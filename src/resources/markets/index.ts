@@ -9,9 +9,9 @@ import {
 	type MarketStatusParams,
 	MarketStatusParamsSchema,
 } from "@/resources/markets/types";
-import type { TypedResult } from "@/types";
+import type { MarketDataParams, TypedResult } from "@/types";
 export class MarketsResource extends BaseResource {
-	public async status<P extends MarketStatusParams>(
+	public async status<P extends MarketStatusParams & MarketDataParams>(
 		params: P = {} as P,
 	): TypedResult<MarketStatusResponse, MarketStatusHumanResponse, P> {
 		return this._fetch("markets/status/", params, {
@@ -19,6 +19,6 @@ export class MarketsResource extends BaseResource {
 			regularSchema: MarketStatusSchema,
 			humanSchema: MarketStatusHumanSchema,
 			service: "markets/status/",
-		}) as any;
+		}) as TypedResult<MarketStatusResponse, MarketStatusHumanResponse, P>;
 	}
 }

@@ -9,9 +9,9 @@ import {
 	type StocksPricesParams,
 	StocksPricesParamsSchema,
 } from "@/resources/stocks/types";
-import type { TypedResult } from "@/types";
+import type { MarketDataParams, TypedResult } from "@/types";
 export class StocksResource extends BaseResource {
-	public async prices<P extends StocksPricesParams>(
+	public async prices<P extends StocksPricesParams & MarketDataParams>(
 		params: P,
 	): TypedResult<StockPriceResponse, StockPriceHumanResponse, P> {
 		return this._fetch("stocks/prices/", params, {
@@ -19,6 +19,6 @@ export class StocksResource extends BaseResource {
 			regularSchema: StockPriceSchema,
 			humanSchema: StockPriceHumanSchema,
 			service: "stocks/prices/",
-		}) as any;
+		}) as TypedResult<StockPriceResponse, StockPriceHumanResponse, P>;
 	}
 }

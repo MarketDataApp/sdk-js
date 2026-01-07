@@ -63,8 +63,8 @@ describe("MarketDataClient", () => {
 
 			expect(url.pathname).toContain("/v1/stocks/prices/");
 			expect(url.searchParams.get("symbols")).toBe("AAPL,MSFT");
-			expect(url.searchParams.get("dateFormat")).toBe("unix");
-			expect(url.searchParams.get("addHeaders")).toBe("true");
+			expect(url.searchParams.get("dateformat")).toBe("unix");
+			expect(url.searchParams.get("headers")).toBe("true");
 
 
 			expect(result).toEqual([
@@ -147,25 +147,52 @@ describe("MarketDataClient", () => {
 		});
 
 		it("retries on failure", async () => {
-			const client = new MarketDataClient();
+			const client = new MarketDataClient({ maxRetries: 2 }); // 1 initial + 2 retries = 3 attempts total
 
-			fetchMock
-				.mockResolvedValueOnce({
-					ok: false,
-					status: 500,
-					text: () => Promise.resolve("Error"),
-					headers: new Headers(),
-				})
-				.mockResolvedValueOnce({
-					ok: false,
-					status: 500,
-					text: () => Promise.resolve("Error"),
-					headers: new Headers(),
-				})
-				.mockResolvedValueOnce({
-					ok: true,
-					json: () =>
-						Promise.resolve({
+			let stockPriceCallCount = 0;
+			fetchMock.mockImplementation((url: string) => {
+				// Handle /user/ calls (rate limit setup)
+				if (url.includes("/user/")) {
+					return Promise.resolve({
+						ok: true,
+						json: () => Promise.resolve({}),
+						headers: new Headers({
+							"x-api-ratelimit-limit": "100",
+							"x-api-ratelimit-remaining": "100",
+							"x-api-ratelimit-reset": "0",
+							"x-api-ratelimit-consumed": "0",
+						}),
+					});
+				}
+
+				// Handle /status/ calls (service status check)
+				if (url.includes("/status/")) {
+					return Promise.resolve({
+						ok: true,
+						json: () => Promise.resolve({
+							service: ["stocks/prices/"],
+							status: ["online"],
+							online: [true],
+							updated: [Date.now()],
+						}),
+						headers: new Headers(),
+					});
+				}
+
+				// Handle stocks/prices calls: fail first 2, succeed on 3rd
+				if (url.includes("stocks/prices")) {
+					stockPriceCallCount++;
+					if (stockPriceCallCount <= 2) {
+						return Promise.resolve({
+							ok: false,
+							status: 500,
+							text: () => Promise.resolve("Error"),
+							headers: new Headers(),
+						});
+					}
+					return Promise.resolve({
+						ok: true,
+						json: () => Promise.resolve({
 							s: "ok",
 							symbol: ["AAPL"],
 							mid: [150],
@@ -173,12 +200,20 @@ describe("MarketDataClient", () => {
 							changepct: [0.01],
 							updated: [1700000000],
 						}),
+						headers: new Headers(),
+					});
+				}
+
+				return Promise.resolve({
+					ok: false,
+					status: 404,
 					headers: new Headers(),
 				});
+			});
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });
 
-			expect(fetchMock).toHaveBeenCalledTimes(3);
+			expect(stockPriceCallCount).toBe(3); // 1 initial + 2 retries
 			expect(result).toEqual([
 				{
 					symbol: "AAPL",
@@ -216,7 +251,7 @@ describe("MarketDataClient", () => {
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });
 
-			expect(fetchMock).toHaveBeenCalledTimes(9);
+			expect(fetchMock).toHaveBeenCalledTimes(8); // 4 stocks/prices + 4 /user/ or /status/
 			expect(result).toBeInstanceOf(MarketDataClientErrorResult);
 			if (result instanceof MarketDataClientErrorResult) {
 				expect(result.error).toBeInstanceOf(RequestError);

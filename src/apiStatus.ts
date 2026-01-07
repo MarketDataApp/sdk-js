@@ -38,7 +38,7 @@ export class ApiStatusManager {
 			await this.refresh(client);
 		}
 
-		if (!this.data) return APIStatusResult.UNKNOWN;
+		if (!this.data || !this.data.service) return APIStatusResult.UNKNOWN;
 
 		const index = this.data.service.indexOf(service);
 		if (index === -1) return APIStatusResult.UNKNOWN;

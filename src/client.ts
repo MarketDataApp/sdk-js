@@ -68,6 +68,11 @@ export class MarketDataClient implements IMarketDataClient {
 		this.markets = new MarketsResource(this);
 	}
 
+	public dispose(): void {
+		this.rateLimits = undefined;
+		this._loadingRateLimits = false;
+	}
+
 	private async _setupRateLimits(): Promise<void> {
 		if (this._loadingRateLimits) return;
 		this._loadingRateLimits = true;
@@ -82,7 +87,9 @@ export class MarketDataClient implements IMarketDataClient {
 				},
 			);
 		} catch (error) {
-			this.logger.error(`Failed to setup rate limits: ${error}`);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			this.logger.error(`Failed to setup rate limits: ${errorMessage}`);
 		} finally {
 			this._loadingRateLimits = false;
 		}
@@ -98,11 +105,14 @@ export class MarketDataClient implements IMarketDataClient {
 			includeApiVersion?: boolean;
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
+			signal?: AbortSignal;
 		} = {},
 	): Promise<T> {
 		const includeApiVersion = options.includeApiVersion ?? true;
 		const url = this._buildUrl(path, params, includeApiVersion);
 		const headers = { ...this.headers, ...options.headers };
+
+		this.logger.debug(`Making request to: ${url.toString()}`);
 
 		return this._executeWithRetry<T>(
 			url,
@@ -112,6 +122,7 @@ export class MarketDataClient implements IMarketDataClient {
 			{
 				skipRateLimitCheck: options.skipRateLimitCheck,
 				skipRetry: options.skipRetry,
+				signal: options.signal,
 			},
 		);
 	}
@@ -156,6 +167,7 @@ export class MarketDataClient implements IMarketDataClient {
 		options: {
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
+			signal?: AbortSignal;
 		} = {},
 	): Promise<T> {
 		return await pRetry(
@@ -171,6 +183,7 @@ export class MarketDataClient implements IMarketDataClient {
 				const response = await fetch(url.toString(), {
 					headers,
 					method: "GET",
+					signal: options.signal,
 				});
 
 				this._updateRateLimits(response.headers);
@@ -180,6 +193,9 @@ export class MarketDataClient implements IMarketDataClient {
 				}
 
 				const json = await response.json();
+				this.logger.debug(
+					`Response JSON: ${JSON.stringify(json).substring(0, 200)}`,
+				);
 				return schema ? schema.parse(json) : (json as T);
 			},
 			{

@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { DateFormat, Mode, OutputFormat } from "@/enums";
 import { MarketDataClientErrorResult } from "@/error";
 import { processParams } from "@/params";
 import type {
@@ -7,6 +8,20 @@ import type {
 	UserUniversalAPIParams,
 } from "@/types";
 import { getDataRecords, type stockRequestResult } from "@/utils";
+
+function extractUniversalParams(
+	validated: unknown,
+): Partial<UserUniversalAPIParams> {
+	const v = validated as MarketDataParams;
+	return {
+		outputFormat: v.outputFormat as OutputFormat | undefined,
+		dateFormat: v.dateFormat as DateFormat | undefined,
+		addHeaders: v.addHeaders as boolean | undefined,
+		useHumanReadable: v.useHumanReadable as boolean | undefined,
+		mode: v.mode as Mode | undefined,
+		columns: v.columns as string[] | undefined,
+	};
+}
 
 export abstract class BaseResource {
 	protected client: IMarketDataClient;
@@ -21,7 +36,9 @@ export abstract class BaseResource {
 		try {
 			return await fn();
 		} catch (error) {
-			if (error instanceof Error) return new MarketDataClientErrorResult(error);
+			if (error instanceof Error) {
+				return new MarketDataClientErrorResult(error);
+			}
 			return new MarketDataClientErrorResult(new Error(String(error)));
 		}
 	}
@@ -48,13 +65,13 @@ export abstract class BaseResource {
 	}
 
 	protected async _fetch<
-		T extends Record<string, any>,
-		H extends Record<string, any> = T,
+		T extends Record<string, unknown>,
+		H extends Record<string, unknown> = T,
 	>(
 		path: string,
-		params: any,
+		params: MarketDataParams,
 		options: {
-			inputSchema: z.ZodType<any>;
+			inputSchema: z.ZodType<unknown>;
 			regularSchema: z.ZodType<T>;
 			humanSchema: z.ZodType<H>;
 			service: string;
@@ -63,14 +80,21 @@ export abstract class BaseResource {
 	): Promise<stockRequestResult<T | H> | MarketDataClientErrorResult> {
 		return this._run(async () => {
 			const validated = this.validateParams(options.inputSchema, params);
+			const universalParams = extractUniversalParams(validated);
+
 			const useHuman =
-				(params as any).useHumanReadable ??
+				universalParams.useHumanReadable ??
 				this.client.settings.marketdataUseHumanReadable;
 
-			const response = await this._makeRequest<T | H>(path, validated, {
-				schema: useHuman ? options.humanSchema : options.regularSchema,
-				service: options.service,
-			});
+			const response = await this._makeRequest<T | H>(
+				path,
+				validated as MarketDataParams,
+				{
+					schema: useHuman ? options.humanSchema : options.regularSchema,
+					service: options.service,
+					universalParams,
+				},
+			);
 
 			return getDataRecords(response, options.excludeKeys || ["s"]);
 		});

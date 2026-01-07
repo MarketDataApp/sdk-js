@@ -28,11 +28,11 @@ export interface IMarketDataClient {
 }
 
 export type TypedResult<
-	T extends Record<string, any>,
-	H extends Record<string, any>,
+	T extends Record<string, unknown>,
+	H extends Record<string, unknown>,
 	P,
 > = Promise<
-	| (P extends { useHumanReadable: true }
+	| (P extends { useHumanReadable: true } | { human: true }
 			? stockRequestResult<H>
 			: stockRequestResult<T>)
 	| MarketDataClientErrorResult
