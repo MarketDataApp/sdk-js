@@ -1,4 +1,3 @@
-import type { MarketDataClientErrorResult } from "@/error";
 import { BaseResource } from "@/resources/base";
 import {
 	type StockPriceHumanResponse,
@@ -10,26 +9,16 @@ import {
 	type StocksPricesParams,
 	StocksPricesParamsSchema,
 } from "@/resources/stocks/types";
-import { getDataRecords, type stockRequestResult } from "@/utils";
-
+import type { TypedResult } from "@/types";
 export class StocksResource extends BaseResource {
-	public async prices(
-		params: StocksPricesParams,
-	): Promise<
-		| stockRequestResult<StockPriceResponse | StockPriceHumanResponse>
-		| MarketDataClientErrorResult
-	> {
-		return this._run(async () => {
-			const validated = this.validateParams(StocksPricesParamsSchema, params);
-			const useHuman =
-				(params as any).useHumanReadable ??
-				this.client.settings.marketdataUseHumanReadable;
-			const schema = useHuman ? StockPriceHumanSchema : StockPriceSchema;
-
-			const response = await this._makeRequest<
-				StockPriceResponse | StockPriceHumanResponse
-			>("stocks/prices/", validated, { schema, service: "stocks/prices/" });
-			return getDataRecords(response, ["s"]);
-		});
+	public async prices<P extends StocksPricesParams>(
+		params: P,
+	): TypedResult<StockPriceResponse, StockPriceHumanResponse, P> {
+		return this._fetch("stocks/prices/", params, {
+			inputSchema: StocksPricesParamsSchema,
+			regularSchema: StockPriceSchema,
+			humanSchema: StockPriceHumanSchema,
+			service: "stocks/prices/",
+		}) as any;
 	}
 }

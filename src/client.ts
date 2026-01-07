@@ -21,6 +21,7 @@ export class MarketDataClient implements IMarketDataClient {
 	public rateLimits?: UserRateLimits;
 	public stocks: StocksResource;
 	public markets: MarketsResource;
+	private _loadingRateLimits = false;
 
 	public get token(): string | undefined {
 		return this.settings.marketdataToken;
@@ -45,13 +46,11 @@ export class MarketDataClient implements IMarketDataClient {
 			marketdataRetryMaxWait: config.retryMaxWait,
 		};
 
-		Object.keys(overrides).forEach((key) => {
-			if (overrides[key as keyof MarketDataSettings] === undefined) {
-				delete overrides[key as keyof MarketDataSettings];
-			}
-		});
-
-		this.settings = loadSettings(overrides);
+		this.settings = loadSettings(
+			Object.fromEntries(
+				Object.entries(overrides).filter(([_, v]) => v !== undefined),
+			) as Partial<MarketDataSettings>,
+		);
 		this.logger =
 			config.logger ||
 			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
@@ -63,7 +62,6 @@ export class MarketDataClient implements IMarketDataClient {
 
 		if (this.token) {
 			this.headers.Authorization = `Bearer ${this.token}`;
-			this._setupRateLimits();
 		}
 
 		this.stocks = new StocksResource(this);
@@ -71,10 +69,22 @@ export class MarketDataClient implements IMarketDataClient {
 	}
 
 	private async _setupRateLimits(): Promise<void> {
+		if (this._loadingRateLimits) return;
+		this._loadingRateLimits = true;
 		try {
-			await this._makeRequest("user/", {}, { includeApiVersion: false });
+			await this._makeRequest(
+				"user/",
+				{},
+				{
+					includeApiVersion: false,
+					skipRateLimitCheck: true,
+					skipRetry: true,
+				},
+			);
 		} catch (error) {
 			this.logger.error(`Failed to setup rate limits: ${error}`);
+		} finally {
+			this._loadingRateLimits = false;
 		}
 	}
 
@@ -86,6 +96,8 @@ export class MarketDataClient implements IMarketDataClient {
 			schema?: z.ZodType<T>;
 			service?: string;
 			includeApiVersion?: boolean;
+			skipRateLimitCheck?: boolean;
+			skipRetry?: boolean;
 		} = {},
 	): Promise<T> {
 		const includeApiVersion = options.includeApiVersion ?? true;
@@ -97,6 +109,10 @@ export class MarketDataClient implements IMarketDataClient {
 			headers,
 			options.schema,
 			options.service,
+			{
+				skipRateLimitCheck: options.skipRateLimitCheck,
+				skipRetry: options.skipRetry,
+			},
 		);
 	}
 
@@ -137,10 +153,20 @@ export class MarketDataClient implements IMarketDataClient {
 		headers: Record<string, string>,
 		schema?: z.ZodType<T>,
 		service?: string,
+		options: {
+			skipRateLimitCheck?: boolean;
+			skipRetry?: boolean;
+		} = {},
 	): Promise<T> {
 		return await pRetry(
 			async () => {
-				this._checkRateLimits();
+				if (this.token && !this.rateLimits && !options.skipRateLimitCheck) {
+					await this._setupRateLimits();
+				}
+
+				if (!options.skipRateLimitCheck) {
+					this._checkRateLimits();
+				}
 
 				const response = await fetch(url.toString(), {
 					headers,
@@ -150,39 +176,14 @@ export class MarketDataClient implements IMarketDataClient {
 				this._updateRateLimits(response.headers);
 
 				if (!response.ok) {
-					const text = await response.text();
-					let errmsg = text;
-					try {
-						const data = JSON.parse(text);
-						errmsg = data.errmsg || text;
-					} catch {}
-
-					if (response.status === 429) {
-						throw new RateLimitError(`Rate limit exceeded: ${errmsg}`);
-					}
-
-					const requestError = new RequestError(
-						`Request failed (${response.status}): ${errmsg}`,
-					);
-
-					if (response.status >= 500 && service) {
-						const status = await globalApiStatus.getApiStatus(this, service);
-						if (status === APIStatusResult.OFFLINE) {
-							this.logger.error(
-								`Service ${service} is OFFLINE. Aborting retries.`,
-							);
-							throw new AbortError(requestError);
-						}
-					}
-
-					throw requestError;
+					await this._handleResponseError(response, service);
 				}
 
 				const json = await response.json();
 				return schema ? schema.parse(json) : (json as T);
 			},
 			{
-				retries: this.settings.marketdataMaxRetries,
+				retries: options.skipRetry ? 0 : this.settings.marketdataMaxRetries,
 				minTimeout: this.settings.marketdataRetryInitialWait * 1000,
 				maxTimeout: this.settings.marketdataRetryMaxWait * 1000,
 				factor: this.settings.marketdataRetryFactor,
@@ -193,6 +194,43 @@ export class MarketDataClient implements IMarketDataClient {
 				},
 			},
 		);
+	}
+
+	private async _handleResponseError(
+		response: Response,
+		service?: string,
+	): Promise<never> {
+		const text = await response.text();
+		let errmsg = text;
+		try {
+			const data = JSON.parse(text);
+			errmsg = data.errmsg || text;
+		} catch {}
+
+		if (response.status === 429) {
+			throw new RateLimitError(`Rate limit exceeded: ${errmsg}`);
+		}
+
+		const requestError = new RequestError(
+			`Request failed (${response.status}): ${errmsg}`,
+		);
+
+		if (response.status >= 500 && service) {
+			await this._checkServiceStatus(service, requestError);
+		}
+
+		throw requestError;
+	}
+
+	private async _checkServiceStatus(
+		service: string,
+		error: Error,
+	): Promise<void> {
+		const status = await globalApiStatus.getApiStatus(this, service);
+		if (status === APIStatusResult.OFFLINE) {
+			this.logger.error(`Service ${service} is OFFLINE. Aborting retries.`);
+			throw new AbortError(error);
+		}
 	}
 
 	private _checkRateLimits(): void {

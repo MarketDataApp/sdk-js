@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { DateFormat, Mode, OutputFormat } from "@/enums";
+import type { MarketDataClientErrorResult } from "@/error";
 import type { Logger } from "@/logger";
 import type { MarketDataSettings } from "@/settings";
+import type { stockRequestResult } from "@/utils";
 
 export interface IMarketDataClient {
 	settings: MarketDataSettings;
@@ -11,7 +13,30 @@ export interface IMarketDataClient {
 	headers: Record<string, string>;
 	rateLimits?: UserRateLimits;
 	logger: Logger;
+	_makeRequest<T>(
+		path: string,
+		params?: MarketDataParams,
+		options?: {
+			headers?: Record<string, string>;
+			schema?: z.ZodType<T>;
+			service?: string;
+			includeApiVersion?: boolean;
+			skipRateLimitCheck?: boolean;
+			skipRetry?: boolean;
+		},
+	): Promise<T>;
 }
+
+export type TypedResult<
+	T extends Record<string, any>,
+	H extends Record<string, any>,
+	P,
+> = Promise<
+	| (P extends { useHumanReadable: true }
+			? stockRequestResult<H>
+			: stockRequestResult<T>)
+	| MarketDataClientErrorResult
+>;
 
 export interface UserRateLimits {
 	requestsLimit: number;

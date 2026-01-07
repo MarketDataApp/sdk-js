@@ -216,7 +216,7 @@ describe("MarketDataClient", () => {
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });
 
-			expect(fetchMock).toHaveBeenCalledTimes(6);
+			expect(fetchMock).toHaveBeenCalledTimes(9);
 			expect(result).toBeInstanceOf(MarketDataClientErrorResult);
 			if (result instanceof MarketDataClientErrorResult) {
 				expect(result.error).toBeInstanceOf(RequestError);
