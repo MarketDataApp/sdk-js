@@ -1,6 +1,11 @@
 import type { z } from "zod";
 import { MarketDataClientErrorResult } from "@/error";
-import type { IMarketDataClient, MarketDataParams } from "@/types";
+import { processParams } from "@/params";
+import type {
+	IMarketDataClient,
+	MarketDataParams,
+	UserUniversalAPIParams,
+} from "@/types";
 
 export abstract class BaseResource {
 	protected client: IMarketDataClient;
@@ -9,7 +14,9 @@ export abstract class BaseResource {
 		this.client = client;
 	}
 
-	protected async _run<T>(fn: () => Promise<T>): Promise<T | MarketDataClientErrorResult> {
+	protected async _run<T>(
+		fn: () => Promise<T>,
+	): Promise<T | MarketDataClientErrorResult> {
 		try {
 			return await fn();
 		} catch (error) {
@@ -21,29 +28,19 @@ export abstract class BaseResource {
 	protected async _makeRequest<T>(
 		path: string,
 		params: MarketDataParams = {},
-		options: { headers?: Record<string, string>; schema?: z.ZodType<T>; service?: string } = {},
+		options: {
+			headers?: Record<string, string>;
+			schema?: z.ZodType<T>;
+			service?: string;
+			universalParams?: Partial<UserUniversalAPIParams>;
+		} = {},
 	): Promise<T> {
-		const finalParams = this._mergeGlobalParams(params);
+		const finalParams = processParams(
+			params,
+			options.universalParams || {},
+			this.client.settings,
+		);
 		return (this.client as any)._makeRequest(path, finalParams, options);
-	}
-
-	private _mergeGlobalParams(params: MarketDataParams): MarketDataParams {
-		const s = this.client.settings;
-		const mapping: MarketDataParams = {
-			format: s.marketdataOutputFormat,
-			dateformat: s.marketdataDateFormat,
-			headers: s.marketdataAddHeaders,
-			human: s.marketdataUseHumanReadable,
-		};
-
-		const defaults = Object.entries(mapping).reduce<MarketDataParams>((acc, [param, setting]) => {
-			if (setting !== undefined && params[param] === undefined) {
-				acc[param] = setting;
-			}
-			return acc;
-		}, {});
-
-		return { ...defaults, ...params };
 	}
 
 	protected validateParams<T>(schema: z.ZodType<T>, params: unknown): T {

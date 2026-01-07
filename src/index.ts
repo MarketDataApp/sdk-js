@@ -1,8 +1,10 @@
+export { globalApiStatus } from "@/apiStatus";
 export { MarketDataClient } from "@/client";
 export * from "@/error";
+export * from "@/logger";
+export * from "@/resources/markets/outputs";
+export * from "@/resources/markets/types";
 export * from "@/resources/stocks/outputs";
 export * from "@/resources/stocks/types";
 export * from "@/types";
 export * from "@/utils";
-export * from "@/logger";
-export { globalApiStatus } from "@/apiStatus";

@@ -1,11 +1,17 @@
 import pRetry, { AbortError } from "p-retry";
 import type { z } from "zod";
-import { globalApiStatus, APIStatusResult } from "@/apiStatus";
+import { APIStatusResult, globalApiStatus } from "@/apiStatus";
 import { RateLimitError, RequestError } from "@/error";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
+import { MarketsResource } from "@/resources/markets/index";
 import { StocksResource } from "@/resources/stocks/index";
 import { loadSettings, type MarketDataSettings } from "@/settings";
-import type { IMarketDataClient, MarketDataConfig, MarketDataParams, UserRateLimits } from "@/types";
+import type {
+	IMarketDataClient,
+	MarketDataConfig,
+	MarketDataParams,
+	UserRateLimits,
+} from "@/types";
 
 import pkg from "../package.json";
 
@@ -14,6 +20,7 @@ export class MarketDataClient implements IMarketDataClient {
 	public logger: Logger;
 	public rateLimits?: UserRateLimits;
 	public stocks: StocksResource;
+	public markets: MarketsResource;
 
 	public get token(): string | undefined {
 		return this.settings.marketdataToken;
@@ -45,7 +52,9 @@ export class MarketDataClient implements IMarketDataClient {
 		});
 
 		this.settings = loadSettings(overrides);
-		this.logger = config.logger || new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
+		this.logger =
+			config.logger ||
+			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
 
 		this.headers = {
 			Accept: "application/json",
@@ -54,24 +63,50 @@ export class MarketDataClient implements IMarketDataClient {
 
 		if (this.token) {
 			this.headers.Authorization = `Bearer ${this.token}`;
+			this._setupRateLimits();
 		}
 
 		this.stocks = new StocksResource(this);
+		this.markets = new MarketsResource(this);
+	}
+
+	private async _setupRateLimits(): Promise<void> {
+		try {
+			await this._makeRequest("user/", {}, { includeApiVersion: false });
+		} catch (error) {
+			this.logger.error(`Failed to setup rate limits: ${error}`);
+		}
 	}
 
 	public async _makeRequest<T>(
 		path: string,
 		params: MarketDataParams = {},
-		options: { headers?: Record<string, string>; schema?: z.ZodType<T>; service?: string } = {},
+		options: {
+			headers?: Record<string, string>;
+			schema?: z.ZodType<T>;
+			service?: string;
+			includeApiVersion?: boolean;
+		} = {},
 	): Promise<T> {
-		const url = this._buildUrl(path, params);
+		const includeApiVersion = options.includeApiVersion ?? true;
+		const url = this._buildUrl(path, params, includeApiVersion);
 		const headers = { ...this.headers, ...options.headers };
 
-		return this._executeWithRetry<T>(url, headers, options.schema, options.service);
+		return this._executeWithRetry<T>(
+			url,
+			headers,
+			options.schema,
+			options.service,
+		);
 	}
 
-	private _buildUrl(path: string, params: MarketDataParams): URL {
-		const url = new URL(`${this.apiVersion}/${path}`, this.baseUrl);
+	private _buildUrl(
+		path: string,
+		params: MarketDataParams,
+		includeApiVersion = true,
+	): URL {
+		const urlPath = includeApiVersion ? `${this.apiVersion}/${path}` : path;
+		const url = new URL(urlPath, this.baseUrl);
 		const searchParams = new URLSearchParams();
 
 		Object.entries(params).forEach(([key, value]) => {
@@ -79,7 +114,11 @@ export class MarketDataClient implements IMarketDataClient {
 				if (Array.isArray(value)) {
 					searchParams.append(
 						key,
-						value.map((v) => (v instanceof Date ? v.toISOString().split("T")[0] : String(v))).join(","),
+						value
+							.map((v) =>
+								v instanceof Date ? v.toISOString().split("T")[0] : String(v),
+							)
+							.join(","),
 					);
 				} else if (value instanceof Date) {
 					searchParams.append(key, value.toISOString().split("T")[0]);
@@ -103,7 +142,10 @@ export class MarketDataClient implements IMarketDataClient {
 			async () => {
 				this._checkRateLimits();
 
-				const response = await fetch(url.toString(), { headers, method: "GET" });
+				const response = await fetch(url.toString(), {
+					headers,
+					method: "GET",
+				});
 
 				this._updateRateLimits(response.headers);
 
@@ -113,21 +155,22 @@ export class MarketDataClient implements IMarketDataClient {
 					try {
 						const data = JSON.parse(text);
 						errmsg = data.errmsg || text;
-					} catch {
-						// Fallback to text
-					}
+					} catch {}
 
 					if (response.status === 429) {
 						throw new RateLimitError(`Rate limit exceeded: ${errmsg}`);
 					}
 
-					const requestError = new RequestError(`Request failed (${response.status}): ${errmsg}`);
+					const requestError = new RequestError(
+						`Request failed (${response.status}): ${errmsg}`,
+					);
 
-					// Intelligent Retry Logic
 					if (response.status >= 500 && service) {
 						const status = await globalApiStatus.getApiStatus(this, service);
 						if (status === APIStatusResult.OFFLINE) {
-							this.logger.error(`Service ${service} is OFFLINE. Aborting retries.`);
+							this.logger.error(
+								`Service ${service} is OFFLINE. Aborting retries.`,
+							);
 							throw new AbortError(requestError);
 						}
 					}
@@ -144,7 +187,9 @@ export class MarketDataClient implements IMarketDataClient {
 				maxTimeout: this.settings.marketdataRetryMaxWait * 1000,
 				factor: this.settings.marketdataRetryFactor,
 				onFailedAttempt: (error) => {
-					this.logger.warn(`Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`);
+					this.logger.warn(
+						`Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`,
+					);
 				},
 			},
 		);
@@ -160,7 +205,8 @@ export class MarketDataClient implements IMarketDataClient {
 		if (headers.has("x-api-ratelimit-remaining")) {
 			this.rateLimits = {
 				requestsLimit: Number(headers.get("x-api-ratelimit-limit")) || 0,
-				requestsRemaining: Number(headers.get("x-api-ratelimit-remaining")) || 0,
+				requestsRemaining:
+					Number(headers.get("x-api-ratelimit-remaining")) || 0,
 				requestsReset: Number(headers.get("x-api-ratelimit-reset")) || 0,
 				requestsConsumed: Number(headers.get("x-api-ratelimit-consumed")) || 0,
 			};
