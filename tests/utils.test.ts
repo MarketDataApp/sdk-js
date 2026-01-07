@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDataRecords } from "../src/utils";
+import { getDataRecords } from "@/utils";
 
 describe("getDataRecords", () => {
     it("transforms columnar data to array of objects", () => {

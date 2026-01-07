@@ -36,8 +36,8 @@ export class MinMaxDateValidationError extends MarketDataClientError {
 export class MarketDataClientErrorResult {
 	error: Error;
 
-	constructor(error: Error) {
-		this.error = error;
+	constructor(error: Error | string) {
+		this.error = typeof error === "string" ? new Error(error) : error;
 	}
 
 	toString(): string {

@@ -4,10 +4,7 @@ import { DateFormat, Mode, OutputFormat } from "@/enums";
 
 dotenv.config();
 
-const BooleanString = z.union([z.boolean(), z.string()]).transform((val) => {
-	if (typeof val === "boolean") return val;
-	return val.toLowerCase() === "true" || val === "1";
-});
+import { BooleanString } from "@/types";
 
 export const MarketDataSettingsSchema = z.object({
 	marketdataToken: z.string().optional(),
@@ -15,14 +12,14 @@ export const MarketDataSettingsSchema = z.object({
 	marketdataApiVersion: z.string().default("v1"),
 
 	marketdataOutputFormat: z
-		.nativeEnum(OutputFormat)
+		.enum(OutputFormat)
 		.optional()
 		.default(OutputFormat.JSON),
-	marketdataDateFormat: z.nativeEnum(DateFormat).optional(),
+	marketdataDateFormat: z.enum(DateFormat).optional(),
 	marketdataColumns: z.array(z.string()).optional(),
 	marketdataAddHeaders: BooleanString.optional(),
 	marketdataUseHumanReadable: BooleanString.optional(),
-	marketdataMode: z.nativeEnum(Mode).optional(),
+	marketdataMode: z.enum(Mode).optional(),
 	marketdataMaxRetries: z.coerce.number().optional().default(3),
 	marketdataRetryInitialWait: z.coerce.number().optional().default(0.5),
 	marketdataRetryFactor: z.coerce.number().optional().default(2),

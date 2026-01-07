@@ -1,6 +1,9 @@
 import type { MarketDataClientErrorResult } from "@/error";
 import { BaseResource } from "@/resources/base";
-import type { StockPriceResponse } from "@/resources/stocks/outputs";
+import {
+	type StockPriceResponse,
+	StockPriceSchema,
+} from "@/resources/stocks/outputs";
 import {
 	type StocksPricesParams,
 	StocksPricesParamsSchema,
@@ -18,6 +21,7 @@ export class StocksResource extends BaseResource {
 			const response = await this._makeRequest<StockPriceResponse>(
 				"stocks/prices/",
 				validated,
+				{ schema: StockPriceSchema, service: "stocks/prices/" },
 			);
 			return getDataRecords(response);
 		});

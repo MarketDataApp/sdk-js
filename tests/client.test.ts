@@ -25,7 +25,14 @@ describe("MarketDataClient", () => {
 
 			fetchMock.mockResolvedValueOnce({
 				ok: true,
-				json: async () => ({ s: "ok", symbol: ["AAPL", "MSFT"] }),
+				json: async () => ({
+					s: "ok",
+					symbol: ["AAPL", "MSFT"],
+					mid: [150, 250],
+					change: [1.5, 2.5],
+					changepct: [0.01, 0.01],
+					updated: [1700000000, 1700000000],
+				}),
 				headers: new Headers(),
 			});
 
@@ -46,8 +53,23 @@ describe("MarketDataClient", () => {
 
 
 			expect(result).toEqual([
-				{ s: "ok", symbol: "AAPL" },
-				{ s: "ok", symbol: "MSFT" }
+
+				{
+					s: "ok",
+					symbol: "AAPL",
+					mid: 150,
+					change: 1.5,
+					changepct: 0.01,
+					updated: 1700000000,
+				},
+				{
+					s: "ok",
+					symbol: "MSFT",
+					mid: 250,
+					change: 2.5,
+					changepct: 0.01,
+					updated: 1700000000,
+				},
 			]);
 		});
 
@@ -82,29 +104,61 @@ describe("MarketDataClient", () => {
 				})
 				.mockResolvedValueOnce({
 					ok: true,
-					json: () => Promise.resolve({ success: true }),
+					json: () =>
+						Promise.resolve({
+							s: "ok",
+							symbol: ["AAPL"],
+							mid: [150],
+							change: [1.5],
+							changepct: [0.01],
+							updated: [1700000000],
+						}),
 					headers: new Headers(),
 				});
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });
 
 			expect(fetchMock).toHaveBeenCalledTimes(3);
-			expect(result).toEqual([{ success: true }]);
+			expect(result).toEqual([
+				{
+					s: "ok",
+					symbol: "AAPL",
+					mid: 150,
+					change: 1.5,
+					changepct: 0.01,
+					updated: 1700000000,
+				},
+			]);
 		});
 
 		it("returns error result after max retries", async () => {
 			const client = new MarketDataClient();
 
-			fetchMock.mockResolvedValue({
-				ok: false,
-				status: 500,
-				text: () => Promise.resolve("Fail"),
-				headers: new Headers(),
+			fetchMock.mockImplementation((url: string) => {
+				if (url.includes("/status/")) {
+					return Promise.resolve({
+						ok: true,
+						json: () =>
+							Promise.resolve({
+								service: ["stocks/prices/"],
+								status: ["online"],
+								online: [true],
+								updated: [Date.now()],
+							}),
+					});
+				}
+				return Promise.resolve({
+					ok: false,
+					status: 500,
+					text: () => Promise.resolve("Fail"),
+					headers: new Headers(),
+				});
 			});
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });
 
-			expect(fetchMock).toHaveBeenCalledTimes(4);
+			// 4 attempts + 1 status check (which is then cached)
+			expect(fetchMock).toHaveBeenCalledTimes(5);
 			expect(result).toBeInstanceOf(MarketDataClientErrorResult);
 			if (result instanceof MarketDataClientErrorResult) {
 				expect(result.error).toBeInstanceOf(RequestError);
