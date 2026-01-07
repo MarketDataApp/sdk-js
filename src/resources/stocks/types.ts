@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserUniversalAPIParamsInputSchema } from "../../types";
+import { UserUniversalAPIParamsInputSchema } from "@/types";
 
 export const StocksPricesInputSchema = z.object({
 	symbols: z.union([z.string(), z.array(z.string())]),

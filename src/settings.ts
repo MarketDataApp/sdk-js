@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { z } from "zod";
-import { DateFormat, Mode, OutputFormat } from "./enums";
+import { DateFormat, Mode, OutputFormat } from "@/enums";
 
 dotenv.config();
 

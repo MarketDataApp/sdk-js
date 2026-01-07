@@ -4,8 +4,8 @@ import {
 	MarketDataClientErrorResult,
 	RateLimitError,
 	RequestError,
-} from "../error";
-import type { IMarketDataClient, MarketDataParams } from "../types";
+} from "@/error";
+import type { IMarketDataClient, MarketDataParams } from "@/types";
 
 export abstract class BaseResource {
 	protected client: IMarketDataClient;
@@ -39,8 +39,6 @@ export abstract class BaseResource {
 
 	private _mergeGlobalParams(params: MarketDataParams): MarketDataParams {
 		const s = this.client.settings;
-		const defaults: MarketDataParams = {};
-
 		const mapping: MarketDataParams = {
 			format: s.marketdataOutputFormat,
 			dateformat: s.marketdataDateFormat,
@@ -48,11 +46,15 @@ export abstract class BaseResource {
 			human: s.marketdataUseHumanReadable,
 		};
 
-		Object.entries(mapping).forEach(([param, setting]) => {
-			if (setting !== undefined && params[param] === undefined) {
-				defaults[param] = setting;
-			}
-		});
+		const defaults = Object.entries(mapping).reduce<MarketDataParams>(
+			(acc, [param, setting]) => {
+				if (setting !== undefined && params[param] === undefined) {
+					acc[param] = setting;
+				}
+				return acc;
+			},
+			{},
+		);
 
 		return { ...defaults, ...params };
 	}
@@ -67,7 +69,16 @@ export abstract class BaseResource {
 		Object.entries(params).forEach(([key, value]) => {
 			if (value !== undefined && value !== null) {
 				if (Array.isArray(value)) {
-					searchParams.append(key, value.join(","));
+					searchParams.append(
+						key,
+						value
+							.map((v) =>
+								v instanceof Date ? v.toISOString().split("T")[0] : String(v),
+							)
+							.join(","),
+					);
+				} else if (value instanceof Date) {
+					searchParams.append(key, value.toISOString().split("T")[0]);
 				} else {
 					searchParams.append(key, String(value));
 				}

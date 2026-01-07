@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { DateFormat, Mode, OutputFormat } from "./enums";
-import type { MarketDataSettings } from "./settings";
+import { DateFormat, Mode, OutputFormat } from "@/enums";
+import type { MarketDataSettings } from "@/settings";
 
 export interface IMarketDataClient {
 	settings: MarketDataSettings;
@@ -22,23 +22,22 @@ export { OutputFormat, DateFormat, Mode };
 
 export type MarketDataParam =
 	| string
+	| string[]
 	| number
 	| boolean
+	| Date
+	| Date[]
 	| null
-	| undefined
-	| string[];
+	| undefined;
 export type MarketDataParams = Record<string, MarketDataParam>;
 
 export const UserUniversalAPIParamsSchema = z.object({
-	outputFormat: z
-		.nativeEnum(OutputFormat)
-		.optional()
-		.default(OutputFormat.JSON),
-	dateFormat: z.nativeEnum(DateFormat).optional(),
+	outputFormat: z.enum(OutputFormat).optional().default(OutputFormat.JSON),
+	dateFormat: z.enum(DateFormat).optional(),
 	columns: z.array(z.string()).optional(),
 	addHeaders: z.boolean().optional(),
 	useHumanReadable: z.boolean().optional(),
-	mode: z.nativeEnum(Mode).optional(),
+	mode: z.enum(Mode).optional(),
 	filename: z.string().optional(),
 });
 

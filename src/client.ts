@@ -1,6 +1,6 @@
-import { StocksResource } from "./resources/stocks/index";
-import { loadSettings, type MarketDataSettings } from "./settings";
-import type { MarketDataConfig } from "./types";
+import { StocksResource } from "@/resources/stocks/index";
+import { loadSettings, type MarketDataSettings } from "@/settings";
+import type { MarketDataConfig } from "@/types";
 
 export class MarketDataClient {
 	public settings: MarketDataSettings;
