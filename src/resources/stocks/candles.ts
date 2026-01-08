@@ -38,9 +38,6 @@ export async function candles(
 		MarketDataParams;
 	return this._run(async () => {
 		const validated = StocksCandlesParamsSchema.parse(params);
-		const useHuman =
-			validated.useHumanReadable ??
-			this.client.settings.marketdataUseHumanReadable;
 
 		const fromDate = validated.from ? new Date(validated.from) : undefined;
 		const toDate = validated.to ? new Date(validated.to) : new Date();
@@ -53,11 +50,17 @@ export async function candles(
 		const fetchRange = async (start?: Date, end?: Date) => {
 			const rangeParams = { ...validated, from: start, to: end };
 			const { symbol, resolution, ...queryParams } = rangeParams;
+			const schema = this._getSchema(
+				validated,
+				StockCandleSchema,
+				StockCandleHumanSchema,
+			);
+
 			return this._makeRequest<StockCandleResponse | StockCandleHumanResponse>(
 				`stocks/candles/${validated.resolution}/${validated.symbol}/`,
 				queryParams as MarketDataParams,
 				{
-					schema: useHuman ? StockCandleHumanSchema : StockCandleSchema,
+					schema,
 					service: "/v1/stocks/candles/",
 				},
 			);

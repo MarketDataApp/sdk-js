@@ -23,7 +23,7 @@ export abstract class BaseResource {
 		params: P,
 		options: {
 			inputSchema: z.ZodType<unknown>;
-			regularSchema: z.ZodType<T>;
+			regularSchema?: z.ZodType<T>;
 			humanSchema: z.ZodType<H>;
 			service: string;
 			excludeKeys?: string[];
@@ -34,15 +34,18 @@ export abstract class BaseResource {
 				string,
 				unknown
 			>;
-			const useHuman =
-				(validated.useHumanReadable as boolean | undefined) ??
-				this.client.settings.marketdataUseHumanReadable;
+
+			const schema = this._getSchema(
+				validated as MarketDataParams,
+				options.regularSchema,
+				options.humanSchema,
+			);
 
 			const response = await this._makeRequest<T | H>(
 				path,
 				validated as MarketDataParams,
 				{
-					schema: useHuman ? options.humanSchema : options.regularSchema,
+					schema,
 					service: options.service,
 				},
 			);
@@ -79,5 +82,29 @@ export abstract class BaseResource {
 			const err = error instanceof Error ? error : new Error(String(error));
 			return new MarketDataClientErrorResult(err);
 		}
+	}
+
+	protected _isInternalFormat(params: MarketDataParams): boolean {
+		const format =
+			(params.outputFormat as string) ||
+			this.client.settings.marketdataOutputFormat;
+		return format === "internal";
+	}
+
+	protected _getSchema<T, H>(
+		params: MarketDataParams,
+		regularSchema?: z.ZodType<T>,
+		humanSchema?: z.ZodType<H>,
+	): z.ZodType<T | H> | undefined {
+		const useHuman =
+			(params.useHumanReadable as boolean | undefined) ??
+			this.client.settings.marketdataUseHumanReadable;
+
+		if (useHuman && humanSchema) {
+			return humanSchema;
+		}
+
+		const isInternal = this._isInternalFormat(params);
+		return isInternal ? regularSchema : undefined;
 	}
 }
