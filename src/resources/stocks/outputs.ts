@@ -20,3 +20,26 @@ export const StockPriceHumanSchema = z.object({
 
 export type StockPriceResponse = z.infer<typeof StockPriceSchema>;
 export type StockPriceHumanResponse = z.infer<typeof StockPriceHumanSchema>;
+
+export const StockCandleSchema = z.object({
+	s: z.string().optional(),
+	t: z.array(z.number()),
+	o: z.array(z.number()),
+	h: z.array(z.number()),
+	l: z.array(z.number()),
+	c: z.array(z.number()),
+	v: z.array(z.number()),
+});
+
+export const StockCandleHumanSchema = z.object({
+	s: z.string().optional(),
+	Date: z.array(z.number()),
+	Open: z.array(z.number()),
+	High: z.array(z.number()),
+	Low: z.array(z.number()),
+	Close: z.array(z.number()),
+	Volume: z.array(z.number()),
+});
+
+export type StockCandleResponse = z.infer<typeof StockCandleSchema>;
+export type StockCandleHumanResponse = z.infer<typeof StockCandleHumanSchema>;

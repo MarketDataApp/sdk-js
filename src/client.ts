@@ -14,6 +14,8 @@ import type {
 	UserRateLimits,
 } from "@/types";
 
+import { formatValue } from "@/utils";
+
 import pkg from "../package.json";
 
 export class MarketDataClient implements IMarketDataClient {
@@ -51,6 +53,8 @@ export class MarketDataClient implements IMarketDataClient {
 
 		if (this.token) {
 			this.headers.Authorization = `Bearer ${this.token}`;
+		} else {
+			this.logger.warn("No token provided, starting in demo mode");
 		}
 
 		this.stocks = new StocksResource(this);
@@ -115,24 +119,12 @@ export class MarketDataClient implements IMarketDataClient {
 		const url = new URL(urlPath, this.baseUrl);
 		const searchParams = new URLSearchParams();
 
-		Object.entries(params).forEach(([key, value]) => {
-			if (value !== undefined && value !== null) {
-				if (Array.isArray(value)) {
-					searchParams.append(
-						key,
-						value
-							.map((v) =>
-								v instanceof Date ? v.toISOString().split("T")[0] : String(v),
-							)
-							.join(","),
-					);
-				} else if (value instanceof Date) {
-					searchParams.append(key, value.toISOString().split("T")[0]);
-				} else {
-					searchParams.append(key, String(value));
-				}
+		for (const [key, value] of Object.entries(params)) {
+			const formatted = formatValue(value);
+			if (formatted !== undefined) {
+				searchParams.append(key, formatted);
 			}
-		});
+		}
 
 		url.search = searchParams.toString();
 		return url;
@@ -248,7 +240,6 @@ export class MarketDataClient implements IMarketDataClient {
 				await this._makeRequest("user/", undefined, {
 					includeApiVersion: false,
 					skipRateLimitCheck: true,
-					skipRetry: true,
 				});
 			} catch (error) {
 				const errorMessage =

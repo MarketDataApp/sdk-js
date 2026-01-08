@@ -26,9 +26,10 @@ beforeEach(() => {
                     service: [
                         "/v1/markets/status/",
                         "/v1/stocks/prices/",
+                        "/v1/stocks/candles/",
                     ],
-                    status: ["online", "online"],
-                    online: [true, true],
+                    status: ["online", "online", "online"],
+                    online: [true, true, true],
                     uptimePct30d: [100, 100],
                     uptimePct90d: [100, 100],
                     updated: [_time, _time],

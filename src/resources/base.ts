@@ -1,30 +1,11 @@
 import type { z } from "zod";
-import type { DateFormat, Mode, OutputFormat } from "@/enums";
+
 import { MarketDataClientErrorResult } from "@/error";
 import { processParams } from "@/params";
-import type {
-	IMarketDataClient,
-	MarketDataParams,
-	TypedResult,
-	UserUniversalAPIParams,
-} from "@/types";
+import type { IMarketDataClient, MarketDataParams, TypedResult } from "@/types";
 import { getDataRecords } from "@/utils";
 
 const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
-
-function extractUniversalParams(
-	validated: unknown,
-): Partial<UserUniversalAPIParams> {
-	const v = validated as Record<string, unknown>;
-	return {
-		outputFormat: v.outputFormat as OutputFormat | undefined,
-		dateFormat: v.dateFormat as DateFormat | undefined,
-		addHeaders: v.addHeaders as boolean | undefined,
-		useHumanReadable: v.useHumanReadable as boolean | undefined,
-		mode: v.mode as Mode | undefined,
-		columns: v.columns as string[] | undefined,
-	};
-}
 
 export abstract class BaseResource {
 	protected readonly client: IMarketDataClient;
@@ -49,11 +30,12 @@ export abstract class BaseResource {
 		},
 	): TypedResult<T, H, P> {
 		return this._run(async () => {
-			const validated = this.validateParams(options.inputSchema, params);
-			const universalParams = extractUniversalParams(validated);
-
+			const validated = options.inputSchema.parse(params) as Record<
+				string,
+				unknown
+			>;
 			const useHuman =
-				universalParams.useHumanReadable ??
+				(validated.useHumanReadable as boolean | undefined) ??
 				this.client.settings.marketdataUseHumanReadable;
 
 			const response = await this._makeRequest<T | H>(
@@ -62,7 +44,6 @@ export abstract class BaseResource {
 				{
 					schema: useHuman ? options.humanSchema : options.regularSchema,
 					service: options.service,
-					universalParams,
 				},
 			);
 
@@ -80,17 +61,12 @@ export abstract class BaseResource {
 			headers?: Record<string, string>;
 			schema?: z.ZodType<T>;
 			service?: string;
-			universalParams?: Partial<UserUniversalAPIParams>;
 			includeApiVersion?: boolean;
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
 		} = {},
 	): Promise<T> {
-		const finalParams = processParams(
-			params,
-			options.universalParams || {},
-			this.client.settings,
-		);
+		const finalParams = processParams(params, this.client.settings);
 		return this.client._makeRequest(path, finalParams, options);
 	}
 
@@ -100,14 +76,8 @@ export abstract class BaseResource {
 		try {
 			return await fn();
 		} catch (error) {
-			if (error instanceof Error) {
-				return new MarketDataClientErrorResult(error);
-			}
-			return new MarketDataClientErrorResult(new Error(String(error)));
+			const err = error instanceof Error ? error : new Error(String(error));
+			return new MarketDataClientErrorResult(err);
 		}
-	}
-
-	protected validateParams<T>(schema: z.ZodType<T>, params: unknown): T {
-		return schema.parse(params);
 	}
 }

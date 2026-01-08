@@ -1,8 +1,4 @@
-import {
-	REFRESH_API_STATUS_INTERVAL_MS,
-	STATUS_FETCH_TIMEOUT_MS,
-	VALID_STATUS_CODES,
-} from "@/internalSettings";
+import { REFRESH_API_STATUS_INTERVAL_MS } from "@/internalSettings";
 import type { IMarketDataClient } from "@/types";
 
 export enum APIStatusResult {
@@ -20,11 +16,8 @@ export interface StatusData {
 	updated: number[];
 }
 
-const REFRESH_INTERVAL_MS = REFRESH_API_STATUS_INTERVAL_MS;
-
 export class ApiStatusManager {
 	private data: StatusData | null = null;
-	private readonly refreshInterval = REFRESH_INTERVAL_MS;
 	private refreshPromise: Promise<boolean> | null = null;
 
 	public async getApiStatus(
@@ -35,22 +28,27 @@ export class ApiStatusManager {
 			await this.refresh(client);
 		}
 
-		if (!this.data || !this.data.service) return APIStatusResult.UNKNOWN;
+		if (!this.data?.service) return APIStatusResult.UNKNOWN;
 
 		const index = this.data.service.indexOf(service);
-		if (index === -1) return APIStatusResult.UNKNOWN;
+		if (index === -1) {
+			client.logger.error(`Service ${service} not found in API status`);
+			return APIStatusResult.UNKNOWN;
+		}
 
-		if (this.data.status[index] !== APIStatusResult.ONLINE)
+		if (
+			this.data.status[index] !== APIStatusResult.ONLINE ||
+			!this.data.online[index]
+		) {
+			client.logger.error(`Service ${service} is offline`);
 			return APIStatusResult.OFFLINE;
-		if (!this.data.online[index]) return APIStatusResult.OFFLINE;
+		}
 
 		return APIStatusResult.ONLINE;
 	}
 
 	public get lastUpdated(): number {
-		if (!this.data?.updated?.length) {
-			return 0;
-		}
+		if (!this.data?.updated?.length) return 0;
 		return Math.min(...this.data.updated) * 1000;
 	}
 
@@ -59,25 +57,15 @@ export class ApiStatusManager {
 
 		this.refreshPromise = (async () => {
 			try {
-				const controller = new AbortController();
-				const timeout = setTimeout(
-					() => controller.abort(),
-					STATUS_FETCH_TIMEOUT_MS,
+				this.data = await client._makeRequest<StatusData>(
+					"status/",
+					undefined,
+					{
+						includeApiVersion: false,
+						skipRateLimitCheck: true,
+						skipRetry: true,
+					},
 				);
-
-				const response = await fetch(`${client.baseUrl}/status/`, {
-					signal: controller.signal,
-				});
-				clearTimeout(timeout);
-
-				if (!VALID_STATUS_CODES.includes(response.status)) {
-					client.logger.error(
-						`API status check failed with status: ${response.status}`,
-					);
-					return false;
-				}
-
-				this.data = (await response.json()) as StatusData;
 				return true;
 			} catch (error) {
 				const errorMessage =
@@ -93,7 +81,7 @@ export class ApiStatusManager {
 	}
 
 	public get shouldRefresh(): boolean {
-		return Date.now() - this.lastUpdated > this.refreshInterval;
+		return Date.now() - this.lastUpdated > REFRESH_API_STATUS_INTERVAL_MS;
 	}
 }
 
