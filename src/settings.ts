@@ -14,7 +14,7 @@ export const MarketDataSettingsSchema = z.object({
 	marketdataOutputFormat: z
 		.enum(OutputFormat)
 		.optional()
-		.default(OutputFormat.JSON),
+		.default(OutputFormat.INTERNAL),
 	marketdataDateFormat: z.enum(DateFormat).optional(),
 	marketdataColumns: z.array(z.string()).optional(),
 	marketdataAddHeaders: BooleanString.optional(),
@@ -50,9 +50,13 @@ export const loadSettings = (
 		Object.entries(envConfig).filter(([_, v]) => v !== undefined),
 	);
 
+	const cleanOverrides = Object.fromEntries(
+		Object.entries(overrides).filter(([_, v]) => v !== undefined),
+	);
+
 	const merged = {
 		...cleanEnvConfig,
-		...overrides,
+		...cleanOverrides,
 	};
 
 	return MarketDataSettingsSchema.parse(merged);

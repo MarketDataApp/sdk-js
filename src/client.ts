@@ -29,19 +29,15 @@ export class MarketDataClient implements IMarketDataClient {
 	private _rateLimitSetup?: Promise<void>;
 
 	constructor(config: MarketDataConfig = {}) {
-		const overrides = Object.fromEntries(
-			Object.entries({
-				marketdataToken: config.token,
-				marketdataBaseUrl: config.baseUrl,
-				marketdataApiVersion: config.apiVersion,
-				marketdataMaxRetries: config.maxRetries,
-				marketdataRetryInitialWait: config.retryInitialWait,
-				marketdataRetryFactor: config.retryFactor,
-				marketdataRetryMaxWait: config.retryMaxWait,
-			}).filter(([_, v]) => v !== undefined),
-		);
-
-		this.settings = loadSettings(overrides as Partial<MarketDataSettings>);
+		this.settings = loadSettings({
+			marketdataToken: config.token,
+			marketdataBaseUrl: config.baseUrl,
+			marketdataApiVersion: config.apiVersion,
+			marketdataMaxRetries: config.maxRetries,
+			marketdataRetryInitialWait: config.retryInitialWait,
+			marketdataRetryFactor: config.retryFactor,
+			marketdataRetryMaxWait: config.retryMaxWait,
+		});
 		this.logger =
 			config.logger ||
 			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);

@@ -30,11 +30,8 @@ export async function prices(
 	arg1: string | string[] | (StocksPricesParams & MarketDataParams),
 	arg2: MarketDataParams = {},
 ): Promise<unknown> {
-	const params = normalizeArgs(
-		arg1,
-		arg2,
-		"symbols",
-	) as StocksPricesParams & MarketDataParams;
+	const params = normalizeArgs(arg1, arg2, "symbols") as StocksPricesParams &
+		MarketDataParams;
 	return this._fetch("stocks/prices/", params, {
 		inputSchema: StocksPricesParamsSchema,
 		regularSchema: StockPriceSchema,

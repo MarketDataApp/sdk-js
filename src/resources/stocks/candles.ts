@@ -11,11 +11,7 @@ import {
 	StocksCandlesParamsSchema,
 } from "@/resources/stocks/types";
 import type { MarketDataParams, TypedResult } from "@/types";
-import {
-	getDataRecords,
-	normalizeArgs,
-	splitDatesByTimeframe,
-} from "@/utils";
+import { getDataRecords, normalizeArgs, splitDatesByTimeframe } from "@/utils";
 import type { StocksResource } from "./index";
 
 export async function candles<
@@ -38,11 +34,8 @@ export async function candles(
 	arg1: string | (StocksCandlesParams & MarketDataParams),
 	arg2: MarketDataParams = {},
 ): Promise<unknown> {
-	const params = normalizeArgs(
-		arg1,
-		arg2,
-		"symbol",
-	) as StocksCandlesParams & MarketDataParams;
+	const params = normalizeArgs(arg1, arg2, "symbol") as StocksCandlesParams &
+		MarketDataParams;
 	return this._run(async () => {
 		const validated = StocksCandlesParamsSchema.parse(params);
 		const useHuman =
@@ -59,9 +52,10 @@ export async function candles(
 
 		const fetchRange = async (start?: Date, end?: Date) => {
 			const rangeParams = { ...validated, from: start, to: end };
+			const { symbol, resolution, ...queryParams } = rangeParams;
 			return this._makeRequest<StockCandleResponse | StockCandleHumanResponse>(
 				`stocks/candles/${validated.resolution}/${validated.symbol}/`,
-				rangeParams as MarketDataParams,
+				queryParams as MarketDataParams,
 				{
 					schema: useHuman ? StockCandleHumanSchema : StockCandleSchema,
 					service: "/v1/stocks/candles/",

@@ -21,19 +21,25 @@ export function processParams(
 	inputParams: MarketDataParams,
 	settings: MarketDataSettings,
 ): MarketDataParams {
+	const outputFormat =
+		(inputParams.outputFormat as string) ||
+		settings.marketdataOutputFormat ||
+		"internal";
+
+	const mappedFormat = FORMAT_MAP[outputFormat] || outputFormat;
+	const shouldIncludeColumns =
+		outputFormat !== "internal" && outputFormat !== "dataframe";
+
 	const universal: MarketDataParams = {
-		format:
-			FORMAT_MAP[(inputParams.outputFormat as string) || ""] ||
-			FORMAT_MAP[settings.marketdataOutputFormat || ""] ||
-			inputParams.outputFormat ||
-			settings.marketdataOutputFormat,
+		format: mappedFormat,
 		dateformat: inputParams.dateFormat || settings.marketdataDateFormat,
 		headers: inputParams.addHeaders ?? settings.marketdataAddHeaders,
 		human: inputParams.useHumanReadable ?? settings.marketdataUseHumanReadable,
 		mode: inputParams.mode || settings.marketdataMode,
-		columns: Array.isArray(inputParams.columns)
-			? inputParams.columns
-			: undefined,
+		columns:
+			shouldIncludeColumns && Array.isArray(inputParams.columns)
+				? inputParams.columns
+				: undefined,
 	};
 
 	return Object.fromEntries(

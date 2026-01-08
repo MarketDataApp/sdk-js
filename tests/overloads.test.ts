@@ -16,18 +16,14 @@ describe("Method Overloads", () => {
             await client.stocks.candles("AAPL", { resolution: "D" });
             const args = makeRequestSpy.mock.calls[0];
             expect(args[0]).toMatch(/stocks\/candles\/D\/AAPL\/?/);
-            expect(args[1]).toEqual(
-                expect.objectContaining({ symbol: "AAPL", resolution: "D" }),
-            );
+            expect(args[1]).toEqual(expect.not.objectContaining({ symbol: "AAPL", resolution: "D" }));
         });
 
         it("accepts params object", async () => {
             await client.stocks.candles({ symbol: "MSFT", resolution: "60" });
             const args = makeRequestSpy.mock.calls[0];
             expect(args[0]).toMatch(/stocks\/candles\/60\/MSFT\/?/);
-            expect(args[1]).toEqual(
-                expect.objectContaining({ symbol: "MSFT", resolution: "60" }),
-            );
+            expect(args[1]).toEqual(expect.not.objectContaining({ symbol: "MSFT", resolution: "60" }));
         });
     });
 
