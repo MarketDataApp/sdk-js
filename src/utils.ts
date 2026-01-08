@@ -1,6 +1,6 @@
 export const getDataRecords = <T extends Record<string, unknown>>(
 	data: T,
-	excludeKeys: string[] = [],
+	excludeKeys: readonly string[] = [],
 ): stockRequestResult<T> => {
 	const keys = (Object.keys(data) as (keyof T)[]).filter(
 		(k) => !excludeKeys.includes(k as string),
@@ -14,12 +14,12 @@ export const getDataRecords = <T extends Record<string, unknown>>(
 	);
 
 	return Array.from({ length }, (_, i) => {
-		const row = {} as { [K in keyof T]: Unpacked<T[K]> };
-		for (const key of keys) {
-			const val = data[key];
-			row[key] = (Array.isArray(val) ? val[i] : val) as Unpacked<T[keyof T]>;
-		}
-		return row;
+		return Object.fromEntries(
+			keys.map((key) => {
+				const val = data[key];
+				return [key, Array.isArray(val) ? val[i] : val];
+			}),
+		) as { [K in keyof T]: Unpacked<T[K]> };
 	});
 };
 

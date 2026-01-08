@@ -18,7 +18,7 @@ export class StocksResource extends BaseResource {
 			inputSchema: StocksPricesParamsSchema,
 			regularSchema: StockPriceSchema,
 			humanSchema: StockPriceHumanSchema,
-			service: "stocks/prices/",
+			service: "/v1/stocks/prices/",
 		});
 	}
 }

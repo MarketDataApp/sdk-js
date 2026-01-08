@@ -10,10 +10,15 @@ export interface Logger {
 	info(message: string): void;
 	warn(message: string): void;
 	error(message: string): void;
+	setLogLevel(level: LogLevel): void;
 }
 
 export class DefaultLogger implements Logger {
 	constructor(private level: LogLevel = LogLevel.INFO) {}
+
+	public setLogLevel(level: LogLevel): void {
+		this.level = level;
+	}
 
 	public debug(message: string): void {
 		if (this.level <= LogLevel.DEBUG)

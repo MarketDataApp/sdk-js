@@ -6,13 +6,13 @@ import type { MarketDataSettings } from "@/settings";
 import type { stockRequestResult } from "@/utils";
 
 export interface IMarketDataClient {
-	settings: MarketDataSettings;
-	token?: string;
-	baseUrl: string;
-	apiVersion: string;
-	headers: Record<string, string>;
+	readonly settings: MarketDataSettings;
+	readonly token?: string;
+	readonly baseUrl: string;
+	readonly apiVersion: string;
+	readonly headers: Record<string, string>;
 	rateLimits?: UserRateLimits;
-	logger: Logger;
+	readonly logger: Logger;
 	_makeRequest<T>(
 		path: string,
 		params?: MarketDataParams,

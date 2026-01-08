@@ -17,31 +17,29 @@ import type {
 import pkg from "../package.json";
 
 export class MarketDataClient implements IMarketDataClient {
-	public settings: MarketDataSettings;
-	public logger: Logger;
+	public readonly settings: MarketDataSettings;
+	public readonly logger: Logger;
 	public rateLimits?: UserRateLimits;
-	public stocks: StocksResource;
-	public markets: MarketsResource;
-	public headers: Record<string, string>;
+	public readonly stocks: StocksResource;
+	public readonly markets: MarketsResource;
+	public readonly headers: Record<string, string>;
 
 	private _rateLimitSetup?: Promise<void>;
 
 	constructor(config: MarketDataConfig = {}) {
-		const overrides: Partial<MarketDataSettings> = {
-			marketdataToken: config.token,
-			marketdataBaseUrl: config.baseUrl,
-			marketdataApiVersion: config.apiVersion,
-			marketdataMaxRetries: config.maxRetries,
-			marketdataRetryInitialWait: config.retryInitialWait,
-			marketdataRetryFactor: config.retryFactor,
-			marketdataRetryMaxWait: config.retryMaxWait,
-		};
-
-		this.settings = loadSettings(
-			Object.fromEntries(
-				Object.entries(overrides).filter(([_, v]) => v !== undefined),
-			) as Partial<MarketDataSettings>,
+		const overrides = Object.fromEntries(
+			Object.entries({
+				marketdataToken: config.token,
+				marketdataBaseUrl: config.baseUrl,
+				marketdataApiVersion: config.apiVersion,
+				marketdataMaxRetries: config.maxRetries,
+				marketdataRetryInitialWait: config.retryInitialWait,
+				marketdataRetryFactor: config.retryFactor,
+				marketdataRetryMaxWait: config.retryMaxWait,
+			}).filter(([_, v]) => v !== undefined),
 		);
+
+		this.settings = loadSettings(overrides as Partial<MarketDataSettings>);
 		this.logger =
 			config.logger ||
 			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
@@ -236,9 +234,10 @@ export class MarketDataClient implements IMarketDataClient {
 
 		if (isRetriableStatusCode(response.status) && service) {
 			await this._checkServiceStatus(service, requestError);
+			throw requestError;
 		}
 
-		throw requestError;
+		throw new AbortError(requestError);
 	}
 
 	private async _setupRateLimits(): Promise<void> {
@@ -246,15 +245,11 @@ export class MarketDataClient implements IMarketDataClient {
 
 		this._rateLimitSetup = (async () => {
 			try {
-				await this._makeRequest(
-					"user/",
-					{},
-					{
-						includeApiVersion: false,
-						skipRateLimitCheck: true,
-						skipRetry: true,
-					},
-				);
+				await this._makeRequest("user/", undefined, {
+					includeApiVersion: false,
+					skipRateLimitCheck: true,
+					skipRetry: true,
+				});
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : String(error);

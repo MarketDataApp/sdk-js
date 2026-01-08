@@ -1,10 +1,6 @@
 import { GLOBAL_EXCLUDED_PARAMS } from "@/internalSettings";
 import type { MarketDataSettings } from "@/settings";
-import type {
-	MarketDataParam,
-	MarketDataParams,
-	UserUniversalAPIParams,
-} from "@/types";
+import type { MarketDataParams, UserUniversalAPIParams } from "@/types";
 
 const SDK_ONLY_KEYS = [
 	...GLOBAL_EXCLUDED_PARAMS,
@@ -29,12 +25,10 @@ export function processParams(
 	userUniversalParams: Partial<UserUniversalAPIParams>,
 	settings: MarketDataSettings,
 ): MarketDataParams {
-	const params: MarketDataParams = {};
-
 	const outputFormat =
 		userUniversalParams.outputFormat || settings.marketdataOutputFormat;
 
-	const universal: Record<string, MarketDataParam> = {
+	const universal: MarketDataParams = {
 		format: getApiFormat(outputFormat),
 		dateformat: userUniversalParams.dateFormat || settings.marketdataDateFormat,
 		headers: userUniversalParams.addHeaders ?? settings.marketdataAddHeaders,
@@ -42,29 +36,23 @@ export function processParams(
 			userUniversalParams.useHumanReadable ??
 			settings.marketdataUseHumanReadable,
 		mode: userUniversalParams.mode || settings.marketdataMode,
+		columns:
+			userUniversalParams.columns && Array.isArray(userUniversalParams.columns)
+				? userUniversalParams.columns
+				: undefined,
 	};
 
-	if (
-		userUniversalParams.columns &&
-		Array.isArray(userUniversalParams.columns)
-	) {
-		universal.columns = userUniversalParams.columns;
-	}
+	const filteredInput = Object.fromEntries(
+		Object.entries(inputParams).filter(
+			([key, value]) =>
+				!SDK_ONLY_KEYS.includes(key as (typeof SDK_ONLY_KEYS)[number]) &&
+				isDefined(value),
+		),
+	);
 
-	for (const [key, value] of Object.entries(universal)) {
-		if (isDefined(value)) {
-			params[key] = value;
-		}
-	}
-
-	for (const [key, value] of Object.entries(inputParams)) {
-		if (SDK_ONLY_KEYS.includes(key as (typeof SDK_ONLY_KEYS)[number])) {
-			continue;
-		}
-		if (isDefined(value)) {
-			params[key] = value;
-		}
-	}
-
-	return params;
+	return Object.fromEntries(
+		Object.entries({ ...universal, ...filteredInput }).filter(([_, v]) =>
+			isDefined(v),
+		),
+	) as MarketDataParams;
 }

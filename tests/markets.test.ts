@@ -9,7 +9,7 @@ describe("MarketsResource", () => {
         const client = new MarketDataClient({ token: "test-token" });
 
         fetchMock.mockImplementation(async (url: string) => {
-            if (url.includes("markets/status/")) {
+            if (url.includes("/v1/markets/status/")) {
                 return createMockResponse({
                     json: {
                         s: "ok",
@@ -43,7 +43,7 @@ describe("MarketsResource", () => {
         fetchMock.mockImplementation(async (url: string) => {
             if (url.includes("/user/")) return createMockResponse();
 
-            if (url.includes("markets/status/")) {
+            if (url.includes("/v1/markets/status/")) {
                 return createMockResponse({
                     json: {
                         s: "ok",

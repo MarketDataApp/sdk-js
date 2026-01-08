@@ -1,51 +1,30 @@
 export class MarketDataClientError extends Error {
 	constructor(message: string) {
 		super(message);
-		this.name = "MarketDataClientError";
+		this.name = this.constructor.name;
 		Error.captureStackTrace?.(this, this.constructor);
 	}
 }
 
-export class BadStatusCodeError extends MarketDataClientError {
-	constructor(message: string) {
-		super(message);
-		this.name = "BadStatusCodeError";
-		Error.captureStackTrace?.(this, this.constructor);
-	}
-}
+export class BadStatusCodeError extends MarketDataClientError {}
+export class MinMaxDateValidationError extends MarketDataClientError {}
+export class RateLimitError extends MarketDataClientError {}
+export class RequestError extends MarketDataClientError {}
 
 export class MarketDataClientErrorResult {
-	error: Error;
+	public readonly error: Error;
 
 	constructor(error: Error | string) {
 		this.error = typeof error === "string" ? new Error(error) : error;
 	}
 
-	toString(): string {
-		return `MarketDataClientErrorResult(error=${this.error.name}, message=${this.error.message})`;
+	public static isError(
+		result: unknown,
+	): result is MarketDataClientErrorResult {
+		return result instanceof MarketDataClientErrorResult;
 	}
-}
 
-export class MinMaxDateValidationError extends MarketDataClientError {
-	constructor(message: string) {
-		super(message);
-		this.name = "MinMaxDateValidationError";
-		Error.captureStackTrace?.(this, this.constructor);
-	}
-}
-
-export class RateLimitError extends MarketDataClientError {
-	constructor(message: string) {
-		super(message);
-		this.name = "RateLimitError";
-		Error.captureStackTrace?.(this, this.constructor);
-	}
-}
-
-export class RequestError extends MarketDataClientError {
-	constructor(message: string) {
-		super(message);
-		this.name = "RequestError";
-		Error.captureStackTrace?.(this, this.constructor);
+	public toString(): string {
+		return `MarketDataClientErrorResult(error=${this.error.name}, message="${this.error.message}")`;
 	}
 }

@@ -18,7 +18,7 @@ export class MarketsResource extends BaseResource {
 			inputSchema: MarketStatusParamsSchema,
 			regularSchema: MarketStatusSchema,
 			humanSchema: MarketStatusHumanSchema,
-			service: "markets/status/",
+			service: "/v1/markets/status/",
 		});
 	}
 }

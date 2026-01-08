@@ -19,7 +19,7 @@ describe("MarketDataClient", () => {
 			const client = new MarketDataClient({ token: "test-token" });
 
 			fetchMock.mockImplementation(async (url: string) => {
-				if (url.includes("/user/")) {
+				if (url.includes("/user/") && !url.includes("v1/user/")) {
 					return createMockResponse({
 						headers: {
 							"x-api-ratelimit-limit": "100",
@@ -29,7 +29,7 @@ describe("MarketDataClient", () => {
 						},
 					});
 				}
-				if (url.includes("stocks/prices/")) {
+				if (url.includes("/v1/stocks/prices/")) {
 					return createMockResponse({
 						json: {
 							s: "ok",
@@ -82,8 +82,8 @@ describe("MarketDataClient", () => {
 			const client = new MarketDataClient({ token: "test-token" });
 
 			fetchMock.mockImplementation(async (url: string) => {
-				if (url.includes("/user/")) return createMockResponse();
-				if (url.includes("stocks/prices/")) {
+				if (url.includes("/user/") && !url.includes("v1/user/")) return createMockResponse();
+				if (url.includes("/v1/stocks/prices/")) {
 					return createMockResponse({
 						json: {
 							s: "ok",
@@ -132,7 +132,7 @@ describe("MarketDataClient", () => {
 
 			let stockPriceCallCount = 0;
 			fetchMock.mockImplementation(async (url: string) => {
-				if (url.includes("/user/")) {
+				if (url.includes("/user/") && !url.includes("v1/user/")) {
 					return createMockResponse({
 						headers: {
 							"x-api-ratelimit-limit": "100",
@@ -146,7 +146,7 @@ describe("MarketDataClient", () => {
 				if (url.includes("/status/")) {
 					return createMockResponse({
 						json: {
-							service: ["stocks/prices/"],
+							service: ["/v1/stocks/prices/"],
 							status: ["online"],
 							online: [true],
 							updated: [Date.now()],
@@ -157,7 +157,7 @@ describe("MarketDataClient", () => {
 				if (url.includes("stocks/prices")) {
 					stockPriceCallCount++;
 					if (stockPriceCallCount <= 2) {
-						return createMockResponse({ ok: false, status: 500, text: "Error" });
+						return createMockResponse({ ok: false, status: 502, text: "Error" });
 					}
 					return createMockResponse({
 						json: {
@@ -195,14 +195,14 @@ describe("MarketDataClient", () => {
 				if (url.includes("/status/")) {
 					return createMockResponse({
 						json: {
-							service: ["stocks/prices/"],
+							service: ["/v1/stocks/prices/"],
 							status: ["online"],
 							online: [true],
 							updated: [Date.now()],
 						},
 					});
 				}
-				return createMockResponse({ ok: false, status: 500, text: "Fail" });
+				return createMockResponse({ ok: false, status: 502, text: "Fail" });
 			});
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });

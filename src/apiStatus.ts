@@ -1,4 +1,8 @@
-import { VALID_STATUS_CODES } from "@/internalSettings";
+import {
+	REFRESH_API_STATUS_INTERVAL_MS,
+	STATUS_FETCH_TIMEOUT_MS,
+	VALID_STATUS_CODES,
+} from "@/internalSettings";
 import type { IMarketDataClient } from "@/types";
 
 export enum APIStatusResult {
@@ -16,12 +20,12 @@ export interface StatusData {
 	updated: number[];
 }
 
-const REFRESH_INTERVAL_MS = 4.5 * 60 * 1000;
-const STATUS_FETCH_TIMEOUT_MS = 10000;
+const REFRESH_INTERVAL_MS = REFRESH_API_STATUS_INTERVAL_MS;
 
 export class ApiStatusManager {
 	private data: StatusData | null = null;
 	private readonly refreshInterval = REFRESH_INTERVAL_MS;
+	private refreshPromise: Promise<boolean> | null = null;
 
 	public async getApiStatus(
 		client: IMarketDataClient,
@@ -51,33 +55,41 @@ export class ApiStatusManager {
 	}
 
 	public async refresh(client: IMarketDataClient): Promise<boolean> {
-		try {
-			const controller = new AbortController();
-			const timeout = setTimeout(
-				() => controller.abort(),
-				STATUS_FETCH_TIMEOUT_MS,
-			);
+		if (this.refreshPromise) return this.refreshPromise;
 
-			const response = await fetch(`${client.baseUrl}/status/`, {
-				signal: controller.signal,
-			});
-			clearTimeout(timeout);
-
-			if (!VALID_STATUS_CODES.includes(response.status)) {
-				client.logger.error(
-					`API status check failed with status: ${response.status}`,
+		this.refreshPromise = (async () => {
+			try {
+				const controller = new AbortController();
+				const timeout = setTimeout(
+					() => controller.abort(),
+					STATUS_FETCH_TIMEOUT_MS,
 				);
-				return false;
-			}
 
-			this.data = (await response.json()) as StatusData;
-			return true;
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error);
-			client.logger.error(`Failed to refresh API status: ${errorMessage}`);
-			return false;
-		}
+				const response = await fetch(`${client.baseUrl}/status/`, {
+					signal: controller.signal,
+				});
+				clearTimeout(timeout);
+
+				if (!VALID_STATUS_CODES.includes(response.status)) {
+					client.logger.error(
+						`API status check failed with status: ${response.status}`,
+					);
+					return false;
+				}
+
+				this.data = (await response.json()) as StatusData;
+				return true;
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : String(error);
+				client.logger.error(`Failed to refresh API status: ${errorMessage}`);
+				return false;
+			} finally {
+				this.refreshPromise = null;
+			}
+		})();
+
+		return this.refreshPromise;
 	}
 
 	public get shouldRefresh(): boolean {

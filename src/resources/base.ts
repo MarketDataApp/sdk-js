@@ -15,7 +15,7 @@ const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
 function extractUniversalParams(
 	validated: unknown,
 ): Partial<UserUniversalAPIParams> {
-	const v = validated as MarketDataParams;
+	const v = validated as Record<string, unknown>;
 	return {
 		outputFormat: v.outputFormat as OutputFormat | undefined,
 		dateFormat: v.dateFormat as DateFormat | undefined,
@@ -27,7 +27,7 @@ function extractUniversalParams(
 }
 
 export abstract class BaseResource {
-	protected client: IMarketDataClient;
+	protected readonly client: IMarketDataClient;
 
 	constructor(client: IMarketDataClient) {
 		this.client = client;
@@ -69,7 +69,7 @@ export abstract class BaseResource {
 			return getDataRecords(
 				response,
 				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
-			) as any;
+			);
 		}) as TypedResult<T, H, P>;
 	}
 
