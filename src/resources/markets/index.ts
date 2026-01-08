@@ -19,6 +19,6 @@ export class MarketsResource extends BaseResource {
 			regularSchema: MarketStatusSchema,
 			humanSchema: MarketStatusHumanSchema,
 			service: "markets/status/",
-		}) as TypedResult<MarketStatusResponse, MarketStatusHumanResponse, P>;
+		});
 	}
 }

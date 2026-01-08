@@ -22,18 +22,9 @@ export class MarketDataClient implements IMarketDataClient {
 	public rateLimits?: UserRateLimits;
 	public stocks: StocksResource;
 	public markets: MarketsResource;
-
-	public get token(): string | undefined {
-		return this.settings.marketdataToken;
-	}
-	public get baseUrl(): string {
-		return this.settings.marketdataBaseUrl;
-	}
-	public get apiVersion(): string {
-		return this.settings.marketdataApiVersion;
-	}
-
 	public headers: Record<string, string>;
+
+	private _rateLimitSetup?: Promise<void>;
 
 	constructor(config: MarketDataConfig = {}) {
 		const overrides: Partial<MarketDataSettings> = {
@@ -68,39 +59,21 @@ export class MarketDataClient implements IMarketDataClient {
 		this.markets = new MarketsResource(this);
 	}
 
+	public get apiVersion(): string {
+		return this.settings.marketdataApiVersion;
+	}
+
+	public get baseUrl(): string {
+		return this.settings.marketdataBaseUrl;
+	}
+
 	public dispose(): void {
 		this.rateLimits = undefined;
 		this._rateLimitSetup = undefined;
 	}
 
-	private _rateLimitSetup?: Promise<void>;
-
-	private async _setupRateLimits(): Promise<void> {
-		if (this._rateLimitSetup) {
-			return this._rateLimitSetup;
-		}
-
-		this._rateLimitSetup = this._doSetupRateLimits();
-		await this._rateLimitSetup;
-		this._rateLimitSetup = undefined;
-	}
-
-	private async _doSetupRateLimits(): Promise<void> {
-		try {
-			await this._makeRequest(
-				"user/",
-				{},
-				{
-					includeApiVersion: false,
-					skipRateLimitCheck: true,
-					skipRetry: true,
-				},
-			);
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error);
-			this.logger.error(`Failed to setup rate limits: ${errorMessage}`);
-		}
+	public get token(): string | undefined {
+		return this.settings.marketdataToken;
 	}
 
 	public async _makeRequest<T>(
@@ -167,6 +140,23 @@ export class MarketDataClient implements IMarketDataClient {
 		return url;
 	}
 
+	private _checkRateLimits(): void {
+		if (this.rateLimits && this.rateLimits.requestsRemaining <= 0) {
+			throw new RateLimitError("Rate limit exceeded");
+		}
+	}
+
+	private async _checkServiceStatus(
+		service: string,
+		error: Error,
+	): Promise<void> {
+		const status = await globalApiStatus.getApiStatus(this, service);
+		if (status === APIStatusResult.OFFLINE) {
+			this.logger.error(`Service ${service} is OFFLINE. Aborting retries.`);
+			throw new AbortError(error);
+		}
+	}
+
 	private async _executeWithRetry<T>(
 		url: URL,
 		headers: Record<string, string>,
@@ -226,12 +216,13 @@ export class MarketDataClient implements IMarketDataClient {
 	): Promise<never> {
 		const text = await response.text();
 		let errmsg = text;
+
 		try {
 			const data = JSON.parse(text);
 			errmsg = data.errmsg || text;
 		} catch (error) {
 			this.logger.debug(
-				`Failed to parse error response as JSON: ${error instanceof Error ? error.message : String(error)}`,
+				`Failed to parse error response: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
 
@@ -250,21 +241,30 @@ export class MarketDataClient implements IMarketDataClient {
 		throw requestError;
 	}
 
-	private async _checkServiceStatus(
-		service: string,
-		error: Error,
-	): Promise<void> {
-		const status = await globalApiStatus.getApiStatus(this, service);
-		if (status === APIStatusResult.OFFLINE) {
-			this.logger.error(`Service ${service} is OFFLINE. Aborting retries.`);
-			throw new AbortError(error);
-		}
-	}
+	private async _setupRateLimits(): Promise<void> {
+		if (this._rateLimitSetup) return this._rateLimitSetup;
 
-	private _checkRateLimits(): void {
-		if (this.rateLimits && this.rateLimits.requestsRemaining <= 0) {
-			throw new RateLimitError("Rate limit exceeded");
-		}
+		this._rateLimitSetup = (async () => {
+			try {
+				await this._makeRequest(
+					"user/",
+					{},
+					{
+						includeApiVersion: false,
+						skipRateLimitCheck: true,
+						skipRetry: true,
+					},
+				);
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : String(error);
+				this.logger.error(`Failed to setup rate limits: ${errorMessage}`);
+			} finally {
+				this._rateLimitSetup = undefined;
+			}
+		})();
+
+		return this._rateLimitSetup;
 	}
 
 	private _updateRateLimits(headers: Headers): void {

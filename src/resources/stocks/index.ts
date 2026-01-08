@@ -19,6 +19,6 @@ export class StocksResource extends BaseResource {
 			regularSchema: StockPriceSchema,
 			humanSchema: StockPriceHumanSchema,
 			service: "stocks/prices/",
-		}) as TypedResult<StockPriceResponse, StockPriceHumanResponse, P>;
+		});
 	}
 }

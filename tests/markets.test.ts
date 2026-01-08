@@ -1,29 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
+import { createMockResponse } from "./test-utils";
 
 describe("MarketsResource", () => {
 
     it("fetches market status with correct params", async () => {
         const client = new MarketDataClient({ token: "test-token" });
 
-        fetchMock.mockImplementation((url: string) => {
+        fetchMock.mockImplementation(async (url: string) => {
             if (url.includes("markets/status/")) {
-                return Promise.resolve({
-                    ok: true,
-                    json: async () => ({
+                return createMockResponse({
+                    json: {
                         s: "ok",
                         date: [1700000000],
                         status: ["open"],
-                    }),
-                    headers: new Headers(),
+                    },
                 });
             }
-            return Promise.resolve({
-                ok: false,
-                status: 404,
-                headers: new Headers(),
-            });
+            return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
         const result = await client.markets.status({ country: "US" });
@@ -45,30 +40,19 @@ describe("MarketsResource", () => {
     it("fetches human-readable market status", async () => {
         const client = new MarketDataClient({ token: "test-token" });
 
-        fetchMock.mockImplementation((url: string) => {
-            if (url.includes("/user/")) {
-                return Promise.resolve({
-                    ok: true,
-                    json: async () => ({}),
-                    headers: new Headers(),
-                });
-            }
+        fetchMock.mockImplementation(async (url: string) => {
+            if (url.includes("/user/")) return createMockResponse();
+
             if (url.includes("markets/status/")) {
-                return Promise.resolve({
-                    ok: true,
-                    json: async () => ({
+                return createMockResponse({
+                    json: {
                         s: "ok",
                         Date: [1699920000],
                         Status: ["open"],
-                    }),
-                    headers: new Headers(),
+                    },
                 });
             }
-            return Promise.resolve({
-                ok: false,
-                status: 404,
-                headers: new Headers(),
-            });
+            return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
         const result = await client.markets.status({ useHumanReadable: true } as any);

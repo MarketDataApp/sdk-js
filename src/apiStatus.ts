@@ -23,17 +23,6 @@ export class ApiStatusManager {
 	private data: StatusData | null = null;
 	private readonly refreshInterval = REFRESH_INTERVAL_MS;
 
-	public get lastUpdated(): number {
-		if (!this.data?.updated?.length) {
-			return 0;
-		}
-		return Math.min(...this.data.updated) * 1000;
-	}
-
-	public get shouldRefresh(): boolean {
-		return Date.now() - this.lastUpdated > this.refreshInterval;
-	}
-
 	public async getApiStatus(
 		client: IMarketDataClient,
 		service: string,
@@ -54,6 +43,13 @@ export class ApiStatusManager {
 		return APIStatusResult.ONLINE;
 	}
 
+	public get lastUpdated(): number {
+		if (!this.data?.updated?.length) {
+			return 0;
+		}
+		return Math.min(...this.data.updated) * 1000;
+	}
+
 	public async refresh(client: IMarketDataClient): Promise<boolean> {
 		try {
 			const controller = new AbortController();
@@ -68,14 +64,24 @@ export class ApiStatusManager {
 			clearTimeout(timeout);
 
 			if (!VALID_STATUS_CODES.includes(response.status)) {
+				client.logger.error(
+					`API status check failed with status: ${response.status}`,
+				);
 				return false;
 			}
 
 			this.data = (await response.json()) as StatusData;
 			return true;
-		} catch {
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			client.logger.error(`Failed to refresh API status: ${errorMessage}`);
 			return false;
 		}
+	}
+
+	public get shouldRefresh(): boolean {
+		return Date.now() - this.lastUpdated > this.refreshInterval;
 	}
 }
 

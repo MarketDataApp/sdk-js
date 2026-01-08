@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { loadMock } from "./test-utils";
+import { createMockResponse, loadMock } from "./test-utils";
 
 
 const mockData = loadMock("stocks_prices_response_200");
@@ -12,19 +12,11 @@ describe("StocksResource (Mock Data)", () => {
     it("prices returns correct data structure from mock", async () => {
         const client = new MarketDataClient({ token: "test" });
 
-        fetchMock.mockImplementation((url: string) => {
+        fetchMock.mockImplementation(async (url: string) => {
             if (url.includes("stocks/prices/")) {
-                return Promise.resolve({
-                    ok: true,
-                    json: async () => mockData,
-                    headers: new Headers(),
-                });
+                return createMockResponse({ json: mockData });
             }
-            return Promise.resolve({
-                ok: false,
-                status: 404,
-                headers: new Headers(),
-            });
+            return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
         const result = await client.stocks.prices({ symbols: ["AAPL", "TSLA"] });
@@ -45,19 +37,11 @@ describe("StocksResource (Mock Data)", () => {
     it("prices returns correct human-readable data structure from mock", async () => {
         const client = new MarketDataClient({ token: "test" });
 
-        fetchMock.mockImplementation((url: string) => {
+        fetchMock.mockImplementation(async (url: string) => {
             if (url.includes("stocks/prices/")) {
-                return Promise.resolve({
-                    ok: true,
-                    json: async () => mockHumanData,
-                    headers: new Headers(),
-                });
+                return createMockResponse({ json: mockHumanData });
             }
-            return Promise.resolve({
-                ok: false,
-                status: 404,
-                headers: new Headers(),
-            });
+            return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
         const result = await client.stocks.prices({ symbols: ["AAPL"], useHumanReadable: true } as any);

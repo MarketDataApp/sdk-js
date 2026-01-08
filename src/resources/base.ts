@@ -5,9 +5,10 @@ import { processParams } from "@/params";
 import type {
 	IMarketDataClient,
 	MarketDataParams,
+	TypedResult,
 	UserUniversalAPIParams,
 } from "@/types";
-import { getDataRecords, type stockRequestResult } from "@/utils";
+import { getDataRecords } from "@/utils";
 
 const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
 
@@ -32,17 +33,44 @@ export abstract class BaseResource {
 		this.client = client;
 	}
 
-	protected async _run<T>(
-		fn: () => Promise<T>,
-	): Promise<T | MarketDataClientErrorResult> {
-		try {
-			return await fn();
-		} catch (error) {
-			if (error instanceof Error) {
-				return new MarketDataClientErrorResult(error);
-			}
-			return new MarketDataClientErrorResult(new Error(String(error)));
-		}
+	protected async _fetch<
+		T extends Record<string, unknown>,
+		H extends Record<string, unknown>,
+		P extends MarketDataParams,
+	>(
+		path: string,
+		params: P,
+		options: {
+			inputSchema: z.ZodType<unknown>;
+			regularSchema: z.ZodType<T>;
+			humanSchema: z.ZodType<H>;
+			service: string;
+			excludeKeys?: string[];
+		},
+	): TypedResult<T, H, P> {
+		return this._run(async () => {
+			const validated = this.validateParams(options.inputSchema, params);
+			const universalParams = extractUniversalParams(validated);
+
+			const useHuman =
+				universalParams.useHumanReadable ??
+				this.client.settings.marketdataUseHumanReadable;
+
+			const response = await this._makeRequest<T | H>(
+				path,
+				validated as MarketDataParams,
+				{
+					schema: useHuman ? options.humanSchema : options.regularSchema,
+					service: options.service,
+					universalParams,
+				},
+			);
+
+			return getDataRecords(
+				response,
+				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
+			) as any;
+		}) as TypedResult<T, H, P>;
 	}
 
 	protected async _makeRequest<T>(
@@ -66,43 +94,17 @@ export abstract class BaseResource {
 		return this.client._makeRequest(path, finalParams, options);
 	}
 
-	protected async _fetch<
-		T extends Record<string, unknown>,
-		H extends Record<string, unknown> = T,
-	>(
-		path: string,
-		params: MarketDataParams,
-		options: {
-			inputSchema: z.ZodType<unknown>;
-			regularSchema: z.ZodType<T>;
-			humanSchema: z.ZodType<H>;
-			service: string;
-			excludeKeys?: string[];
-		},
-	): Promise<stockRequestResult<T | H> | MarketDataClientErrorResult> {
-		return this._run(async () => {
-			const validated = this.validateParams(options.inputSchema, params);
-			const universalParams = extractUniversalParams(validated);
-
-			const useHuman =
-				universalParams.useHumanReadable ??
-				this.client.settings.marketdataUseHumanReadable;
-
-			const response = await this._makeRequest<T | H>(
-				path,
-				validated as MarketDataParams,
-				{
-					schema: useHuman ? options.humanSchema : options.regularSchema,
-					service: options.service,
-					universalParams,
-				},
-			);
-
-			return getDataRecords(
-				response,
-				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
-			);
-		});
+	protected async _run<T>(
+		fn: () => Promise<T>,
+	): Promise<T | MarketDataClientErrorResult> {
+		try {
+			return await fn();
+		} catch (error) {
+			if (error instanceof Error) {
+				return new MarketDataClientErrorResult(error);
+			}
+			return new MarketDataClientErrorResult(new Error(String(error)));
+		}
 	}
 
 	protected validateParams<T>(schema: z.ZodType<T>, params: unknown): T {
