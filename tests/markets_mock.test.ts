@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, loadMock } from "./test-utils";
+import { createMockResponse, loadMock, unwrapOk } from "./test-utils";
 
 const mockData = loadMock("markets_status_response_200");
 const mockHumanData = loadMock("markets_status_human_response_200");
@@ -17,12 +17,12 @@ describe("MarketsResource (Mock Data)", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.markets.status();
+        const result = unwrapOk(await client.markets.status());
 
         expect(Array.isArray(result)).toBe(true);
-        expect((result as any[]).length).toBeGreaterThan(0);
+        expect(result.length).toBeGreaterThan(0);
 
-        const first = (result as any[])[0];
+        const first = result[0];
         expect(first).not.toHaveProperty("s");
         expect(first).toHaveProperty("date");
         expect(first).toHaveProperty("status");
@@ -40,12 +40,12 @@ describe("MarketsResource (Mock Data)", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.markets.status({ useHumanReadable: true } as any);
+        const result = unwrapOk(await client.markets.status({ useHumanReadable: true }));
 
         expect(Array.isArray(result)).toBe(true);
-        expect((result as any[]).length).toBeGreaterThan(0);
+        expect(result.length).toBeGreaterThan(0);
 
-        const first = (result as any[])[0];
+        const first = result[0];
         expect(first).not.toHaveProperty("s");
         expect(first).toHaveProperty("Date");
         expect(first).toHaveProperty("Status");

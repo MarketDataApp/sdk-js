@@ -1,6 +1,7 @@
+import type { ResultAsync } from "neverthrow";
 import { z } from "zod";
 import { DateFormat, Mode, OutputFormat } from "@/enums";
-import type { MarketDataClientErrorResult } from "@/error";
+import type { MarketDataClientError } from "@/error";
 import type { Logger } from "@/logger";
 import type { MarketDataSettings } from "@/settings";
 import type { stockRequestResult } from "@/utils";
@@ -24,18 +25,19 @@ export interface IMarketDataClient {
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
 		},
-	): Promise<T>;
+	): MarketDataResult<T>;
 }
+
+export type MarketDataResult<T> = ResultAsync<T, MarketDataClientError>;
 
 export type TypedResult<
 	T extends Record<string, unknown>,
 	H extends Record<string, unknown>,
 	P,
-> = Promise<
-	| (P extends { useHumanReadable: true }
-			? stockRequestResult<H>
-			: stockRequestResult<T>)
-	| MarketDataClientErrorResult
+> = MarketDataResult<
+	P extends { useHumanReadable: true } | { human: true }
+		? stockRequestResult<H>
+		: stockRequestResult<T>
 >;
 
 export interface UserRateLimits {

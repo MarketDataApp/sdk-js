@@ -6,22 +6,18 @@ export const formatDate = (date: Date | string | number): string => {
 		return date.toISOString().split("T")[0];
 	}
 	if (typeof date === "string") {
-		// Try to parse as ISO date string first
 		const d = new Date(date);
 		if (!Number.isNaN(d.getTime()) && date.includes("-")) {
 			return d.toISOString().split("T")[0];
 		}
-		// Fallback or specific string handling if needed
 		return date;
 	}
 	if (typeof date === "number") {
-		// Handle Excel serial dates (Python behavior: 0 < value < 60000)
 		if (date > 0 && date < 60000) {
-			const excelBase = new Date(1899, 11, 30); // Dec 30, 1899
+			const excelBase = new Date(1899, 11, 30);
 			const d = new Date(excelBase.getTime() + date * 24 * 60 * 60 * 1000);
 			return d.toISOString().split("T")[0];
 		}
-		// Handle Unix timestamp
 		return new Date(date * 1000).toISOString().split("T")[0];
 	}
 	return String(date);
@@ -33,32 +29,6 @@ export const formatValue = (value: unknown): string | undefined => {
 	if (value instanceof Date) return formatDate(value);
 	if (Array.isArray(value)) return value.map(formatValue).join(",");
 	return String(value);
-};
-
-export const splitDatesByTimeframe = (
-	start: Date,
-	end: Date,
-	days: number,
-): [Date, Date][] => {
-	if (start >= end) {
-		throw new Error("start must be before end");
-	}
-
-	const ranges: [Date, Date][] = [];
-	let current = new Date(start);
-	const timeframeMs = days * 24 * 60 * 60 * 1000;
-
-	while (true) {
-		const nextCut = new Date(current.getTime() + timeframeMs);
-		if (nextCut >= end) {
-			ranges.push([current, end]);
-			break;
-		}
-		ranges.push([current, nextCut]);
-		current = nextCut;
-	}
-
-	return ranges;
 };
 
 export const getDataRecords = <T extends Record<string, unknown>>(
@@ -99,4 +69,30 @@ export const normalizeArgs = <T>(
 		return { ...(arg2 as object), [key]: arg1 } as T;
 	}
 	return arg1 as T;
+};
+
+export const splitDatesByTimeframe = (
+	start: Date,
+	end: Date,
+	days: number,
+): [Date, Date][] => {
+	if (start >= end) {
+		throw new Error("start must be before end");
+	}
+
+	const ranges: [Date, Date][] = [];
+	let current = new Date(start);
+	const timeframeMs = days * 24 * 60 * 60 * 1000;
+
+	while (true) {
+		const nextCut = new Date(current.getTime() + timeframeMs);
+		if (nextCut >= end) {
+			ranges.push([current, end]);
+			break;
+		}
+		ranges.push([current, nextCut]);
+		current = nextCut;
+	}
+
+	return ranges;
 };

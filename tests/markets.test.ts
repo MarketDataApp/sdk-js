@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse } from "./test-utils";
+import { createMockResponse, unwrapOk } from "./test-utils";
 
 describe("MarketsResource", () => {
 
@@ -9,6 +9,7 @@ describe("MarketsResource", () => {
         const client = new MarketDataClient({ token: "test-token" });
 
         fetchMock.mockImplementation(async (url: string) => {
+            if (url.includes("/user/")) return createMockResponse();
             if (url.includes("/v1/markets/status/")) {
                 return createMockResponse({
                     json: {
@@ -21,7 +22,7 @@ describe("MarketsResource", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.markets.status({ country: "US" });
+        const result = unwrapOk(await client.markets.status({ country: "US" }));
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
         const url = new URL(fetchMock.mock.calls[1][0]);
@@ -29,7 +30,7 @@ describe("MarketsResource", () => {
         expect(url.pathname).toContain("/v1/markets/status/");
         expect(url.searchParams.get("country")).toBe("US");
 
-        expect(result as any[]).toEqual([
+        expect(result).toEqual([
             {
                 date: 1700000000,
                 status: "open",
@@ -55,9 +56,9 @@ describe("MarketsResource", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.markets.status({ useHumanReadable: true } as any);
+        const result = unwrapOk(await client.markets.status({ useHumanReadable: true }));
 
-        expect(result as any[]).toEqual([
+        expect(result).toEqual([
             {
                 Date: 1699920000,
                 Status: "open",

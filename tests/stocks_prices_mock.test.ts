@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, loadMock } from "./test-utils";
+import { createMockResponse, loadMock, unwrapOk } from "./test-utils";
 
 
 const mockData = loadMock("stocks_prices_response_200");
@@ -19,17 +19,17 @@ describe("StocksResource (Mock Data)", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.stocks.prices({ symbols: ["AAPL", "TSLA"] });
+        const result = unwrapOk(await client.stocks.prices({ symbols: ["AAPL", "TSLA"] }));
 
         expect(Array.isArray(result)).toBe(true);
         expect(result).toHaveLength(2);
 
-        const aapl = (result as any[]).find(r => r.symbol === "AAPL");
+        const aapl = result.find(r => r.symbol === "AAPL");
         expect(aapl).toBeDefined();
         expect(aapl).toHaveProperty("mid", 280.02);
 
 
-        const tsla = (result as any[]).find(r => r.symbol === "TSLA");
+        const tsla = result.find(r => r.symbol === "TSLA");
         expect(tsla).toBeDefined();
         expect(tsla).toHaveProperty("mid", 455.76);
     });
@@ -44,17 +44,17 @@ describe("StocksResource (Mock Data)", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.stocks.prices({ symbols: ["AAPL"], useHumanReadable: true } as any);
+        const result = unwrapOk(await client.stocks.prices({ symbols: ["AAPL"], useHumanReadable: true }));
 
         expect(Array.isArray(result)).toBe(true);
         expect(result).toHaveLength(2);
 
-        const aapl = (result as any[])[0];
+        const aapl = result[0];
         expect(aapl).toHaveProperty("Symbol", "AAPL");
         expect(aapl).toHaveProperty("Mid", 278.72);
         expect(aapl).toHaveProperty("Change $", 0.69);
 
-        const tsla = (result as any[])[1];
+        const tsla = result[1];
         expect(tsla).toHaveProperty("Symbol", "TSLA");
         expect(tsla).toHaveProperty("Mid", 455.66);
     });

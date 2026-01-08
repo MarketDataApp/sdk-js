@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { okAsync } from "neverthrow";
 import { MarketDataClient } from "@/client";
 
 describe("Method Overloads", () => {
@@ -7,8 +8,8 @@ describe("Method Overloads", () => {
 
     beforeEach(() => {
         client = new MarketDataClient({ token: "test-token" });
-        makeRequestSpy = vi.fn().mockResolvedValue({});
-        client._makeRequest = makeRequestSpy as any;
+        makeRequestSpy = vi.fn().mockReturnValue(okAsync({}));
+        (client as unknown as { _makeRequest: typeof makeRequestSpy })._makeRequest = makeRequestSpy;
     });
 
     describe("stocks.candles", () => {

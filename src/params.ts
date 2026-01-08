@@ -27,8 +27,8 @@ export function processParams(
 		"internal";
 
 	const mappedFormat = FORMAT_MAP[outputFormat] || outputFormat;
-	const shouldIncludeColumns =
-		outputFormat !== "internal" && outputFormat !== "dataframe";
+	const isInternal =
+		outputFormat === "internal" || outputFormat === "dataframe";
 
 	const universal: MarketDataParams = {
 		format: mappedFormat,
@@ -37,8 +37,8 @@ export function processParams(
 		human: inputParams.useHumanReadable ?? settings.marketdataUseHumanReadable,
 		mode: inputParams.mode || settings.marketdataMode,
 		columns:
-			shouldIncludeColumns && Array.isArray(inputParams.columns)
-				? inputParams.columns
+			!isInternal && Array.isArray(inputParams.columns)
+				? inputParams.columns.join(",")
 				: undefined,
 	};
 

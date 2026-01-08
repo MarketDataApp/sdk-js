@@ -67,7 +67,7 @@ describe("utils", () => {
                 { symbol: "MSFT", price: 250, ok: true },
             ];
 
-            expect(getDataRecords(input as any)).toEqual(expected);
+            expect(getDataRecords(input)).toEqual(expected);
         });
 
         it("handles empty input", () => {

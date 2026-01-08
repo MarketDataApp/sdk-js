@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
-import { MarketDataClientErrorResult, RequestError } from "@/error";
-import { DateFormat } from "@/types";
+import { MarketDataClientError, RequestError } from "@/error";
+import { DateFormat } from "@/enums";
 import { fetchMock } from "./setup";
-import { createMockResponse } from "./test-utils";
+import { createMockResponse, unwrapOk } from "./test-utils";
 
 describe("MarketDataClient", () => {
 
@@ -44,12 +44,12 @@ describe("MarketDataClient", () => {
 				return createMockResponse({ ok: false, status: 404 });
 			});
 
-			const result = await client.stocks.prices({
+			const result = unwrapOk(await client.stocks.prices({
 				symbols: ["AAPL", "MSFT"],
 
 				dateformat: DateFormat.UNIX,
 				headers: true,
-			} as any);
+			}));
 
 			expect(fetchMock).toHaveBeenCalledTimes(2);
 			const url = new URL(fetchMock.mock.calls[1][0]);
@@ -98,10 +98,10 @@ describe("MarketDataClient", () => {
 				return createMockResponse({ ok: false, status: 404 });
 			});
 
-			const result = await client.stocks.prices({
+			const result = unwrapOk(await client.stocks.prices({
 				symbols: "AAPL",
 				useHumanReadable: true,
-			} as any);
+			}));
 
 			expect(result).toEqual([
 				{
@@ -118,12 +118,12 @@ describe("MarketDataClient", () => {
 			const client = new MarketDataClient();
 
 			const result = await client.stocks.prices({
-				symbols: 123 as any,
+				symbols: 123 as unknown as string,
 			});
 
-			expect(result).toBeInstanceOf(MarketDataClientErrorResult);
-			if (result instanceof MarketDataClientErrorResult) {
-				expect(result.error.name).toBe("ZodError");
+			expect(result.isErr()).toBe(true);
+			if (result.isErr()) {
+				expect(result.error.name).toBe("ValidationError");
 			}
 		});
 
@@ -174,7 +174,7 @@ describe("MarketDataClient", () => {
 				return createMockResponse({ ok: false, status: 404 });
 			});
 
-			const result = await client.stocks.prices({ symbols: "AAPL" });
+			const result = unwrapOk(await client.stocks.prices({ symbols: "AAPL" }));
 
 			expect(stockPriceCallCount).toBe(3); // 1 initial + 2 retries
 			expect(result).toEqual([
@@ -192,6 +192,16 @@ describe("MarketDataClient", () => {
 			const client = new MarketDataClient({ token: "test-token" });
 
 			fetchMock.mockImplementation(async (url: string) => {
+				if (url.includes("/user/") && !url.includes("v1/user/")) {
+					return createMockResponse({
+						headers: {
+							"x-api-ratelimit-limit": "100",
+							"x-api-ratelimit-remaining": "100",
+							"x-api-ratelimit-reset": "0",
+							"x-api-ratelimit-consumed": "0",
+						},
+					});
+				}
 				if (url.includes("/status/")) {
 					return createMockResponse({
 						json: {
@@ -207,9 +217,9 @@ describe("MarketDataClient", () => {
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });
 
-			expect(fetchMock).toHaveBeenCalledTimes(8); // 4 stocks/prices + 4 /user/ or /status/
-			expect(result).toBeInstanceOf(MarketDataClientErrorResult);
-			if (result instanceof MarketDataClientErrorResult) {
+			expect(fetchMock).toHaveBeenCalledTimes(5); // 1 /user/ + 4 /stocks/prices/ (initial + 3 retries)
+			expect(result.isErr()).toBe(true);
+			if (result.isErr()) {
 				expect(result.error).toBeInstanceOf(RequestError);
 			}
 		});

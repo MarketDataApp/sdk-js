@@ -1,5 +1,9 @@
-import { REFRESH_API_STATUS_INTERVAL_MS } from "@/internalSettings";
-import type { IMarketDataClient } from "@/types";
+import {
+	Endpoints,
+	REFRESH_API_STATUS_INTERVAL_MS,
+	Service,
+} from "@/internalSettings";
+import type { IMarketDataClient, MarketDataResult } from "@/types";
 
 export enum APIStatusResult {
 	ONLINE = "online",
@@ -18,6 +22,7 @@ export interface StatusData {
 
 export class ApiStatusManager {
 	private data: StatusData | null = null;
+	private failureTimestamp = 0;
 	private refreshPromise: Promise<boolean> | null = null;
 
 	public async getApiStatus(
@@ -56,32 +61,40 @@ export class ApiStatusManager {
 		if (this.refreshPromise) return this.refreshPromise;
 
 		this.refreshPromise = (async () => {
-			try {
-				this.data = await client._makeRequest<StatusData>(
-					"status/",
-					undefined,
-					{
-						includeApiVersion: false,
-						skipRateLimitCheck: true,
-						skipRetry: true,
-					},
-				);
-				return true;
-			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : String(error);
-				client.logger.error(`Failed to refresh API status: ${errorMessage}`);
-				return false;
-			} finally {
+			const result: MarketDataResult<StatusData> =
+				client._makeRequest<StatusData>(Endpoints.API_STATUS, undefined, {
+					includeApiVersion: false,
+					skipRateLimitCheck: true,
+					skipRetry: true,
+					service: Service.STATUS,
+				});
+
+			const res = await result;
+
+			if (res.isOk()) {
+				this.data = res.value;
+				this.failureTimestamp = 0;
 				this.refreshPromise = null;
+				return true;
 			}
+
+			this.data = null;
+			this.failureTimestamp = Date.now();
+			client.logger.error(`Failed to refresh API status: ${res.error.message}`);
+			this.refreshPromise = null;
+			return false;
 		})();
 
 		return this.refreshPromise;
 	}
 
 	public get shouldRefresh(): boolean {
-		return Date.now() - this.lastUpdated > REFRESH_API_STATUS_INTERVAL_MS;
+		if (this.refreshPromise) return false;
+
+		const now = Date.now();
+		if (now - this.failureTimestamp < 30000) return false;
+
+		return now - this.lastUpdated > REFRESH_API_STATUS_INTERVAL_MS;
 	}
 }
 

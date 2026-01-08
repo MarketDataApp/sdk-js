@@ -1,5 +1,7 @@
+import { Result } from "neverthrow";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { expect } from "vitest";
 
 export interface MockResponseOptions {
     ok?: boolean;
@@ -23,4 +25,11 @@ export function createMockResponse(options: MockResponseOptions = {}): any {
 export function loadMock<T = unknown>(name: string): T {
     const path = join(__dirname, "mocks", `${name}.json`);
     return JSON.parse(readFileSync(path, "utf-8")) as T;
+}
+
+export function unwrapOk<T, E>(result: Result<T, E>): T {
+    if (result.isErr()) {
+        throw new Error(`Expected Ok, but got Err: ${JSON.stringify(result.error)}`);
+    }
+    return result.value;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, loadMock } from "./test-utils";
+import { createMockResponse, loadMock, unwrapOk } from "./test-utils";
 
 const mockData = loadMock("stocks_candles_response_200");
 const mockHumanData = loadMock("stocks_candles_human_response_200");
@@ -17,16 +17,12 @@ describe("StocksResource (Mock Candles)", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.stocks.candles({
+        const result = unwrapOk(await client.stocks.candles({
             symbol: "AAPL",
             resolution: "D",
             from: "2023-01-01",
             to: "2023-01-10",
-        });
-
-        if ("error" in result) {
-            throw new Error("Should not return error");
-        }
+        }));
 
         expect(result).toBeDefined();
         expect(Array.isArray(result)).toBe(true);
@@ -43,17 +39,13 @@ describe("StocksResource (Mock Candles)", () => {
             return createMockResponse({ ok: false, status: 404, text: "Not Found" });
         });
 
-        const result = await client.stocks.candles({
+        const result = unwrapOk(await client.stocks.candles({
             symbol: "AAPL",
             resolution: "D",
             from: "2023-01-01",
             to: "2023-01-10",
             useHumanReadable: true,
-        });
-
-        if ("error" in result) {
-            throw new Error("Should not return error");
-        }
+        }));
 
         expect(result).toBeDefined();
         expect(Array.isArray(result)).toBe(true);

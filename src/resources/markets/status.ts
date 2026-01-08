@@ -1,3 +1,4 @@
+import { Endpoints, Service } from "@/internalSettings";
 import {
 	type MarketStatusHumanResponse,
 	MarketStatusHumanSchema,
@@ -11,14 +12,14 @@ import {
 import type { MarketDataParams, TypedResult } from "@/types";
 import type { MarketsResource } from "./index";
 
-export async function status<P extends MarketStatusParams & MarketDataParams>(
+export function status<P extends MarketStatusParams & MarketDataParams>(
 	this: MarketsResource,
 	params: P = {} as P,
 ): TypedResult<MarketStatusResponse, MarketStatusHumanResponse, P> {
-	return this._fetch("markets/status/", params, {
+	return this._fetch(Endpoints.MARKETS_STATUS, params, {
 		inputSchema: MarketStatusParamsSchema,
 		regularSchema: MarketStatusSchema,
 		humanSchema: MarketStatusHumanSchema,
-		service: "/v1/markets/status/",
+		service: Service.STATUS,
 	});
 }
