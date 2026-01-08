@@ -1,3 +1,4 @@
+import { GLOBAL_EXCLUDED_PARAMS } from "@/internalSettings";
 import type { MarketDataSettings } from "@/settings";
 import type {
 	MarketDataParam,
@@ -6,7 +7,7 @@ import type {
 } from "@/types";
 
 const SDK_ONLY_KEYS = [
-	"outputFormat",
+	...GLOBAL_EXCLUDED_PARAMS,
 	"dateFormat",
 	"addHeaders",
 	"useHumanReadable",
@@ -21,9 +22,7 @@ function getApiFormat(outputFormat: string | undefined): string | undefined {
 	return outputFormat;
 }
 
-function isDefined(value: unknown): boolean {
-	return value !== undefined && value !== null;
-}
+const isDefined = (value: unknown): boolean => value != null;
 
 export function processParams(
 	inputParams: MarketDataParams,

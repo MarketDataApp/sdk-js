@@ -2,6 +2,7 @@ import pRetry, { AbortError } from "p-retry";
 import type { z } from "zod";
 import { APIStatusResult, globalApiStatus } from "@/apiStatus";
 import { RateLimitError, RequestError } from "@/error";
+import { isRetriableStatusCode } from "@/internalSettings";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
 import { MarketsResource } from "@/resources/markets/index";
 import { StocksResource } from "@/resources/stocks/index";
@@ -21,7 +22,6 @@ export class MarketDataClient implements IMarketDataClient {
 	public rateLimits?: UserRateLimits;
 	public stocks: StocksResource;
 	public markets: MarketsResource;
-	private _loadingRateLimits = false;
 
 	public get token(): string | undefined {
 		return this.settings.marketdataToken;
@@ -70,12 +70,22 @@ export class MarketDataClient implements IMarketDataClient {
 
 	public dispose(): void {
 		this.rateLimits = undefined;
-		this._loadingRateLimits = false;
+		this._rateLimitSetup = undefined;
 	}
 
+	private _rateLimitSetup?: Promise<void>;
+
 	private async _setupRateLimits(): Promise<void> {
-		if (this._loadingRateLimits) return;
-		this._loadingRateLimits = true;
+		if (this._rateLimitSetup) {
+			return this._rateLimitSetup;
+		}
+
+		this._rateLimitSetup = this._doSetupRateLimits();
+		await this._rateLimitSetup;
+		this._rateLimitSetup = undefined;
+	}
+
+	private async _doSetupRateLimits(): Promise<void> {
 		try {
 			await this._makeRequest(
 				"user/",
@@ -90,8 +100,6 @@ export class MarketDataClient implements IMarketDataClient {
 			const errorMessage =
 				error instanceof Error ? error.message : String(error);
 			this.logger.error(`Failed to setup rate limits: ${errorMessage}`);
-		} finally {
-			this._loadingRateLimits = false;
 		}
 	}
 
@@ -221,7 +229,11 @@ export class MarketDataClient implements IMarketDataClient {
 		try {
 			const data = JSON.parse(text);
 			errmsg = data.errmsg || text;
-		} catch {}
+		} catch (error) {
+			this.logger.debug(
+				`Failed to parse error response as JSON: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
 
 		if (response.status === 429) {
 			throw new RateLimitError(`Rate limit exceeded: ${errmsg}`);
@@ -231,7 +243,7 @@ export class MarketDataClient implements IMarketDataClient {
 			`Request failed (${response.status}): ${errmsg}`,
 		);
 
-		if (response.status >= 500 && service) {
+		if (isRetriableStatusCode(response.status) && service) {
 			await this._checkServiceStatus(service, requestError);
 		}
 

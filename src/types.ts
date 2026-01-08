@@ -32,7 +32,7 @@ export type TypedResult<
 	H extends Record<string, unknown>,
 	P,
 > = Promise<
-	| (P extends { useHumanReadable: true } | { human: true }
+	| (P extends { useHumanReadable: true }
 			? stockRequestResult<H>
 			: stockRequestResult<T>)
 	| MarketDataClientErrorResult

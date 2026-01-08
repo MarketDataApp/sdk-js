@@ -9,6 +9,8 @@ import type {
 } from "@/types";
 import { getDataRecords, type stockRequestResult } from "@/utils";
 
+const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
+
 function extractUniversalParams(
 	validated: unknown,
 ): Partial<UserUniversalAPIParams> {
@@ -96,7 +98,10 @@ export abstract class BaseResource {
 				},
 			);
 
-			return getDataRecords(response, options.excludeKeys || ["s"]);
+			return getDataRecords(
+				response,
+				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
+			);
 		});
 	}
 

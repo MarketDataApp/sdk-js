@@ -42,6 +42,7 @@ beforeEach(() => {
             ok: false,
             status: 404,
             text: async () => "Not Found",
+            json: async () => ({}),
             headers: new Headers(),
         });
     });

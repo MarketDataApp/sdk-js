@@ -16,18 +16,22 @@ export class DefaultLogger implements Logger {
 	constructor(private level: LogLevel = LogLevel.INFO) {}
 
 	public debug(message: string): void {
-		if (this.level <= LogLevel.DEBUG) console.debug(`[DEBUG] ${message}`);
+		if (this.level <= LogLevel.DEBUG)
+			console.debug(`[${new Date().toISOString()}] [DEBUG] ${message}`);
 	}
 
 	public info(message: string): void {
-		if (this.level <= LogLevel.INFO) console.info(`[INFO] ${message}`);
+		if (this.level <= LogLevel.INFO)
+			console.info(`[${new Date().toISOString()}] [INFO] ${message}`);
 	}
 
 	public warn(message: string): void {
-		if (this.level <= LogLevel.WARN) console.warn(`[WARN] ${message}`);
+		if (this.level <= LogLevel.WARN)
+			console.warn(`[${new Date().toISOString()}] [WARN] ${message}`);
 	}
 
 	public error(message: string): void {
-		if (this.level <= LogLevel.ERROR) console.error(`[ERROR] ${message}`);
+		if (this.level <= LogLevel.ERROR)
+			console.error(`[${new Date().toISOString()}] [ERROR] ${message}`);
 	}
 }

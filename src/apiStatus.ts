@@ -1,3 +1,4 @@
+import { VALID_STATUS_CODES } from "@/internalSettings";
 import type { IMarketDataClient } from "@/types";
 
 export enum APIStatusResult {
@@ -15,12 +16,15 @@ export interface StatusData {
 	updated: number[];
 }
 
+const REFRESH_INTERVAL_MS = 4.5 * 60 * 1000;
+const STATUS_FETCH_TIMEOUT_MS = 10000;
+
 export class ApiStatusManager {
 	private data: StatusData | null = null;
-	private readonly refreshInterval = 4.5 * 60 * 1000;
+	private readonly refreshInterval = REFRESH_INTERVAL_MS;
 
 	public get lastUpdated(): number {
-		if (!this.data || !this.data.updated || this.data.updated.length === 0) {
+		if (!this.data?.updated?.length) {
 			return 0;
 		}
 		return Math.min(...this.data.updated) * 1000;
@@ -52,8 +56,20 @@ export class ApiStatusManager {
 
 	public async refresh(client: IMarketDataClient): Promise<boolean> {
 		try {
-			const response = await fetch(`${client.baseUrl}/status/`);
-			if (!response.ok) return false;
+			const controller = new AbortController();
+			const timeout = setTimeout(
+				() => controller.abort(),
+				STATUS_FETCH_TIMEOUT_MS,
+			);
+
+			const response = await fetch(`${client.baseUrl}/status/`, {
+				signal: controller.signal,
+			});
+			clearTimeout(timeout);
+
+			if (!VALID_STATUS_CODES.includes(response.status)) {
+				return false;
+			}
 
 			this.data = (await response.json()) as StatusData;
 			return true;
