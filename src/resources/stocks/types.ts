@@ -1,6 +1,23 @@
 import { z } from "zod";
 import { UserUniversalAPIParamsInputSchema } from "@/types";
 
+export const StocksCandlesInputSchema = z.object({
+	symbol: z.string(),
+	resolution: z.string().default("D"),
+	from: z.union([z.string(), z.date()]).optional(),
+	to: z.union([z.string(), z.date()]).optional(),
+	countback: z.number().optional(),
+	extended: z.boolean().optional(),
+	adjustsplits: z.boolean().optional(),
+});
+
+export const StocksCandlesParamsSchema = z.intersection(
+	StocksCandlesInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type StocksCandlesParams = z.input<typeof StocksCandlesParamsSchema>;
+
 export const StocksPricesInputSchema = z.object({
 	symbols: z.union([z.string(), z.array(z.string())]),
 });
@@ -21,28 +38,10 @@ export const StocksPricesInputPreprocessed = z.preprocess((val: unknown) => {
 	return val;
 }, StocksPricesInputSchema);
 
-export type StocksPricesInput = z.input<typeof StocksPricesInputSchema>;
-
 export const StocksPricesParamsSchema = z.intersection(
 	StocksPricesInputPreprocessed,
 	UserUniversalAPIParamsInputSchema,
 );
 
+export type StocksPricesInput = z.input<typeof StocksPricesInputSchema>;
 export type StocksPricesParams = z.input<typeof StocksPricesParamsSchema>;
-
-export const StocksCandlesInputSchema = z.object({
-	symbol: z.string(),
-	resolution: z.string().default("D"),
-	from: z.union([z.string(), z.date()]).optional(),
-	to: z.union([z.string(), z.date()]).optional(),
-	countback: z.number().optional(),
-	extended: z.boolean().optional(),
-	adjustsplits: z.boolean().optional(),
-});
-
-export const StocksCandlesParamsSchema = z.intersection(
-	StocksCandlesInputSchema,
-	UserUniversalAPIParamsInputSchema,
-);
-
-export type StocksCandlesParams = z.input<typeof StocksCandlesParamsSchema>;

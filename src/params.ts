@@ -8,8 +8,6 @@ const SDK_ONLY_KEYS = [
 	"dateFormat",
 	"addHeaders",
 	"useHumanReadable",
-	"mode",
-	"columns",
 ] as const;
 
 const FORMAT_MAP: Record<string, string> = {
@@ -27,23 +25,16 @@ export function processParams(
 		"internal";
 
 	const mappedFormat = FORMAT_MAP[outputFormat] || outputFormat;
-	const isInternal =
-		outputFormat === "internal" || outputFormat === "dataframe";
 
 	const universal: MarketDataParams = {
 		format: mappedFormat,
 		dateformat: inputParams.dateFormat || settings.marketdataDateFormat,
 		headers: inputParams.addHeaders ?? settings.marketdataAddHeaders,
 		human: inputParams.useHumanReadable ?? settings.marketdataUseHumanReadable,
-		mode: inputParams.mode || settings.marketdataMode,
-		columns:
-			!isInternal && Array.isArray(inputParams.columns)
-				? inputParams.columns.join(",")
-				: undefined,
 	};
 
 	return Object.fromEntries(
-		Object.entries({ ...universal, ...inputParams })
+		Object.entries({ ...inputParams, ...universal })
 			.filter(
 				([key, value]) =>
 					!SDK_ONLY_KEYS.includes(key as (typeof SDK_ONLY_KEYS)[number]) &&

@@ -1,6 +1,3 @@
-export type Unpacked<T> = T extends (infer U)[] ? U : T;
-export type stockRequestResult<T> = { [K in keyof T]: Unpacked<T[K]> }[];
-
 export const formatDate = (date: Date | string | number): string => {
 	if (date instanceof Date) {
 		return date.toISOString().split("T")[0];
@@ -18,7 +15,8 @@ export const formatDate = (date: Date | string | number): string => {
 			const d = new Date(excelBase.getTime() + date * 24 * 60 * 60 * 1000);
 			return d.toISOString().split("T")[0];
 		}
-		return new Date(date * 1000).toISOString().split("T")[0];
+		const isMs = date > 10000000000;
+		return new Date(isMs ? date : date * 1000).toISOString().split("T")[0];
 	}
 	return String(date);
 };
@@ -96,3 +94,7 @@ export const splitDatesByTimeframe = (
 
 	return ranges;
 };
+
+export type stockRequestResult<T> = { [K in keyof T]: Unpacked<T[K]> }[];
+
+export type Unpacked<T> = T extends (infer U)[] ? U : T;

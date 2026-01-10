@@ -14,11 +14,11 @@ import { getDataRecords } from "@/utils";
 const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
 
 export abstract class BaseResource {
-	protected readonly client: IMarketDataClient;
-
 	constructor(client: IMarketDataClient) {
 		this.client = client;
 	}
+
+	protected readonly client: IMarketDataClient;
 
 	protected _fetch<
 		T extends Record<string, unknown>,
@@ -35,16 +35,12 @@ export abstract class BaseResource {
 			excludeKeys?: string[];
 		},
 	): TypedResult<T, H, P> {
-		const normalization = this._validateAndNormalize(
-			params,
-			options.inputSchema,
-		);
-		if (normalization.isErr()) {
-			return errAsync(normalization.error) as TypedResult<T, H, P>;
+		const validation = this._validateAndNormalize(params, options.inputSchema);
+		if (validation.isErr()) {
+			return errAsync(validation.error) as TypedResult<T, H, P>;
 		}
 
-		const validated = normalization.value;
-
+		const validated = validation.value;
 		const schema = this._getSchema(
 			validated as MarketDataParams,
 			options.regularSchema,
@@ -54,7 +50,7 @@ export abstract class BaseResource {
 		return this._makeRequest<T | H>(path, validated as MarketDataParams, {
 			schema,
 			service: options.service,
-		}).map((response: T | H) =>
+		}).map((response) =>
 			getDataRecords(
 				response,
 				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
@@ -106,10 +102,10 @@ export abstract class BaseResource {
 		params: P,
 		schema: z.ZodType<unknown>,
 	): Result<P, ValidationError> {
-		const validationResult = schema.safeParse(params);
-		if (!validationResult.success) {
-			return err(new ValidationError(validationResult.error.message));
+		const result = schema.safeParse(params);
+		if (!result.success) {
+			return err(new ValidationError(result.error.message));
 		}
-		return ok(validationResult.data as P);
+		return ok(result.data as P);
 	}
 }

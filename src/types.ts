@@ -7,13 +7,6 @@ import type { MarketDataSettings } from "@/settings";
 import type { stockRequestResult } from "@/utils";
 
 export interface IMarketDataClient {
-	readonly settings: MarketDataSettings;
-	readonly token?: string;
-	readonly baseUrl: string;
-	readonly apiVersion: string;
-	readonly headers: Record<string, string>;
-	rateLimits?: UserRateLimits;
-	readonly logger: Logger;
 	_makeRequest<T>(
 		path: string,
 		params?: MarketDataParams,
@@ -26,6 +19,13 @@ export interface IMarketDataClient {
 			skipRetry?: boolean;
 		},
 	): MarketDataResult<T>;
+	readonly apiVersion: string;
+	readonly baseUrl: string;
+	readonly headers: Record<string, string>;
+	readonly logger: Logger;
+	rateLimits?: UserRateLimits;
+	readonly settings: MarketDataSettings;
+	readonly token?: string;
 }
 
 export type MarketDataResult<T> = ResultAsync<T, MarketDataClientError>;
@@ -41,10 +41,10 @@ export type TypedResult<
 >;
 
 export interface UserRateLimits {
+	requestsConsumed: number;
 	requestsLimit: number;
 	requestsRemaining: number;
 	requestsReset: number;
-	requestsConsumed: number;
 }
 
 export { OutputFormat, DateFormat, Mode };
@@ -57,12 +57,12 @@ export const BooleanString = z
 	});
 
 export const BaseMarketDataParamsSchema = z.object({
-	outputFormat: z.enum(OutputFormat).optional().default(OutputFormat.JSON),
-	dateFormat: z.enum(DateFormat).optional(),
-	columns: z.array(z.string()).optional(),
 	addHeaders: BooleanString.optional(),
-	useHumanReadable: BooleanString.optional(),
+	columns: z.array(z.string()).optional(),
+	dateFormat: z.enum(DateFormat).optional(),
 	mode: z.enum(Mode).optional(),
+	outputFormat: z.enum(OutputFormat).optional().default(OutputFormat.JSON),
+	useHumanReadable: BooleanString.optional(),
 });
 
 export type MarketDataParam =
@@ -115,13 +115,13 @@ export type UserUniversalAPIParamsInput = z.input<
 >;
 
 export interface MarketDataConfig {
-	token?: string;
-	baseUrl?: string;
 	apiVersion?: string;
+	baseUrl?: string;
 	debug?: boolean;
 	logger?: Logger;
 	maxRetries?: number;
-	retryInitialWait?: number;
 	retryFactor?: number;
+	retryInitialWait?: number;
 	retryMaxWait?: number;
+	token?: string;
 }

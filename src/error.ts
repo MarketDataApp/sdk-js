@@ -7,5 +7,7 @@ export class MarketDataClientError extends Error {
 }
 
 export class RateLimitError extends MarketDataClientError {}
+
 export class RequestError extends MarketDataClientError {}
+
 export class ValidationError extends MarketDataClientError {}

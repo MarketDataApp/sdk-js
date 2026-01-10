@@ -24,56 +24,6 @@ import type {
 import pkg from "../package.json";
 
 export class MarketDataClient implements IMarketDataClient {
-	public readonly headers: Record<string, string>;
-	public readonly logger: Logger;
-	public readonly markets: MarketsResource;
-	public rateLimits?: UserRateLimits;
-	public readonly settings: MarketDataSettings;
-	public readonly stocks: StocksResource;
-
-	private _rateLimitSetup?: Promise<void>;
-
-	constructor(config: MarketDataConfig = {}) {
-		this.settings = loadSettings({
-			marketdataToken: config.token,
-			marketdataBaseUrl: config.baseUrl,
-			marketdataApiVersion: config.apiVersion,
-			marketdataMaxRetries: config.maxRetries,
-			marketdataRetryInitialWait: config.retryInitialWait,
-			marketdataRetryFactor: config.retryFactor,
-			marketdataRetryMaxWait: config.retryMaxWait,
-		});
-		this.logger =
-			config.logger ||
-			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
-
-		this.headers = {
-			Accept: "application/json",
-			"User-Agent": `marketdata-js-${pkg.version}`,
-		};
-
-		this._initAuth();
-		this.stocks = new StocksResource(this);
-		this.markets = new MarketsResource(this);
-	}
-
-	public get apiVersion(): string {
-		return this.settings.marketdataApiVersion;
-	}
-
-	public get baseUrl(): string {
-		return this.settings.marketdataBaseUrl;
-	}
-
-	public get token(): string | undefined {
-		return this.settings.marketdataToken;
-	}
-
-	public dispose(): void {
-		this.rateLimits = undefined;
-		this._rateLimitSetup = undefined;
-	}
-
 	public _makeRequest<T>(
 		path: string,
 		params: MarketDataParams = {},
@@ -104,6 +54,59 @@ export class MarketDataClient implements IMarketDataClient {
 				signal: options.signal,
 			},
 		);
+	}
+
+	public get apiVersion(): string {
+		return this.settings.marketdataApiVersion;
+	}
+
+	public get baseUrl(): string {
+		return this.settings.marketdataBaseUrl;
+	}
+
+	constructor(config: MarketDataConfig = {}) {
+		this.settings = loadSettings({
+			marketdataToken: config.token,
+			marketdataBaseUrl: config.baseUrl,
+			marketdataApiVersion: config.apiVersion,
+			marketdataMaxRetries: config.maxRetries,
+			marketdataRetryInitialWait: config.retryInitialWait,
+			marketdataRetryFactor: config.retryFactor,
+			marketdataRetryMaxWait: config.retryMaxWait,
+		});
+		this.logger =
+			config.logger ||
+			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
+
+		this.headers = {
+			Accept: "application/json",
+			"User-Agent": `marketdata-js-${pkg.version}`,
+		};
+
+		this._initAuth();
+		this.stocks = new StocksResource(this);
+		this.markets = new MarketsResource(this);
+	}
+
+	public dispose(): void {
+		this.rateLimits = undefined;
+		this._rateLimitSetup = undefined;
+	}
+
+	public readonly headers: Record<string, string>;
+
+	public readonly logger: Logger;
+
+	public readonly markets: MarketsResource;
+
+	public rateLimits?: UserRateLimits;
+
+	public readonly settings: MarketDataSettings;
+
+	public readonly stocks: StocksResource;
+
+	public get token(): string | undefined {
+		return this.settings.marketdataToken;
 	}
 
 	private _buildUrl(
@@ -265,6 +268,8 @@ export class MarketDataClient implements IMarketDataClient {
 		}
 		return json as T;
 	}
+
+	private _rateLimitSetup?: Promise<void>;
 
 	private async _setupRateLimits(): Promise<void> {
 		if (this._rateLimitSetup) return this._rateLimitSetup;

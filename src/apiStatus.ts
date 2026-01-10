@@ -21,10 +21,6 @@ export interface StatusData {
 }
 
 export class ApiStatusManager {
-	private data: StatusData | null = null;
-	private failureTimestamp = 0;
-	private refreshPromise: Promise<boolean> | null = null;
-
 	public async getApiStatus(
 		client: IMarketDataClient,
 		service: string,
@@ -96,6 +92,12 @@ export class ApiStatusManager {
 
 		return now - this.lastUpdated > REFRESH_API_STATUS_INTERVAL_MS;
 	}
+
+	private data: StatusData | null = null;
+
+	private failureTimestamp = 0;
+
+	private refreshPromise: Promise<boolean> | null = null;
 }
 
 export const globalApiStatus = new ApiStatusManager();

@@ -7,23 +7,22 @@ dotenv.config();
 import { BooleanString } from "@/types";
 
 export const MarketDataSettingsSchema = z.object({
-	marketdataToken: z.string().optional(),
-	marketdataBaseUrl: z.string().default("https://api.marketdata.app"),
+	marketdataAddHeaders: BooleanString.optional(),
 	marketdataApiVersion: z.string().default("v1"),
-
+	marketdataBaseUrl: z.string().default("https://api.marketdata.app"),
+	marketdataColumns: z.array(z.string()).optional(),
+	marketdataDateFormat: z.enum(DateFormat).optional(),
+	marketdataMaxRetries: z.coerce.number().optional().default(3),
+	marketdataMode: z.enum(Mode).optional(),
 	marketdataOutputFormat: z
 		.enum(OutputFormat)
 		.optional()
 		.default(OutputFormat.INTERNAL),
-	marketdataDateFormat: z.enum(DateFormat).optional(),
-	marketdataColumns: z.array(z.string()).optional(),
-	marketdataAddHeaders: BooleanString.optional(),
-	marketdataUseHumanReadable: BooleanString.optional(),
-	marketdataMode: z.enum(Mode).optional(),
-	marketdataMaxRetries: z.coerce.number().optional().default(3),
-	marketdataRetryInitialWait: z.coerce.number().optional().default(0.5),
 	marketdataRetryFactor: z.coerce.number().optional().default(2),
+	marketdataRetryInitialWait: z.coerce.number().optional().default(0.5),
 	marketdataRetryMaxWait: z.coerce.number().optional().default(10),
+	marketdataToken: z.string().optional(),
+	marketdataUseHumanReadable: BooleanString.optional(),
 });
 
 export type MarketDataSettings = z.infer<typeof MarketDataSettingsSchema>;
@@ -32,18 +31,18 @@ export const loadSettings = (
 	overrides: Partial<MarketDataSettings> = {},
 ): MarketDataSettings => {
 	const envConfig = {
-		marketdataToken: process.env.MARKETDATA_TOKEN,
-		marketdataBaseUrl: process.env.MARKETDATA_BASE_URL,
-		marketdataApiVersion: process.env.MARKETDATA_API_VERSION,
-		marketdataOutputFormat: process.env.MARKETDATA_OUTPUT_FORMAT,
-		marketdataDateFormat: process.env.MARKETDATA_DATE_FORMAT,
 		marketdataAddHeaders: process.env.MARKETDATA_ADD_HEADERS,
-		marketdataUseHumanReadable: process.env.MARKETDATA_USE_HUMAN_READABLE,
-		marketdataMode: process.env.MARKETDATA_MODE,
+		marketdataApiVersion: process.env.MARKETDATA_API_VERSION,
+		marketdataBaseUrl: process.env.MARKETDATA_BASE_URL,
+		marketdataDateFormat: process.env.MARKETDATA_DATE_FORMAT,
 		marketdataMaxRetries: process.env.MARKETDATA_MAX_RETRIES,
-		marketdataRetryInitialWait: process.env.MARKETDATA_RETRY_INITIAL_WAIT,
+		marketdataMode: process.env.MARKETDATA_MODE,
+		marketdataOutputFormat: process.env.MARKETDATA_OUTPUT_FORMAT,
 		marketdataRetryFactor: process.env.MARKETDATA_RETRY_FACTOR,
+		marketdataRetryInitialWait: process.env.MARKETDATA_RETRY_INITIAL_WAIT,
 		marketdataRetryMaxWait: process.env.MARKETDATA_RETRY_MAX_WAIT,
+		marketdataToken: process.env.MARKETDATA_TOKEN,
+		marketdataUseHumanReadable: process.env.MARKETDATA_USE_HUMAN_READABLE,
 	};
 
 	const cleanEnvConfig = Object.fromEntries(

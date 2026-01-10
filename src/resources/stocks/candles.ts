@@ -64,20 +64,20 @@ export function candles(
 	const fromDate = validated.from ? new Date(validated.from) : undefined;
 	const toDate = validated.to ? new Date(validated.to) : new Date();
 
-	let ranges: [Date | undefined, Date | undefined][] = [[fromDate, toDate]];
-	if (fromDate && isIntraday(validated.resolution as string)) {
-		ranges = splitDatesByTimeframe(fromDate, toDate, 365);
-	}
+	const ranges: [Date | undefined, Date | undefined][] =
+		fromDate && isIntraday(validated.resolution as string)
+			? splitDatesByTimeframe(fromDate, toDate, 365)
+			: [[fromDate, toDate]];
 
+	const schema = this._getSchema(
+		validated,
+		StockCandleSchema,
+		StockCandleHumanSchema,
+	);
 	const limit = pLimit(MAX_CONCURRENT_REQUESTS);
 	const requests = ranges.map(([start, end]) => {
 		const rangeParams = { ...validated, from: start, to: end };
 		const { symbol, resolution, ...queryParams } = rangeParams;
-		const schema = this._getSchema(
-			validated,
-			StockCandleSchema,
-			StockCandleHumanSchema,
-		);
 
 		return ResultAsync.fromPromise(
 			limit(() =>
