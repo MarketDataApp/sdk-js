@@ -67,7 +67,7 @@ async function main() {
         const data = priceMultiple.value;
         console.log("✓ Success! Got", data.length, "record(s)");
         console.log("First 3 records:");
-        data.slice(0, 3).forEach((record: Record<string, any>, i) => {
+        data.slice(0, 3).forEach((record: Record<string, any>, i: number) => {
             console.log(
                 `  ${i + 1}. ${record.Symbol}: $${record.Mid} (${record["Change %"] > 0 ? "+" : ""}${record["Change %"]}%)`,
             );
@@ -87,6 +87,23 @@ async function main() {
         console.error("❌ Error:", candles.error.message);
     } else {
         const data = candles.value;
+        console.log("✓ Success! Got", data.length, "candle(s)");
+        if (data.length > 0) console.log("First candle:", data[0]);
+    }
+    console.log();
+
+    // Test 6: Fund Candles
+    testLabel("Test 6: Fund Candles (Daily, Human Format)");
+    const fundCandles = await sdk.funds.candles("VMFXX", {
+        resolution: "D",
+        from: "2025-12-01",
+        to: "2025-12-10",
+        human: true,
+    });
+    if (fundCandles.isErr()) {
+        console.error("❌ Error:", fundCandles.error.message);
+    } else {
+        const data = fundCandles.value;
         console.log("✓ Success! Got", data.length, "candle(s)");
         if (data.length > 0) console.log("First candle:", data[0]);
     }

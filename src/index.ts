@@ -2,6 +2,8 @@ export { globalApiStatus } from "@/apiStatus";
 export { MarketDataClient } from "@/client";
 export * from "@/error";
 export * from "@/logger";
+export * from "@/resources/funds/outputs";
+export * from "@/resources/funds/types";
 export * from "@/resources/markets/outputs";
 export * from "@/resources/markets/types";
 export * from "@/resources/stocks/outputs";

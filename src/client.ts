@@ -10,6 +10,7 @@ import {
 } from "@/error";
 import { Endpoints, isRetriableStatusCode, Service } from "@/internalSettings";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
+import { FundsResource } from "@/resources/funds/index";
 import { MarketsResource } from "@/resources/markets/index";
 import { StocksResource } from "@/resources/stocks/index";
 import { loadSettings, type MarketDataSettings } from "@/settings";
@@ -86,6 +87,7 @@ export class MarketDataClient implements IMarketDataClient {
 		this._initAuth();
 		this.stocks = new StocksResource(this);
 		this.markets = new MarketsResource(this);
+		this.funds = new FundsResource(this);
 	}
 
 	public dispose(): void {
@@ -98,6 +100,8 @@ export class MarketDataClient implements IMarketDataClient {
 	public readonly logger: Logger;
 
 	public readonly markets: MarketsResource;
+
+	public readonly funds: FundsResource;
 
 	public rateLimits?: UserRateLimits;
 

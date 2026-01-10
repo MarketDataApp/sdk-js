@@ -1,6 +1,7 @@
 export const Endpoints = {
 	API_STATUS: "status/",
 	MARKETS_STATUS: "markets/status/",
+	FUNDS_CANDLES: "funds/candles/",
 	STOCKS_CANDLES: "stocks/candles/",
 	STOCKS_PRICES: "stocks/prices/",
 	USER: "user/",
@@ -17,6 +18,7 @@ export const REFRESH_API_STATUS_INTERVAL_MS = 4.5 * 60 * 1000;
 
 export enum Service {
 	CANDLES = "/v1/stocks/candles/",
+	FUNDS_CANDLES = "/v1/funds/candles/",
 	PRICES = "/v1/stocks/prices/",
 	STATUS = "/v1/markets/status/",
 	USER = "/v1/user/",
