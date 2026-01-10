@@ -66,6 +66,7 @@ Detailed documentation of architectural decisions and implementation patterns:
 - **[ADR-003: Retry Logic and Service Status](docs/adr/ADR-003-retry-logic-and-service-status.md)** - Intelligent retry mechanism and status checking
 - **[ADR-004: Rate Limiting Strategy](docs/adr/ADR-004-rate-limiting-strategy.md)** - Proactive rate limit  tracking and enforcement
 - **[ADR-005: TypeScript Type System](docs/adr/ADR-005-typescript-type-system.md)** - Advanced TypeScript patterns and type safety
+- **[ADR-006: Result Pattern with neverthrow](docs/adr/ADR-006-result-pattern-neverthrow.md)** - Functional error handling with Result types
 
 ## Configuration
 
@@ -139,9 +140,40 @@ if (client.rateLimits) {
 
 ## Error Handling
 
+The SDK uses the Result pattern via [neverthrow](https://github.com/supermacro/neverthrow) for functional, type-safe error handling. All methods return `MarketDataResult<T>` which explicitly represents success or failure.
+
+### Functional Pattern (Recommended)
+
+```typescript
+const result = await client.stocks.prices('AAPL');
+
+result.match(
+  (prices) => console.log('Success:', prices.mid),
+  (error) => console.error('Failed:', error.message)
+);
+```
+
+### Checking Results
+
+```typescript
+const result = await client.stocks.prices('AAPL');
+
+if (result.isOk()) {
+  console.log('Prices:', result.value);
+} else {
+  console.error('Error:', result.error.message);
+}
+```
+
+### Exception-Based (Alternative)
+
+If you prefer traditional exceptions, use `.unwrap()`:
+
 ```typescript
 try {
-  const prices = await client.stocks.prices('AAPL');
+  const result = await client.stocks.prices('AAPL');
+  const prices = result.unwrap();
+  console.log(prices);
 } catch (error) {
   if (error instanceof RateLimitError) {
     console.error('Rate limit exceeded');
@@ -152,6 +184,36 @@ try {
   }
 }
 ```
+
+### Functional Composition
+
+```typescript
+const result = await client.stocks.prices('AAPL')
+  .map((prices) => prices.filter(p => p.mid > 100))
+  .mapErr((error) => {
+    console.error('Failed to fetch:', error.message);
+    return error;
+  });
+
+if (result.isOk()) {
+  console.log('Filtered prices:', result.value);
+}
+```
+
+### Chaining Operations
+
+```typescript
+const result = await client.stocks.prices('AAPL')
+  .andThen((prices) => {
+    if (prices.length === 0) {
+      return errAsync(new Error('No prices found'));
+    }
+    return okAsync(prices);
+  });
+```
+
+For more details, see [ADR-006: Result Pattern with neverthrow](docs/adr/ADR-006-result-pattern-neverthrow.md).
+
 
 ## License
 
