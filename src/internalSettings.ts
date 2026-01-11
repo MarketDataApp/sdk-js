@@ -17,14 +17,16 @@ export const MAX_CONCURRENT_REQUESTS = 50;
 
 export const REFRESH_API_STATUS_INTERVAL_MS = 4.5 * 60 * 1000;
 
-export enum Service {
-	CANDLES = "/v1/stocks/candles/",
-	FUNDS_CANDLES = "/v1/funds/candles/",
-	OPTIONS_CHAIN = "/v1/options/chain/",
-	PRICES = "/v1/stocks/prices/",
-	STATUS = "/v1/markets/status/",
-	USER = "/v1/user/",
-}
+export const Service = {
+	CANDLES: `/v1/${Endpoints.STOCKS_CANDLES}`,
+	FUNDS_CANDLES: `/v1/${Endpoints.FUNDS_CANDLES}`,
+	OPTIONS_CHAIN: `/v1/${Endpoints.OPTIONS_CHAIN}`,
+	PRICES: `/v1/${Endpoints.STOCKS_PRICES}`,
+	STATUS: `/v1/${Endpoints.MARKETS_STATUS}`,
+	USER: `/v1/${Endpoints.USER}`,
+} as const;
+
+export type Service = (typeof Service)[keyof typeof Service];
 
 export const STATUS_FETCH_TIMEOUT_MS = 10000;
 
