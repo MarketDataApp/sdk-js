@@ -31,12 +31,25 @@ import type {
 import pkg from "../package.json";
 
 export class MarketDataClient implements IMarketDataClient {
+	public readonly funds: FundsResource;
+	public readonly headers: Record<string, string>;
+	public readonly logger: Logger;
+	public readonly markets: MarketsResource;
+	public readonly options: OptionsResource;
+	public rateLimits?: UserRateLimits;
+	public readonly settings: MarketDataSettings;
+	public readonly stocks: StocksResource;
+
 	public get apiVersion(): string {
 		return this.settings.marketdataApiVersion;
 	}
 
 	public get baseUrl(): string {
 		return this.settings.marketdataBaseUrl;
+	}
+
+	public get token(): string | undefined {
+		return this.settings.marketdataToken;
 	}
 
 	constructor(config: MarketDataConfig = {}) {
@@ -64,17 +77,6 @@ export class MarketDataClient implements IMarketDataClient {
 		this.funds = new FundsResource(this);
 		this.options = new OptionsResource(this);
 	}
-
-	public dispose(): void {
-		this.rateLimits = undefined;
-		this._rateLimitSetup = undefined;
-	}
-
-	public readonly funds: FundsResource;
-
-	public readonly headers: Record<string, string>;
-
-	public readonly logger: Logger;
 
 	public _makeRequest<T>(
 		path: string,
@@ -108,19 +110,7 @@ export class MarketDataClient implements IMarketDataClient {
 		);
 	}
 
-	public readonly markets: MarketsResource;
-
-	public readonly options: OptionsResource;
-
-	public rateLimits?: UserRateLimits;
-
-	public readonly settings: MarketDataSettings;
-
-	public readonly stocks: StocksResource;
-
-	public get token(): string | undefined {
-		return this.settings.marketdataToken;
-	}
+	private _rateLimitSetup?: Promise<void>;
 
 	private _buildUrl(
 		path: string,
@@ -313,8 +303,6 @@ export class MarketDataClient implements IMarketDataClient {
 			);
 		}
 	}
-
-	private _rateLimitSetup?: Promise<void>;
 
 	private async _setupRateLimits(): Promise<void> {
 		if (this._rateLimitSetup) return this._rateLimitSetup;
