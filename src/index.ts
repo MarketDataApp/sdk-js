@@ -6,6 +6,8 @@ export * from "@/resources/funds/outputs";
 export * from "@/resources/funds/types";
 export * from "@/resources/markets/outputs";
 export * from "@/resources/markets/types";
+export * from "@/resources/options/outputs";
+export * from "@/resources/options/types";
 export * from "@/resources/stocks/outputs";
 export * from "@/resources/stocks/types";
 export * from "@/types";

@@ -109,6 +109,23 @@ async function main() {
     }
     console.log();
 
+    // Test 7: Options Chain
+    testLabel("Test 7: Options Chain (AAPL, Human Format)");
+    const optionsChain = await sdk.options.chain("AAPL", {
+        expiration: "ALL"
+    });
+    console.log(optionsChain);
+    if (optionsChain.isErr()) {
+        console.error("❌ Error:", optionsChain.error.message);
+    } else {
+        const data = optionsChain.value;
+        console.log("✓ Success! Got", data.length, "option(s)");
+        if (data.length > 0) {
+            console.log("First option:", data[0]);
+        }
+    }
+    console.log();
+
     console.log("=".repeat(60));
     console.log("Test Suite Complete");
     console.log("=".repeat(60));

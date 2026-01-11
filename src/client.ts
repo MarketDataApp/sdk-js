@@ -12,6 +12,7 @@ import { Endpoints, isRetriableStatusCode, Service } from "@/internalSettings";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
 import { FundsResource } from "@/resources/funds/index";
 import { MarketsResource } from "@/resources/markets/index";
+import { OptionsResource } from "@/resources/options/index";
 import { StocksResource } from "@/resources/stocks/index";
 import { loadSettings, type MarketDataSettings } from "@/settings";
 import type {
@@ -25,6 +26,51 @@ import type {
 import pkg from "../package.json";
 
 export class MarketDataClient implements IMarketDataClient {
+	public get apiVersion(): string {
+		return this.settings.marketdataApiVersion;
+	}
+
+	public get baseUrl(): string {
+		return this.settings.marketdataBaseUrl;
+	}
+
+	constructor(config: MarketDataConfig = {}) {
+		this.settings = loadSettings({
+			marketdataToken: config.token,
+			marketdataBaseUrl: config.baseUrl,
+			marketdataApiVersion: config.apiVersion,
+			marketdataMaxRetries: config.maxRetries,
+			marketdataRetryInitialWait: config.retryInitialWait,
+			marketdataRetryFactor: config.retryFactor,
+			marketdataRetryMaxWait: config.retryMaxWait,
+		});
+		this.logger =
+			config.logger ||
+			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
+
+		this.headers = {
+			Accept: "application/json",
+			"User-Agent": `marketdata-js-${pkg.version}`,
+		};
+
+		this._initAuth();
+		this.stocks = new StocksResource(this);
+		this.markets = new MarketsResource(this);
+		this.funds = new FundsResource(this);
+		this.options = new OptionsResource(this);
+	}
+
+	public dispose(): void {
+		this.rateLimits = undefined;
+		this._rateLimitSetup = undefined;
+	}
+
+	public readonly funds: FundsResource;
+
+	public readonly headers: Record<string, string>;
+
+	public readonly logger: Logger;
+
 	public _makeRequest<T>(
 		path: string,
 		params: MarketDataParams = {},
@@ -57,51 +103,9 @@ export class MarketDataClient implements IMarketDataClient {
 		);
 	}
 
-	public get apiVersion(): string {
-		return this.settings.marketdataApiVersion;
-	}
-
-	public get baseUrl(): string {
-		return this.settings.marketdataBaseUrl;
-	}
-
-	constructor(config: MarketDataConfig = {}) {
-		this.settings = loadSettings({
-			marketdataToken: config.token,
-			marketdataBaseUrl: config.baseUrl,
-			marketdataApiVersion: config.apiVersion,
-			marketdataMaxRetries: config.maxRetries,
-			marketdataRetryInitialWait: config.retryInitialWait,
-			marketdataRetryFactor: config.retryFactor,
-			marketdataRetryMaxWait: config.retryMaxWait,
-		});
-		this.logger =
-			config.logger ||
-			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
-
-		this.headers = {
-			Accept: "application/json",
-			"User-Agent": `marketdata-js-${pkg.version}`,
-		};
-
-		this._initAuth();
-		this.stocks = new StocksResource(this);
-		this.markets = new MarketsResource(this);
-		this.funds = new FundsResource(this);
-	}
-
-	public dispose(): void {
-		this.rateLimits = undefined;
-		this._rateLimitSetup = undefined;
-	}
-
-	public readonly headers: Record<string, string>;
-
-	public readonly logger: Logger;
-
 	public readonly markets: MarketsResource;
 
-	public readonly funds: FundsResource;
+	public readonly options: OptionsResource;
 
 	public rateLimits?: UserRateLimits;
 
