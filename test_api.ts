@@ -6,7 +6,7 @@ async function main() {
     console.log("=".repeat(60));
     console.log();
 
-    const sdk = new MarketDataClient({ debug: false });
+    const sdk = new MarketDataClient({ debug: true });
 
     console.log("SDK Configuration:");
     console.log(`  Base URL: ${sdk.baseUrl}`);
@@ -109,12 +109,11 @@ async function main() {
     }
     console.log();
 
-    // Test 7: Options Chain
+    // // Test 7: Options Chain
     testLabel("Test 7: Options Chain (AAPL, Human Format)");
     const optionsChain = await sdk.options.chain("AAPL", {
         expiration: "ALL"
     });
-    console.log(optionsChain);
     if (optionsChain.isErr()) {
         console.error("❌ Error:", optionsChain.error.message);
     } else {

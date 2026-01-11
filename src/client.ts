@@ -8,7 +8,12 @@ import {
 	RequestError,
 	ValidationError,
 } from "@/error";
-import { Endpoints, isRetriableStatusCode, Service } from "@/internalSettings";
+import {
+	CHECK_RATE_LIMITS,
+	Endpoints,
+	isRetriableStatusCode,
+	Service,
+} from "@/internalSettings";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
 import { FundsResource } from "@/resources/funds/index";
 import { MarketsResource } from "@/resources/markets/index";
@@ -137,6 +142,7 @@ export class MarketDataClient implements IMarketDataClient {
 	}
 
 	private _checkRateLimits(): void {
+		if (!CHECK_RATE_LIMITS) return;
 		if (this.rateLimits && this.rateLimits.requestsRemaining <= 0) {
 			throw new RateLimitError("Rate limit exceeded");
 		}
@@ -197,7 +203,10 @@ export class MarketDataClient implements IMarketDataClient {
 		}
 
 		if (response.status === 429) {
-			throw new RateLimitError(`Rate limit exceeded: ${errmsg}`);
+			const error = CHECK_RATE_LIMITS
+				? new RateLimitError(`Rate limit exceeded: ${errmsg}`)
+				: new RequestError(`Request failed (${response.status}): ${errmsg}`);
+			throw new AbortError(error);
 		}
 
 		const requestError = new RequestError(
@@ -222,9 +231,14 @@ export class MarketDataClient implements IMarketDataClient {
 
 	private _mapFetchError(e: unknown): MarketDataClientError {
 		if (e instanceof MarketDataClientError) return e;
-		if (e instanceof Error && e.name === "AbortError" && "originalError" in e) {
-			return (e as { originalError: MarketDataClientError })
-				.originalError as MarketDataClientError;
+		if (e instanceof Error && e.name === "AbortError") {
+			const original = (e as AbortError).originalError;
+			if (original instanceof MarketDataClientError) return original;
+			if (original instanceof z.ZodError)
+				return new ValidationError(original.message);
+			return new RequestError(
+				original instanceof Error ? original.message : String(original),
+			);
 		}
 		if (e instanceof z.ZodError) {
 			return new ValidationError(e.message);
@@ -242,39 +256,62 @@ export class MarketDataClient implements IMarketDataClient {
 			signal?: AbortSignal;
 		} = {},
 	): Promise<T> {
-		if (this.token && !this.rateLimits && !options.skipRateLimitCheck) {
-			await this._setupRateLimits();
-		}
-
-		if (this.token && !options.skipRateLimitCheck) {
-			this._checkRateLimits();
-		}
-
-		const response = await fetch(url.toString(), {
-			headers,
-			method: "GET",
-			signal: options.signal,
-		});
-
-		this._updateRateLimits(response.headers);
-
-		if (!response.ok) {
-			await this._handleResponseError(response, service);
-		}
-
-		const json = await response.json();
-		this.logger.debug(
-			`Response JSON: ${JSON.stringify(json).substring(0, 200)}`,
-		);
-
-		if (schema) {
-			const result = schema.safeParse(json);
-			if (!result.success) {
-				throw result.error;
+		try {
+			if (
+				CHECK_RATE_LIMITS &&
+				this.token &&
+				!this.rateLimits &&
+				!options.skipRateLimitCheck
+			) {
+				await this._setupRateLimits();
 			}
-			return result.data;
+
+			if (this.token && !options.skipRateLimitCheck) {
+				this._checkRateLimits();
+			}
+
+			const response = await fetch(url.toString(), {
+				headers,
+				method: "GET",
+				signal: options.signal,
+			});
+
+			this._updateRateLimits(response.headers);
+
+			if (!response.ok) {
+				await this._handleResponseError(response, service);
+			}
+
+			const json = await response.json();
+			this.logger.debug(
+				`Response JSON: ${JSON.stringify(json).substring(0, 200)}`,
+			);
+
+			if (schema) {
+				const result = schema.safeParse(json);
+				if (!result.success) {
+					throw result.error;
+				}
+				return result.data;
+			}
+			return json as T;
+		} catch (error) {
+			if (error instanceof AbortError) {
+				throw error;
+			}
+
+			if (
+				error instanceof RequestError &&
+				!(error instanceof ValidationError) &&
+				!(error instanceof RateLimitError)
+			) {
+				throw error;
+			}
+
+			throw new AbortError(
+				error instanceof Error ? error : new Error(String(error)),
+			);
 		}
-		return json as T;
 	}
 
 	private _rateLimitSetup?: Promise<void>;

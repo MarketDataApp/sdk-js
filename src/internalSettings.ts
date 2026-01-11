@@ -1,3 +1,5 @@
+export const CHECK_RATE_LIMITS = true;
+
 export const Endpoints = {
 	API_STATUS: "status/",
 	FUNDS_CANDLES: "funds/candles/",
