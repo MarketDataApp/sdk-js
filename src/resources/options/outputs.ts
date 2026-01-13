@@ -57,6 +57,16 @@ export const OptionsChainSchema = z.object({
 	theta: z.array(z.number().nullable()),
 	vega: z.array(z.number().nullable()),
 });
+export interface OptionsLookup {
+	[key: string]: unknown;
+	s: string;
+	optionSymbol: string;
+}
+
+export interface OptionsLookupHumanReadable {
+	[key: string]: unknown;
+	Symbol: string;
+}
 
 export type OptionsChainHumanResponse = z.infer<typeof OptionsChainHumanSchema>;
 export type OptionsChainResponse = z.infer<typeof OptionsChainSchema>;

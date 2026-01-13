@@ -52,3 +52,14 @@ export const OptionsExpirationsParamsSchema = z.intersection(
 export type OptionsExpirationsParams = z.input<
 	typeof OptionsExpirationsParamsSchema
 >;
+
+export const OptionsLookupInputSchema = z.object({
+	lookup: z.string().min(1),
+});
+
+export const OptionsLookupParamsSchema = z.intersection(
+	OptionsLookupInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type OptionsLookupParams = z.input<typeof OptionsLookupParamsSchema>;
