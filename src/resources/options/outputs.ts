@@ -60,3 +60,16 @@ export const OptionsChainSchema = z.object({
 
 export type OptionsChainHumanResponse = z.infer<typeof OptionsChainHumanSchema>;
 export type OptionsChainResponse = z.infer<typeof OptionsChainSchema>;
+
+export interface OptionsExpirations {
+	[key: string]: unknown;
+	s: string;
+	expirations: string[];
+	updated: number;
+}
+
+export interface OptionsExpirationsHumanReadable {
+	[key: string]: unknown;
+	Expirations: string[];
+	Date: number;
+}

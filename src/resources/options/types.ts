@@ -37,3 +37,18 @@ export const OptionsChainParamsSchema = z.intersection(
 );
 
 export type OptionsChainParams = z.input<typeof OptionsChainParamsSchema>;
+
+export const OptionsExpirationsInputSchema = z.object({
+	symbol: z.string().optional(),
+	strike: z.number().optional(),
+	date: z.union([z.string(), z.date()]).optional(),
+});
+
+export const OptionsExpirationsParamsSchema = z.intersection(
+	OptionsExpirationsInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type OptionsExpirationsParams = z.input<
+	typeof OptionsExpirationsParamsSchema
+>;

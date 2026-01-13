@@ -1,3 +1,7 @@
+import { err, ok, type Result } from "neverthrow";
+import type { z } from "zod";
+import { ValidationError } from "@/error";
+
 export const formatDate = (date: Date | string | number): string => {
 	if (date instanceof Date) {
 		return date.toISOString().split("T")[0];
@@ -93,6 +97,28 @@ export const splitDatesByTimeframe = (
 	}
 
 	return ranges;
+};
+
+export const cleanAndValidateParams = <
+	T extends z.ZodTypeAny,
+	U extends z.ZodTypeAny,
+>(
+	params: unknown,
+	schema: T,
+	universalSchema: U,
+): Result<z.infer<T> & z.infer<U>, ValidationError> => {
+	const result = schema.safeParse(params);
+	if (!result.success) {
+		return err(new ValidationError(result.error.message));
+	}
+	const universalResult = universalSchema.safeParse(params);
+	if (!universalResult.success) {
+		return err(new ValidationError(universalResult.error.message));
+	}
+	return ok({
+		...(result.data as object),
+		...(universalResult.data as object),
+	} as z.infer<T> & z.infer<U>);
 };
 
 export type stockRequestResult<T> = { [K in keyof T]: Unpacked<T[K]> }[];
