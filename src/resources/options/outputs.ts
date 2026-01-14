@@ -57,29 +57,62 @@ export const OptionsChainSchema = z.object({
 	theta: z.array(z.number().nullable()),
 	vega: z.array(z.number().nullable()),
 });
-export interface OptionsLookup {
-	[key: string]: unknown;
-	s: string;
-	optionSymbol: string;
-}
+export const OptionsLookupSchema = z.object({
+	s: z.string(),
+	optionSymbol: z.string(),
+	updated: z.number().optional(),
+});
 
-export interface OptionsLookupHumanReadable {
-	[key: string]: unknown;
-	Symbol: string;
-}
+export const OptionsLookupHumanSchema = z.object({
+	s: z.string().optional(),
+	Symbol: z.string(),
+});
 
-export type OptionsChainHumanResponse = z.infer<typeof OptionsChainHumanSchema>;
-export type OptionsChainResponse = z.infer<typeof OptionsChainSchema>;
+export const OptionsExpirationsSchema = z.object({
+	s: z.string(),
+	expirations: z.array(z.string()),
+	updated: z.number(),
+});
 
-export interface OptionsExpirations {
-	[key: string]: unknown;
-	s: string;
-	expirations: string[];
-	updated: number;
-}
+export const OptionsExpirationsHumanSchema = z.object({
+	s: z.string().optional(),
+	Expirations: z.array(z.string()),
+	Date: z.number(),
+});
 
-export interface OptionsExpirationsHumanReadable {
-	[key: string]: unknown;
-	Expirations: string[];
-	Date: number;
-}
+import type { UnpackedObject } from "@/utils";
+
+export type OptionsLookupHumanRawResponse = z.infer<
+	typeof OptionsLookupHumanSchema
+>;
+export type OptionsLookupRawResponse = z.infer<typeof OptionsLookupSchema>;
+export type OptionsChainHumanRawResponse = z.infer<
+	typeof OptionsChainHumanSchema
+>;
+export type OptionsChainRawResponse = z.infer<typeof OptionsChainSchema>;
+export type OptionsExpirationsRawResponse = z.infer<
+	typeof OptionsExpirationsSchema
+>;
+export type OptionsExpirationsHumanRawResponse = z.infer<
+	typeof OptionsExpirationsHumanSchema
+>;
+
+export type OptionsChain = UnpackedObject<OptionsChainRawResponse>;
+export type OptionsChainHuman = UnpackedObject<OptionsChainHumanRawResponse>;
+
+export type OptionsLookupResponse = OptionsLookupRawResponse;
+export type OptionsLookupHumanResponse = OptionsLookupHumanRawResponse;
+export type OptionsChainResponse = OptionsChain[];
+export type OptionsChainHumanResponse = OptionsChainHuman[];
+export type OptionsExpirationsResponse = OptionsExpirationsRawResponse;
+export type OptionsExpirationsHumanResponse =
+	OptionsExpirationsHumanRawResponse;
+
+/** @deprecated Use OptionsLookupResponse */
+export type OptionsLookup = OptionsLookupResponse;
+/** @deprecated Use OptionsLookupHumanResponse */
+export type OptionsLookupHumanReadable = OptionsLookupHumanResponse;
+/** @deprecated Use OptionsExpirationsResponse */
+export type OptionsExpirations = OptionsExpirationsResponse;
+/** @deprecated Use OptionsExpirationsHumanReadable */
+export type OptionsExpirationsHumanReadable = OptionsExpirationsHumanResponse;

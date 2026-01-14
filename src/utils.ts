@@ -36,7 +36,7 @@ export const formatValue = (value: unknown): string | undefined => {
 export const getDataRecords = <T extends Record<string, unknown>>(
 	data: T,
 	excludeKeys: readonly string[] = [],
-): stockRequestResult<T> => {
+): { [K in keyof T]: Unpacked<T[K]> }[] => {
 	const keys = (Object.keys(data) as (keyof T)[]).filter(
 		(k) => !excludeKeys.includes(k as string),
 	);
@@ -121,6 +121,6 @@ export const cleanAndValidateParams = <
 	} as z.infer<T> & z.infer<U>);
 };
 
-export type stockRequestResult<T> = { [K in keyof T]: Unpacked<T[K]> }[];
-
 export type Unpacked<T> = T extends (infer U)[] ? U : T;
+
+export type UnpackedObject<T> = { [K in keyof T]: Unpacked<T[K]> };

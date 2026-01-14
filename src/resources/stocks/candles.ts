@@ -7,16 +7,20 @@ import {
 	Service,
 } from "@/internalSettings";
 import {
+	type StockCandleHumanRawResponse,
 	type StockCandleHumanResponse,
 	StockCandleHumanSchema,
+	type StockCandleRawResponse,
 	type StockCandleResponse,
 	StockCandleSchema,
 } from "@/resources/stocks/outputs";
+
 import {
 	type StocksCandlesParams,
 	StocksCandlesParamsSchema,
 } from "@/resources/stocks/types";
 import type { MarketDataParams, TypedResult } from "@/types";
+
 import { getDataRecords, normalizeArgs, splitDatesByTimeframe } from "@/utils";
 import type { StocksResource } from "./index";
 
@@ -31,10 +35,12 @@ export function candles<
 	StockCandleHumanResponse,
 	P & { symbol: string }
 >;
+
 export function candles<P extends StocksCandlesParams & MarketDataParams>(
 	this: StocksResource,
 	params: P,
 ): TypedResult<StockCandleResponse, StockCandleHumanResponse, P>;
+
 export function candles(
 	this: StocksResource,
 	arg1: string | (StocksCandlesParams & MarketDataParams),
@@ -81,8 +87,9 @@ export function candles(
 
 		return ResultAsync.fromPromise(
 			limit(() =>
-				this._makeRequest<StockCandleResponse | StockCandleHumanResponse>(
+				this._makeRequest<StockCandleRawResponse | StockCandleHumanRawResponse>(
 					`${Endpoints.STOCKS_CANDLES}${validated.resolution as string}/${validated.symbol}/`,
+
 					queryParams as MarketDataParams,
 					{
 						schema,

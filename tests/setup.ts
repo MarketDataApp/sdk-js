@@ -6,8 +6,13 @@ global.fetch = fetchMock;
 
 beforeEach(() => {
 	fetchMock.mockClear();
-	fetchMock.mockImplementation(async (url: string) => {
-		if (url.includes("/user/")) {
+	fetchMock.mockImplementation(async (url: string | URL) => {
+		const urlString = url.toString();
+
+		if (urlString.includes("user")) {
+
+
+
 			return createMockResponse({
 				json: {},
 				headers: {
@@ -19,7 +24,8 @@ beforeEach(() => {
 			});
 		}
 
-		if (url.includes("/status/")) {
+		if (urlString.includes("/status/")) {
+
 			const _time = Math.floor(Date.now() / 1000);
 			return createMockResponse({
 				json: {

@@ -40,11 +40,7 @@ export function candles(
 	const params = normalizeArgs(arg1, arg2, "symbol") as FundsCandlesParams &
 		MarketDataParams;
 
-	return this._fetch<
-		FundsCandleResponse,
-		FundsCandleHumanResponse,
-		FundsCandlesParams & MarketDataParams
-	>(
+	return this._fetch(
 		`${Endpoints.FUNDS_CANDLES}${params.resolution || "D"}/${params.symbol}/`,
 		params,
 		{

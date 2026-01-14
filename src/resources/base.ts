@@ -2,6 +2,7 @@ import { err, errAsync, ok, type Result } from "neverthrow";
 
 import type { z } from "zod";
 import { ValidationError } from "@/error";
+import { DEFAULT_EXCLUDE_KEYS } from "@/internalSettings";
 import { processParams } from "@/params";
 import type {
 	IMarketDataClient,
@@ -9,9 +10,8 @@ import type {
 	MarketDataResult,
 	TypedResult,
 } from "@/types";
-import { getDataRecords } from "@/utils";
 
-const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
+import { getDataRecords, type UnpackedObject } from "@/utils";
 
 export abstract class BaseResource {
 	constructor(client: IMarketDataClient) {
@@ -34,10 +34,14 @@ export abstract class BaseResource {
 			service: string;
 			excludeKeys?: string[];
 		},
-	): TypedResult<T, H, P> {
+	): TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P> {
 		const validation = this._validateAndNormalize(params, options.inputSchema);
 		if (validation.isErr()) {
-			return errAsync(validation.error) as TypedResult<T, H, P>;
+			return errAsync(validation.error) as TypedResult<
+				UnpackedObject<T>[],
+				UnpackedObject<H>[],
+				P
+			>;
 		}
 
 		const validated = validation.value;
@@ -55,7 +59,7 @@ export abstract class BaseResource {
 				response,
 				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
 			),
-		) as TypedResult<T, H, P>;
+		) as TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P>;
 	}
 
 	protected _getSchema<T, H>(
@@ -64,10 +68,14 @@ export abstract class BaseResource {
 		humanSchema?: z.ZodType<H>,
 	): z.ZodType<T | H> | undefined {
 		const useHuman =
-			(params.useHumanReadable as boolean | undefined) ??
+			(params.useHumanReadable as boolean | string | undefined) ??
+			(params.human as boolean | string | undefined) ??
 			this.client.settings.marketdataUseHumanReadable;
 
-		if (useHuman && humanSchema) {
+		const isHuman =
+			useHuman === true || useHuman === "true" || useHuman === "1";
+
+		if (isHuman && humanSchema) {
 			return humanSchema;
 		}
 

@@ -19,6 +19,7 @@ describe("Options Expirations Mocks", () => {
 
         const result = await client.options.expirations("AAPL");
         expect(result.isOk()).toBe(true);
+
         if (result.isOk()) {
             expect(result.value.s).toBe("ok");
             expect(result.value.expirations).toHaveLength(22);
@@ -40,9 +41,10 @@ describe("Options Expirations Mocks", () => {
         });
 
         const result = await client.options.expirations("AAPL", {
-            human: true,
+            useHumanReadable: true,
         });
         expect(result.isOk()).toBe(true);
+
         if (result.isOk()) {
             expect(result.value.Expirations).toHaveLength(22);
             expect(result.value.Expirations[0]).toBe("2025-12-12");

@@ -38,7 +38,21 @@ export const StockPriceSchema = z.object({
 	updated: z.array(z.number()),
 });
 
-export type StockCandleHumanResponse = z.infer<typeof StockCandleHumanSchema>;
-export type StockCandleResponse = z.infer<typeof StockCandleSchema>;
-export type StockPriceHumanResponse = z.infer<typeof StockPriceHumanSchema>;
-export type StockPriceResponse = z.infer<typeof StockPriceSchema>;
+import type { UnpackedObject } from "@/utils";
+
+export type StockCandleHumanRawResponse = z.infer<
+	typeof StockCandleHumanSchema
+>;
+export type StockCandleRawResponse = z.infer<typeof StockCandleSchema>;
+export type StockPriceHumanRawResponse = z.infer<typeof StockPriceHumanSchema>;
+export type StockPriceRawResponse = z.infer<typeof StockPriceSchema>;
+
+export type StockCandle = UnpackedObject<StockCandleRawResponse>;
+export type StockCandleHuman = UnpackedObject<StockCandleHumanRawResponse>;
+export type StockPrice = UnpackedObject<StockPriceRawResponse>;
+export type StockPriceHuman = UnpackedObject<StockPriceHumanRawResponse>;
+
+export type StockCandleResponse = StockCandle[];
+export type StockCandleHumanResponse = StockCandleHuman[];
+export type StockPriceResponse = StockPrice[];
+export type StockPriceHumanResponse = StockPriceHuman[];

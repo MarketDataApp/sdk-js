@@ -5,12 +5,16 @@ export const Endpoints = {
 	FUNDS_CANDLES: "funds/candles/",
 	MARKETS_STATUS: "markets/status/",
 	OPTIONS_CHAIN: "options/chain/",
+	OPTIONS_EXPIRATIONS: "options/expirations/",
+	OPTIONS_LOOKUP: "options/lookup/",
 	STOCKS_CANDLES: "stocks/candles/",
 	STOCKS_PRICES: "stocks/prices/",
 	USER: "user/",
 } as const;
 
 export const GLOBAL_EXCLUDED_PARAMS = ["outputFormat", "filename"] as const;
+
+export const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
 
 export const isRetriableStatusCode = (statusCode: number): boolean =>
 	statusCode > 500;
@@ -23,6 +27,8 @@ export const Service = {
 	CANDLES: `/v1/${Endpoints.STOCKS_CANDLES}`,
 	FUNDS_CANDLES: `/v1/${Endpoints.FUNDS_CANDLES}`,
 	OPTIONS_CHAIN: `/v1/${Endpoints.OPTIONS_CHAIN}`,
+	OPTIONS_EXPIRATIONS: `/v1/${Endpoints.OPTIONS_EXPIRATIONS}`,
+	OPTIONS_LOOKUP: `/v1/${Endpoints.OPTIONS_LOOKUP}`,
 	PRICES: `/v1/${Endpoints.STOCKS_PRICES}`,
 	STATUS: `/v1/${Endpoints.MARKETS_STATUS}`,
 	USER: `/v1/${Endpoints.USER}`,

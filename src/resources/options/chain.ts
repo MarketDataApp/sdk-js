@@ -7,6 +7,7 @@ import {
 	type OptionsChainResponse,
 	OptionsChainSchema,
 } from "@/resources/options/outputs";
+
 import type { OptionsChainParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedResult } from "@/types";
 import { getDataRecords, normalizeArgs } from "@/utils";

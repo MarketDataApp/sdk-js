@@ -4,7 +4,6 @@ import { DateFormat, Mode, OutputFormat } from "@/enums";
 import type { MarketDataClientError } from "@/error";
 import type { Logger } from "@/logger";
 import type { MarketDataSettings } from "@/settings";
-import type { stockRequestResult } from "@/utils";
 
 export interface IMarketDataClient {
 	_makeRequest<T>(
@@ -30,14 +29,8 @@ export interface IMarketDataClient {
 
 export type MarketDataResult<T> = ResultAsync<T, MarketDataClientError>;
 
-export type TypedResult<
-	T extends Record<string, unknown>,
-	H extends Record<string, unknown>,
-	P,
-> = MarketDataResult<
-	P extends { useHumanReadable: true } | { human: true }
-		? stockRequestResult<H>
-		: stockRequestResult<T>
+export type TypedResult<T, H, P> = MarketDataResult<
+	P extends { useHumanReadable: true } | { human: true } ? H : T
 >;
 
 export interface UserRateLimits {

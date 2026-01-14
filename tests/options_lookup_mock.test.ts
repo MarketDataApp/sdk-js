@@ -39,8 +39,9 @@ describe("Options Lookup Mocks", () => {
         });
 
         const result = await client.options.lookup("AAPL", {
-            human: true,
+            useHumanReadable: true,
         });
+
         expect(result.isOk()).toBe(true);
         if (result.isOk()) {
             expect((result.value as any).Symbol).toBe("AAPL230728C00200000");

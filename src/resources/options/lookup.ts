@@ -1,35 +1,61 @@
-import { errAsync } from "neverthrow";
-import type { BaseResource } from "@/resources/base";
-import type {
-	OptionsLookup,
-	OptionsLookupHumanReadable,
-} from "@/resources/options/outputs";
+import { Endpoints, Service } from "@/internalSettings";
 import {
-	type OptionsLookupParams,
-	OptionsLookupParamsSchema,
-} from "@/resources/options/types";
-import { type MarketDataResult, UserUniversalAPIParamsSchema } from "@/types";
-import { cleanAndValidateParams } from "@/utils";
+	type OptionsLookupHumanResponse,
+	OptionsLookupHumanSchema,
+	type OptionsLookupResponse,
+	OptionsLookupSchema,
+} from "@/resources/options/outputs";
+import type { OptionsLookupParams } from "@/resources/options/types";
+
+import type { MarketDataParams, TypedResult } from "@/types";
+import { normalizeArgs } from "@/utils";
+import type { OptionsResource } from "./index";
+
+export function lookup<
+	P extends Omit<OptionsLookupParams, "lookup"> & MarketDataParams,
+>(
+	this: OptionsResource,
+	lookupStr: string,
+	params?: P,
+): TypedResult<
+	OptionsLookupResponse,
+	OptionsLookupHumanResponse,
+	P & { lookup: string }
+>;
+
+export function lookup<P extends OptionsLookupParams & MarketDataParams>(
+	this: OptionsResource,
+	params: P,
+): TypedResult<OptionsLookupResponse, OptionsLookupHumanResponse, P>;
 
 export function lookup(
-	this: BaseResource,
-	lookupStr: string,
-	params: OptionsLookupParams = { lookup: lookupStr },
-): MarketDataResult<OptionsLookup | OptionsLookupHumanReadable> {
-	const result = cleanAndValidateParams(
-		{ ...params, lookup: lookupStr },
-		OptionsLookupParamsSchema,
-		UserUniversalAPIParamsSchema,
-	);
+	this: OptionsResource,
+	arg1: string | (OptionsLookupParams & MarketDataParams),
+	arg2: MarketDataParams = {},
+): TypedResult<
+	OptionsLookupResponse,
+	OptionsLookupHumanResponse,
+	OptionsLookupParams & MarketDataParams
+> {
+	const params = normalizeArgs(arg1, arg2, "lookup") as OptionsLookupParams &
+		MarketDataParams;
 
-	if (result.isErr()) {
-		return errAsync(result.error);
-	}
+	const encodedLookup = encodeURIComponent(params.lookup);
 
-	const encodedLookup = encodeURIComponent(result.value.lookup);
-
-	return this.client._makeRequest(
-		`options/lookup/${encodedLookup}/`,
-		result.value,
-	);
+	return this._makeRequest<OptionsLookupResponse | OptionsLookupHumanResponse>(
+		`${Endpoints.OPTIONS_LOOKUP}${encodedLookup}/`,
+		params,
+		{
+			schema: this._getSchema(
+				params,
+				OptionsLookupSchema,
+				OptionsLookupHumanSchema,
+			),
+			service: Service.OPTIONS_LOOKUP,
+		},
+	) as TypedResult<
+		OptionsLookupResponse,
+		OptionsLookupHumanResponse,
+		OptionsLookupParams & MarketDataParams
+	>;
 }

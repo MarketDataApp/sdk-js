@@ -18,5 +18,15 @@ export const FundsCandleSchema = z.object({
 	c: z.array(z.number()),
 });
 
-export type FundsCandleHumanResponse = z.infer<typeof FundsCandleHumanSchema>;
-export type FundsCandleResponse = z.infer<typeof FundsCandleSchema>;
+import type { UnpackedObject } from "@/utils";
+
+export type FundsCandleHumanRawResponse = z.infer<
+	typeof FundsCandleHumanSchema
+>;
+export type FundsCandleRawResponse = z.infer<typeof FundsCandleSchema>;
+
+export type FundsCandle = UnpackedObject<FundsCandleRawResponse>;
+export type FundsCandleHuman = UnpackedObject<FundsCandleHumanRawResponse>;
+
+export type FundsCandleResponse = FundsCandle[];
+export type FundsCandleHumanResponse = FundsCandleHuman[];
