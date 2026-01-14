@@ -57,6 +57,9 @@ export const OptionsChainSchema = z.object({
 	theta: z.array(z.number().nullable()),
 	vega: z.array(z.number().nullable()),
 });
+
+export const OptionsQuotesSchema = OptionsChainSchema;
+export const OptionsQuotesHumanSchema = OptionsChainHumanSchema;
 export const OptionsLookupSchema = z.object({
 	s: z.string(),
 	optionSymbol: z.string(),
@@ -104,15 +107,17 @@ export type OptionsLookupResponse = OptionsLookupRawResponse;
 export type OptionsLookupHumanResponse = OptionsLookupHumanRawResponse;
 export type OptionsChainResponse = OptionsChain[];
 export type OptionsChainHumanResponse = OptionsChainHuman[];
+
+export type OptionsQuotesRawResponse = z.infer<typeof OptionsQuotesSchema>;
+export type OptionsQuotesHumanRawResponse = z.infer<
+	typeof OptionsQuotesHumanSchema
+>;
+
+export type OptionsQuotes = UnpackedObject<OptionsQuotesRawResponse>;
+export type OptionsQuotesHuman = UnpackedObject<OptionsQuotesHumanRawResponse>;
+
+export type OptionsQuotesResponse = OptionsQuotes[];
+export type OptionsQuotesHumanResponse = OptionsQuotesHuman[];
 export type OptionsExpirationsResponse = OptionsExpirationsRawResponse;
 export type OptionsExpirationsHumanResponse =
 	OptionsExpirationsHumanRawResponse;
-
-/** @deprecated Use OptionsLookupResponse */
-export type OptionsLookup = OptionsLookupResponse;
-/** @deprecated Use OptionsLookupHumanResponse */
-export type OptionsLookupHumanReadable = OptionsLookupHumanResponse;
-/** @deprecated Use OptionsExpirationsResponse */
-export type OptionsExpirations = OptionsExpirationsResponse;
-/** @deprecated Use OptionsExpirationsHumanReadable */
-export type OptionsExpirationsHumanReadable = OptionsExpirationsHumanResponse;

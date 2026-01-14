@@ -63,3 +63,14 @@ export const OptionsLookupParamsSchema = z.intersection(
 );
 
 export type OptionsLookupParams = z.input<typeof OptionsLookupParamsSchema>;
+
+export const OptionsQuotesInputSchema = z.object({
+	symbols: z.union([z.string(), z.array(z.string())]),
+});
+
+export const OptionsQuotesParamsSchema = z.intersection(
+	OptionsQuotesInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type OptionsQuotesParams = z.input<typeof OptionsQuotesParamsSchema>;
