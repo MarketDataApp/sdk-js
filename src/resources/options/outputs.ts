@@ -66,6 +66,19 @@ export const OptionsLookupSchema = z.object({
 	updated: z.number().optional(),
 });
 
+export const OptionsStrikesSchema = z
+	.object({
+		s: z.string(),
+		updated: z.number(),
+	})
+	.catchall(z.array(z.number()));
+
+export const OptionsStrikesHumanSchema = z
+	.object({
+		Date: z.number(),
+	})
+	.catchall(z.array(z.number()));
+
 export const OptionsLookupHumanSchema = z.object({
 	s: z.string().optional(),
 	Symbol: z.string(),
@@ -121,3 +134,11 @@ export type OptionsQuotesHumanResponse = OptionsQuotesHuman[];
 export type OptionsExpirationsResponse = OptionsExpirationsRawResponse;
 export type OptionsExpirationsHumanResponse =
 	OptionsExpirationsHumanRawResponse;
+
+export type OptionsStrikesRawResponse = z.infer<typeof OptionsStrikesSchema>;
+export type OptionsStrikesHumanRawResponse = z.infer<
+	typeof OptionsStrikesHumanSchema
+>;
+
+export type OptionsStrikesResponse = OptionsStrikesRawResponse;
+export type OptionsStrikesHumanResponse = OptionsStrikesHumanRawResponse;

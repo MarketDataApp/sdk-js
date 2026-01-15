@@ -53,6 +53,19 @@ export type OptionsExpirationsParams = z.input<
 	typeof OptionsExpirationsParamsSchema
 >;
 
+export const OptionsStrikesInputSchema = z.object({
+	symbol: z.string().optional(),
+	expiration: z.union([z.string(), z.date()]).optional(),
+	date: z.union([z.string(), z.date()]).optional(),
+});
+
+export const OptionsStrikesParamsSchema = z.intersection(
+	OptionsStrikesInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type OptionsStrikesParams = z.input<typeof OptionsStrikesParamsSchema>;
+
 export const OptionsLookupInputSchema = z.object({
 	lookup: z.string().min(1),
 });
