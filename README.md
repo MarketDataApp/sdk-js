@@ -4,6 +4,8 @@ TypeScript/JavaScript SDK for the MarketData API - Real-time and historical mark
 
 ## Installation
 
+**Prerequisites**: Node.js v20 or higher. The SDK targets ES2020.
+
 ```bash
 npm install marketdata-sdk
 # or
@@ -24,7 +26,7 @@ const client = new MarketDataClient({
 
 // Get stock prices
 const prices = await client.stocks.prices('AAPL');
-console.log(prices.mid);  // [150.25]
+console.log(prices[0].mid);  // 150.25
 
 // Get historical candles
 const candles = await client.stocks.candles('AAPL', {
@@ -97,8 +99,8 @@ const prices = await client.stocks.prices(['AAPL', 'GOOGL', 'MSFT']);
 
 // With human-readable format
 const humanPrices = await client.stocks.prices('AAPL', { human: true });
-console.log(humanPrices.Symbol);  // ['AAPL']
-console.log(humanPrices.Mid);     // [150.25]
+console.log(humanPrices[0].Symbol);  // 'AAPL'
+console.log(humanPrices[0].Mid);     // 150.25
 
 // Raw JSON
 const json = await client.stocks.prices('AAPL', { format: 'json' });
@@ -123,9 +125,9 @@ const last100 = await client.stocks.candles('AAPL', { countback: 100 });
 
 // Human-readable format
 const humanCandles = await client.stocks.candles('AAPL', { human: true });
-console.log(humanCandles.Date);   // Timestamps
-console.log(humanCandles.Open);   // Opening prices
-console.log(humanCandles.Close);  // Closing prices
+console.log(humanCandles[0].Date);   // Timestamp
+console.log(humanCandles[0].Open);   // Opening price
+console.log(humanCandles[0].Close);  // Closing price
 ```
 
 ### Rate Limit Monitoring

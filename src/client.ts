@@ -238,7 +238,7 @@ export class MarketDataClient implements IMarketDataClient {
 			await this._setupRateLimits();
 		}
 
-		if (!options.skipRateLimitCheck) {
+		if (this.token && !options.skipRateLimitCheck) {
 			this._checkRateLimits();
 		}
 
