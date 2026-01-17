@@ -45,3 +45,14 @@ export const StocksPricesParamsSchema = z.intersection(
 
 export type StocksPricesInput = z.input<typeof StocksPricesInputSchema>;
 export type StocksPricesParams = z.input<typeof StocksPricesParamsSchema>;
+
+export const StocksEarningsInputSchema = z.object({
+	symbol: z.string(),
+});
+
+export const StocksEarningsParamsSchema = z.intersection(
+	StocksEarningsInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type StocksEarningsParams = z.input<typeof StocksEarningsParamsSchema>;

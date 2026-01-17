@@ -109,8 +109,8 @@ describe("MarketDataClient", () => {
 				{
 					Symbol: "AAPL",
 					Mid: 150,
-					Change_$: 1.5,
-					"Change_%": 0.01,
+					Change_Price: 1.5,
+					Change_Percent: 0.01,
 					Date: 1700000000,
 				},
 			]);

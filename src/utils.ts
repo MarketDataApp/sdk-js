@@ -104,7 +104,11 @@ export const transformHumanKeys = (
 ): Record<string, unknown> => {
 	const transformed: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(data)) {
-		transformed[key.replace(/ /g, "_")] = value;
+		const newKey = key
+			.replace(/ /g, "_")
+			.replace("_$", "_Price")
+			.replace("_%", "_Percent");
+		transformed[newKey] = value;
 	}
 	return transformed;
 };

@@ -53,7 +53,7 @@ describe("StocksResource (Mock Data)", () => {
 		const aapl = result[0];
 		expect(aapl).toHaveProperty("Symbol", "AAPL");
 		expect(aapl).toHaveProperty("Mid", 278.72);
-		expect(aapl).toHaveProperty("Change_$", 0.69);
+		expect(aapl).toHaveProperty("Change_Price", 0.69);
 
 		const tsla = result[1];
 		expect(tsla).toHaveProperty("Symbol", "TSLA");
