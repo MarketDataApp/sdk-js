@@ -10,7 +10,7 @@ import {
 
 import type { OptionsQuotesParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedResult } from "@/types";
-import { getDataRecords, normalizeArgs } from "@/utils";
+import { getDataRecords, normalizeArgs, transformHumanKeys } from "@/utils";
 import type { OptionsResource } from "./index";
 
 export function quotes<
@@ -80,14 +80,4 @@ export function quotes(
 		OptionsQuotesHumanResponse,
 		OptionsQuotesParams & MarketDataParams
 	>;
-}
-
-function transformHumanKeys(
-	data: Record<string, unknown>,
-): Record<string, unknown> {
-	const transformed: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(data)) {
-		transformed[key.replace(/ /g, "_")] = value;
-	}
-	return transformed;
 }

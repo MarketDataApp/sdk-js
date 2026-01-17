@@ -1,5 +1,3 @@
-import { errAsync, okAsync } from "neverthrow";
-import { ValidationError } from "@/error";
 import { Endpoints, Service } from "@/internalSettings";
 import {
 	type OptionsChainHumanResponse,
@@ -8,9 +6,12 @@ import {
 	OptionsChainSchema,
 } from "@/resources/options/outputs";
 
-import type { OptionsChainParams } from "@/resources/options/types";
+import {
+	type OptionsChainParams,
+	OptionsChainParamsSchema,
+} from "@/resources/options/types";
 import type { MarketDataParams, TypedResult } from "@/types";
-import { getDataRecords, normalizeArgs } from "@/utils";
+import { normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
 export function chain<
@@ -40,37 +41,15 @@ export function chain(
 	const params = normalizeArgs(arg1, arg2, "symbol") as OptionsChainParams &
 		MarketDataParams;
 
-	const useHuman = params.human || params.useHumanReadable;
-
-	return this._makeRequest<Record<string, unknown>>(
-		`${Endpoints.OPTIONS_CHAIN}${params.symbol}/`,
-		params,
-		{
-			service: Service.OPTIONS_CHAIN,
-		},
-	).andThen((data) => {
-		const finalData = useHuman ? transformHumanKeys(data) : data;
-		const schema = useHuman ? OptionsChainHumanSchema : OptionsChainSchema;
-		const result = schema.safeParse(finalData);
-
-		if (!result.success) {
-			return errAsync(new ValidationError(JSON.stringify(result.error.issues)));
-		}
-
-		return okAsync(getDataRecords(result.data, ["s"]) as never);
+	return this._fetch(`${Endpoints.OPTIONS_CHAIN}${params.symbol}/`, params, {
+		inputSchema: OptionsChainParamsSchema,
+		regularSchema: OptionsChainSchema,
+		humanSchema: OptionsChainHumanSchema,
+		service: Service.OPTIONS_CHAIN,
+		excludeKeys: ["s"],
 	}) as TypedResult<
 		OptionsChainResponse,
 		OptionsChainHumanResponse,
 		OptionsChainParams & MarketDataParams
 	>;
-}
-
-function transformHumanKeys(
-	data: Record<string, unknown>,
-): Record<string, unknown> {
-	const transformed: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(data)) {
-		transformed[key.replace(/ /g, "_")] = value;
-	}
-	return transformed;
 }

@@ -1,4 +1,4 @@
-import { err, errAsync, ok, type Result } from "neverthrow";
+import { err, errAsync, ok, okAsync, type Result } from "neverthrow";
 
 import type { z } from "zod";
 import { ValidationError } from "@/error";
@@ -11,7 +11,11 @@ import type {
 	TypedResult,
 } from "@/types";
 
-import { getDataRecords, type UnpackedObject } from "@/utils";
+import {
+	getDataRecords,
+	transformHumanKeys,
+	type UnpackedObject,
+} from "@/utils";
 
 export abstract class BaseResource {
 	constructor(client: IMarketDataClient) {
@@ -45,21 +49,49 @@ export abstract class BaseResource {
 		}
 
 		const validated = validation.value;
+		const useHuman =
+			(validated.useHumanReadable as boolean | string | undefined) ??
+			(validated.human as boolean | string | undefined) ??
+			this.client.settings.marketdataUseHumanReadable;
+
+		const isHuman =
+			useHuman === true || useHuman === "true" || useHuman === "1";
+
 		const schema = this._getSchema(
 			validated as MarketDataParams,
 			options.regularSchema,
 			options.humanSchema,
 		);
 
-		return this._makeRequest<T | H>(path, validated as MarketDataParams, {
-			schema,
-			service: options.service,
-		}).map((response) =>
-			getDataRecords(
-				response,
-				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
-			),
-		) as TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P>;
+		return this._makeRequest<Record<string, unknown>>(
+			path,
+			validated as MarketDataParams,
+			{
+				// biome-ignore lint/suspicious/noExplicitAny: Generic schema requires any type assertion
+				schema: isHuman ? undefined : (schema as z.ZodType<any>),
+				service: options.service,
+			},
+		).andThen((response) => {
+			let data = response;
+			if (isHuman) {
+				const transformed = transformHumanKeys(data);
+				const parseResult = options.humanSchema.safeParse(transformed);
+				if (!parseResult.success) {
+					return errAsync(
+						new ValidationError(JSON.stringify(parseResult.error.issues)),
+					);
+				}
+				// biome-ignore lint/suspicious/noExplicitAny: Parsed data needs to be cast to any for further processing
+				data = parseResult.data as any;
+			}
+			return okAsync(
+				getDataRecords(
+					// biome-ignore lint/suspicious/noExplicitAny: Data records utility handles any type input
+					data as any,
+					options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
+				),
+			);
+		}) as TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P>;
 	}
 
 	protected _getSchema<T, H>(

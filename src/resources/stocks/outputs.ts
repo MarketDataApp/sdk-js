@@ -24,8 +24,8 @@ export const StockPriceHumanSchema = z.object({
 	s: z.string().optional(),
 	Symbol: z.array(z.string()),
 	Mid: z.array(z.number()),
-	"Change $": z.array(z.number()),
-	"Change %": z.array(z.number()),
+	Change_$: z.array(z.number()),
+	"Change_%": z.array(z.number()),
 	Date: z.array(z.number()),
 });
 

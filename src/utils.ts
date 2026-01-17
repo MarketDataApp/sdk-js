@@ -99,6 +99,16 @@ export const splitDatesByTimeframe = (
 	return ranges;
 };
 
+export const transformHumanKeys = (
+	data: Record<string, unknown>,
+): Record<string, unknown> => {
+	const transformed: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(data)) {
+		transformed[key.replace(/ /g, "_")] = value;
+	}
+	return transformed;
+};
+
 export const cleanAndValidateParams = <
 	T extends z.ZodTypeAny,
 	U extends z.ZodTypeAny,
