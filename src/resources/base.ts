@@ -74,7 +74,7 @@ export abstract class BaseResource {
 		).andThen((response) => {
 			let data = response;
 			if (isHuman) {
-				const transformed = transformHumanKeys(data);
+				const transformed = transformHumanKeys(data as Record<string, unknown>);
 				const parseResult = options.humanSchema.safeParse(transformed);
 				if (!parseResult.success) {
 					return errAsync(

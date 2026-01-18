@@ -90,6 +90,36 @@ export const StockNewsSchema = z.object({
 	updated: z.number(),
 });
 
+export const StockQuoteHumanSchema = z.object({
+	s: z.string().optional(),
+	Symbol: z.array(z.string()),
+	Ask: z.array(z.number()),
+	Ask_Size: z.array(z.number()),
+	Bid: z.array(z.number()),
+	Bid_Size: z.array(z.number()),
+	Mid: z.array(z.number()),
+	Last: z.array(z.number()),
+	Change_Price: z.array(z.number()),
+	Change_Percent: z.array(z.number()),
+	Volume: z.array(z.number()),
+	Date: z.array(z.number()),
+});
+
+export const StockQuoteSchema = z.object({
+	s: z.string().optional(),
+	symbol: z.array(z.string()),
+	ask: z.array(z.number()),
+	askSize: z.array(z.number()),
+	bid: z.array(z.number()),
+	bidSize: z.array(z.number()),
+	mid: z.array(z.number()),
+	last: z.array(z.number()),
+	change: z.array(z.number()),
+	changepct: z.array(z.number()),
+	volume: z.array(z.number()),
+	updated: z.array(z.number()),
+});
+
 import type { UnpackedObject } from "@/utils";
 
 export type StockCandleHumanRawResponse = z.infer<
@@ -104,6 +134,8 @@ export type StockEarningsHumanRawResponse = z.infer<
 export type StockEarningsRawResponse = z.infer<typeof StockEarningsSchema>;
 export type StockNewsHumanRawResponse = z.infer<typeof StockNewsHumanSchema>;
 export type StockNewsRawResponse = z.infer<typeof StockNewsSchema>;
+export type StockQuoteHumanRawResponse = z.infer<typeof StockQuoteHumanSchema>;
+export type StockQuoteRawResponse = z.infer<typeof StockQuoteSchema>;
 
 export type StockCandle = UnpackedObject<StockCandleRawResponse>;
 export type StockCandleHuman = UnpackedObject<StockCandleHumanRawResponse>;
@@ -111,6 +143,8 @@ export type StockPrice = UnpackedObject<StockPriceRawResponse>;
 export type StockPriceHuman = UnpackedObject<StockPriceHumanRawResponse>;
 export type StockNews = UnpackedObject<StockNewsRawResponse>;
 export type StockNewsHuman = UnpackedObject<StockNewsHumanRawResponse>;
+export type StockQuote = UnpackedObject<StockQuoteRawResponse>;
+export type StockQuoteHuman = UnpackedObject<StockQuoteHumanRawResponse>;
 
 export type StockCandleResponse = StockCandle[];
 export type StockCandleHumanResponse = StockCandleHuman[];
@@ -121,3 +155,5 @@ export type StockEarningsHumanResponse =
 	UnpackedObject<StockEarningsHumanRawResponse>[];
 export type StockNewsResponse = StockNews[];
 export type StockNewsHumanResponse = StockNewsHuman[];
+export type StockQuoteResponse = StockQuote[];
+export type StockQuoteHumanResponse = StockQuoteHuman[];

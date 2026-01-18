@@ -13,6 +13,7 @@ export const Endpoints = {
 	STOCKS_EARNINGS: "stocks/earnings/",
 	STOCKS_NEWS: "stocks/news/",
 	STOCKS_PRICES: "stocks/prices/",
+	STOCKS_BULK_QUOTES: "stocks/bulkquotes/",
 	USER: "user/",
 } as const;
 
@@ -38,6 +39,7 @@ export const Service = {
 	OPTIONS_QUOTES: `/v1/${Endpoints.OPTIONS_QUOTES}`,
 	OPTIONS_STRIKES: `/v1/${Endpoints.OPTIONS_STRIKES}`,
 	PRICES: `/v1/${Endpoints.STOCKS_PRICES}`,
+	STOCKS_QUOTES: `/v1/${Endpoints.STOCKS_BULK_QUOTES}`,
 	STATUS: `/v1/${Endpoints.MARKETS_STATUS}`,
 	USER: `/v1/${Endpoints.USER}`,
 } as const;

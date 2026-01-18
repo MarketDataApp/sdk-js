@@ -79,3 +79,16 @@ export const StocksNewsInternalParamsSchema = z.intersection(
 );
 
 export type StocksNewsParams = z.input<typeof StocksNewsParamsSchema>;
+
+export const StocksQuotesInputSchema = z.object({
+	symbols: z.union([z.string(), z.array(z.string())]),
+	"52week": z.boolean().optional(),
+	extended: z.boolean().optional(),
+});
+
+export const StocksQuotesParamsSchema = z.intersection(
+	StocksQuotesInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type StocksQuotesParams = z.input<typeof StocksQuotesParamsSchema>;

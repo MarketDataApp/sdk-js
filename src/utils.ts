@@ -106,8 +106,9 @@ export const transformHumanKeys = (
 	for (const [key, value] of Object.entries(data)) {
 		const newKey = key
 			.replace(/ /g, "_")
-			.replace("_$", "_Price")
-			.replace("_%", "_Percent");
+			.replace(/\$/g, "Price")
+			.replace(/%/g, "Percent")
+			.replace(/__/g, "_");
 		transformed[newKey] = value;
 	}
 	return transformed;
