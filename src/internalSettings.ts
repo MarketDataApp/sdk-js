@@ -11,6 +11,7 @@ export const Endpoints = {
 	OPTIONS_STRIKES: "options/strikes/",
 	STOCKS_CANDLES: "stocks/candles/",
 	STOCKS_EARNINGS: "stocks/earnings/",
+	STOCKS_NEWS: "stocks/news/",
 	STOCKS_PRICES: "stocks/prices/",
 	USER: "user/",
 } as const;
@@ -30,6 +31,7 @@ export const Service = {
 	CANDLES: `/v1/${Endpoints.STOCKS_CANDLES}`,
 	EARNINGS: `/v1/${Endpoints.STOCKS_EARNINGS}`,
 	FUNDS_CANDLES: `/v1/${Endpoints.FUNDS_CANDLES}`,
+	NEWS: `/v1/${Endpoints.STOCKS_NEWS}`,
 	OPTIONS_CHAIN: `/v1/${Endpoints.OPTIONS_CHAIN}`,
 	OPTIONS_EXPIRATIONS: `/v1/${Endpoints.OPTIONS_EXPIRATIONS}`,
 	OPTIONS_LOOKUP: `/v1/${Endpoints.OPTIONS_LOOKUP}`,

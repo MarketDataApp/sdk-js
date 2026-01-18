@@ -56,3 +56,26 @@ export const StocksEarningsParamsSchema = z.intersection(
 );
 
 export type StocksEarningsParams = z.input<typeof StocksEarningsParamsSchema>;
+
+export const StocksNewsBaseInputSchema = z.object({
+	from: z.union([z.string(), z.date()]).optional(),
+	to: z.union([z.string(), z.date()]).optional(),
+	countback: z.number().optional(),
+	date: z.union([z.string(), z.date()]).optional(),
+});
+
+export const StocksNewsInputSchema = StocksNewsBaseInputSchema.extend({
+	symbol: z.string(),
+});
+
+export const StocksNewsParamsSchema = z.intersection(
+	StocksNewsInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export const StocksNewsInternalParamsSchema = z.intersection(
+	StocksNewsBaseInputSchema,
+	UserUniversalAPIParamsInputSchema,
+);
+
+export type StocksNewsParams = z.input<typeof StocksNewsParamsSchema>;
