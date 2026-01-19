@@ -109,11 +109,13 @@ async function main() {
     }
     console.log();
 
-    // // Test 7: Options Chain
+    // Test 7: Options Chain
     testLabel("Test 7: Options Chain (AAPL, Human Format)");
     const optionsChain = await sdk.options.chain("AAPL", {
-        expiration: "ALL"
+        expiration: "ALL",
+        human: true,
     });
+    let optionSymbol = "";
     if (optionsChain.isErr()) {
         console.error("❌ Error:", optionsChain.error.message);
     } else {
@@ -121,7 +123,121 @@ async function main() {
         console.log("✓ Success! Got", data.length, "option(s)");
         if (data.length > 0) {
             console.log("First option:", data[0]);
+
+            // Find first unexpired option (Days_To_Expiration > 0)
+            const unexpiredOption = data.find((opt: any) => opt.Days_To_Expiration > 0);
+            if (unexpiredOption) {
+                console.log("Selected unexpired option:", unexpiredOption.Symbol);
+                optionSymbol = unexpiredOption.Symbol;
+            } else {
+                console.log("⚠️ No unexpired option found in chain, using first available (Test 14 might fail)");
+                optionSymbol = data[0].Symbol;
+            }
         }
+    }
+    console.log();
+
+    // Test 8: Stock Quotes (Bulk)
+    testLabel("Test 8: Stock Quotes (Bulk, Human Format)");
+    const stockQuotes = await sdk.stocks.quotes(["AAPL", "MSFT"], {
+        human: true,
+    });
+    if (stockQuotes.isErr()) {
+        console.error("❌ Error:", stockQuotes.error.message);
+    } else {
+        const data = stockQuotes.value;
+        console.log("✓ Success! Got", data.length, "quote(s)");
+        if (data.length > 0) console.log("First quote:", data[0]);
+    }
+    console.log();
+
+    // Test 9: Stock Earnings
+    testLabel("Test 9: Stock Earnings (AAPL, Human Format)");
+    const stockEarnings = await sdk.stocks.earnings("AAPL", {
+        human: true,
+    });
+    if (stockEarnings.isErr()) {
+        console.error("❌ Error:", stockEarnings.error.message);
+    } else {
+        const data = stockEarnings.value;
+        console.log("✓ Success! Got", data.length, "earning(s)");
+        if (data.length > 0) console.log("First earning:", data[0]);
+    }
+    console.log();
+
+    // Test 10: Stock News
+    testLabel("Test 10: Stock News (AAPL, Human Format)");
+    const stockNews = await sdk.stocks.news("AAPL", {
+        human: true,
+    });
+    if (stockNews.isErr()) {
+        console.error("❌ Error:", stockNews.error.message);
+    } else {
+        const data = stockNews.value;
+        console.log("✓ Success! Got", data.length, "news item(s)");
+        if (data.length > 0) console.log("First news:", data[0]);
+    }
+    console.log();
+
+    // Test 11: Options Expirations
+    testLabel("Test 11: Options Expirations (AAPL, Human Format)");
+    const optionsExpirations = await sdk.options.expirations("AAPL", {
+        human: true,
+    });
+    if (optionsExpirations.isErr()) {
+        console.error("❌ Error:", optionsExpirations.error.message);
+    } else {
+        const data = optionsExpirations.value as any;
+        const count = data.Expirations ? data.Expirations.length : 0;
+        console.log("✓ Success! Got", count, "expiration(s)");
+        if (count > 0) console.log("First expiration:", data.Expirations[0]);
+    }
+    console.log();
+
+    // Test 12: Options Strikes
+    testLabel("Test 12: Options Strikes (AAPL, Human Format)");
+    const optionsStrikes = await sdk.options.strikes("AAPL", {
+        human: true,
+    });
+    if (optionsStrikes.isErr()) {
+        console.error("❌ Error:", optionsStrikes.error.message);
+    } else {
+        const data = optionsStrikes.value as any;
+        const keys = Object.keys(data).filter(k => k !== 's' && k !== 'updated' && k !== 'Date');
+        console.log("✓ Success! Got strikes for", keys.length, "expiration date(s)");
+        if (keys.length > 0) console.log(`First date (${keys[0]}) strikes:`, data[keys[0]].slice(0, 5), "...");
+    }
+    console.log();
+
+    // Test 13: Options Lookup
+    testLabel("Test 13: Options Lookup (AAPL, Human Format)");
+    const optionsLookup = await sdk.options.lookup("AAPL 7/28/2023 200 Call", {
+        human: true,
+    });
+    if (optionsLookup.isErr()) {
+        console.error("❌ Error:", optionsLookup.error.message);
+    } else {
+        const data = optionsLookup.value as any;
+        console.log("✓ Success! Found symbol:", data.Symbol);
+    }
+    console.log();
+
+    // Test 14: Options Quotes
+    testLabel("Test 14: Options Quotes (Specific Option, Human Format)");
+    if (optionSymbol) {
+        console.log("Testing with option symbol:", optionSymbol);
+        const optionsQuotes = await sdk.options.quotes(optionSymbol, {
+            human: true,
+        });
+        if (optionsQuotes.isErr()) {
+            console.error("❌ Error:", optionsQuotes.error.message);
+        } else {
+            const data = optionsQuotes.value;
+            console.log("✓ Success! Got", data.length, "quote(s)");
+            if (data.length > 0) console.log("First quote:", data[0]);
+        }
+    } else {
+        console.log("⚠️ Skipping Test 14 - No option symbol available from Test 7");
     }
     console.log();
 

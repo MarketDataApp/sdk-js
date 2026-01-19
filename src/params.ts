@@ -30,7 +30,10 @@ export function processParams(
 		format: mappedFormat,
 		dateformat: inputParams.dateFormat || settings.marketdataDateFormat,
 		headers: inputParams.addHeaders ?? settings.marketdataAddHeaders,
-		human: inputParams.useHumanReadable ?? settings.marketdataUseHumanReadable,
+		human:
+			inputParams.useHumanReadable ??
+			inputParams.human ??
+			settings.marketdataUseHumanReadable,
 	};
 
 	return Object.fromEntries(
