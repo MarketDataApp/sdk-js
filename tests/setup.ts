@@ -10,9 +10,6 @@ beforeEach(() => {
 		const urlString = url.toString();
 
 		if (urlString.includes("user")) {
-
-
-
 			return createMockResponse({
 				json: {},
 				headers: {
@@ -25,7 +22,6 @@ beforeEach(() => {
 		}
 
 		if (urlString.includes("/status/")) {
-
 			const _time = Math.floor(Date.now() / 1000);
 			return createMockResponse({
 				json: {

@@ -5,12 +5,14 @@ import type { Result } from "neverthrow";
 export interface MockResponseOptions {
 	ok?: boolean;
 	status?: number;
-	json?: any;
+	json?: unknown;
 	text?: string;
 	headers?: Record<string, string>;
 }
 
-export function createMockResponse(options: MockResponseOptions = {}): any {
+export function createMockResponse(
+	options: MockResponseOptions = {},
+): Partial<Response> {
 	const {
 		ok = true,
 		status = 200,

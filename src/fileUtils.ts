@@ -1,6 +1,3 @@
-import fs from "fs/promises";
-import path from "path";
-
 /**
  * Saves a Blob to a file.
  *
@@ -12,6 +9,18 @@ export async function saveBlobToFile(
 	blob: Blob,
 	filename?: string,
 ): Promise<string> {
+	let fs: typeof import("node:fs/promises");
+	let path: typeof import("node:path");
+
+	try {
+		fs = (await import("node:fs/promises")).default;
+		path = (await import("node:path")).default;
+	} catch {
+		throw new Error(
+			"File system access is not available. .save() method is only supported in Node.js environments.",
+		);
+	}
+
 	let targetPath: string;
 
 	if (filename) {
