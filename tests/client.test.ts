@@ -130,7 +130,7 @@ describe("MarketDataClient", () => {
 		});
 
 		it("retries on failure", async () => {
-			const client = new MarketDataClient({ maxRetries: 2 }); // 1 initial + 2 retries = 3 attempts total
+			const client = new MarketDataClient({ maxRetries: 2 });
 
 			let stockPriceCallCount = 0;
 			fetchMock.mockImplementation(async (url: string) => {
@@ -182,7 +182,7 @@ describe("MarketDataClient", () => {
 
 			const result = unwrapOk(await client.stocks.prices({ symbols: "AAPL" }));
 
-			expect(stockPriceCallCount).toBe(3); // 1 initial + 2 retries
+			expect(stockPriceCallCount).toBe(3);
 			expect(result).toEqual([
 				{
 					symbol: "AAPL",
@@ -223,7 +223,7 @@ describe("MarketDataClient", () => {
 
 			const result = await client.stocks.prices({ symbols: "AAPL" });
 
-			expect(fetchMock).toHaveBeenCalledTimes(5); // 1 /user/ + 4 /stocks/prices/ (initial + 3 retries)
+			expect(fetchMock).toHaveBeenCalledTimes(5);
 			expect(result.isErr()).toBe(true);
 			if (result.isErr()) {
 				expect(result.error).toBeInstanceOf(RequestError);

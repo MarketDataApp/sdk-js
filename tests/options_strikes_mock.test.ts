@@ -30,7 +30,6 @@ describe("OptionsResource (Mock Strikes)", () => {
         expect(data).toBeDefined();
         expect(data.s).toBe("ok");
         expect(data.updated).toBeDefined();
-        // Check for dynamic date keys
         const keys = Object.keys(data).filter(k => k !== "s" && k !== "updated");
         expect(keys.length).toBeGreaterThan(0);
         expect(Array.isArray(data[keys[0]])).toBe(true);
@@ -58,7 +57,6 @@ describe("OptionsResource (Mock Strikes)", () => {
         const data = result.value;
         expect(data).toBeDefined();
         expect(data.Date).toBeDefined();
-        // Check for dynamic date keys
         const keys = Object.keys(data).filter(k => k !== "Date");
         expect(keys.length).toBeGreaterThan(0);
         expect(Array.isArray(data[keys[0]])).toBe(true);

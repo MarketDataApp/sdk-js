@@ -8,6 +8,7 @@ import {
 	RequestError,
 	ValidationError,
 } from "@/error";
+import { saveBlobToFile } from "@/fileUtils";
 import {
 	CHECK_RATE_LIMITS,
 	Endpoints,
@@ -100,6 +101,7 @@ export class MarketDataClient implements IMarketDataClient {
 		return this._executeWithRetry<T>(
 			url,
 			headers,
+			params,
 			options.schema,
 			options.service,
 			{
@@ -152,6 +154,7 @@ export class MarketDataClient implements IMarketDataClient {
 	private _executeWithRetry<T>(
 		url: URL,
 		headers: Record<string, string>,
+		params?: MarketDataParams,
 		schema?: z.ZodType<T>,
 		service?: string,
 		options: {
@@ -160,20 +163,44 @@ export class MarketDataClient implements IMarketDataClient {
 			signal?: AbortSignal;
 		} = {},
 	): MarketDataResult<T> {
-		return ResultAsync.fromPromise(
-			pRetry(() => this._performFetch(url, headers, schema, service, options), {
-				retries: options.skipRetry ? 0 : this.settings.marketdataMaxRetries,
-				minTimeout: this.settings.marketdataRetryInitialWait * 1000,
-				maxTimeout: this.settings.marketdataRetryMaxWait * 1000,
-				factor: this.settings.marketdataRetryFactor,
-				onFailedAttempt: (error) => {
-					this.logger.warn(
-						`Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`,
-					);
+		const result = ResultAsync.fromPromise(
+			pRetry(
+				() =>
+					this._performFetch(url, headers, params, schema, service, options),
+				{
+					retries: options.skipRetry ? 0 : this.settings.marketdataMaxRetries,
+					minTimeout: this.settings.marketdataRetryInitialWait * 1000,
+					maxTimeout: this.settings.marketdataRetryMaxWait * 1000,
+					factor: this.settings.marketdataRetryFactor,
+					onFailedAttempt: (error) => {
+						this.logger.warn(
+							`Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`,
+						);
+					},
 				},
-			}),
+			),
 			(e) => this._mapFetchError(e),
-		);
+		) as unknown as MarketDataResult<T>;
+
+		result.blob = async function (): Promise<Blob> {
+			const data = await this;
+			if (data.isErr()) {
+				throw data.error;
+			}
+			if (data.value instanceof Blob) {
+				return data.value;
+			}
+			return new Blob([JSON.stringify(data.value)], {
+				type: "application/json",
+			});
+		};
+
+		result.save = async function (filename?: string): Promise<string> {
+			const blob = await this.blob();
+			return saveBlobToFile(blob, filename);
+		};
+
+		return result;
 	}
 
 	private async _handleResponseError(
@@ -239,6 +266,7 @@ export class MarketDataClient implements IMarketDataClient {
 	private async _performFetch<T>(
 		url: URL,
 		headers: Record<string, string>,
+		params?: MarketDataParams,
 		schema?: z.ZodType<T>,
 		service?: string,
 		options: {
@@ -270,6 +298,15 @@ export class MarketDataClient implements IMarketDataClient {
 
 			if (!response.ok) {
 				await this._handleResponseError(response, service);
+			}
+
+			if (
+				(params &&
+					(params.outputFormat === "csv" || params.format === "csv")) ||
+				(!params && this.settings.marketdataOutputFormat === "csv" && !schema)
+			) {
+				const blob = await response.blob();
+				return blob as unknown as T;
 			}
 
 			const json = await response.json();

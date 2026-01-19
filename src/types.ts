@@ -27,10 +27,18 @@ export interface IMarketDataClient {
 	readonly token?: string;
 }
 
-export type MarketDataResult<T> = ResultAsync<T, MarketDataClientError>;
+export interface MarketDataResult<T>
+	extends ResultAsync<T, MarketDataClientError> {
+	save(filename?: string): Promise<string>;
+	blob(): Promise<Blob>;
+}
 
 export type TypedResult<T, H, P> = MarketDataResult<
-	P extends { useHumanReadable: true } | { human: true } ? H : T
+	P extends { outputFormat: "csv" }
+		? Blob
+		: P extends { useHumanReadable: true } | { human: true }
+			? H
+			: T
 >;
 
 export interface UserRateLimits {
@@ -54,7 +62,7 @@ export const BaseMarketDataParamsSchema = z.object({
 	columns: z.array(z.string()).optional(),
 	dateFormat: z.enum(DateFormat).optional(),
 	mode: z.enum(Mode).optional(),
-	outputFormat: z.enum(OutputFormat).optional().default(OutputFormat.JSON),
+	outputFormat: z.enum(OutputFormat).optional(),
 	useHumanReadable: BooleanString.optional(),
 });
 

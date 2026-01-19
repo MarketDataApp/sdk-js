@@ -72,15 +72,12 @@ describe("StocksResource Quotes (Mock Data)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		// Test string overload
 		const result1 = unwrapOk(await client.stocks.quotes("AAPL"));
 		expect(result1).toBeDefined();
 
-		// Test array overload
 		const result2 = unwrapOk(await client.stocks.quotes(["AAPL", "MSFT"]));
 		expect(result2).toHaveLength(2);
 
-		// Test with extra params
 		const result3 = unwrapOk(
 			await client.stocks.quotes({
 				symbols: "AAPL",

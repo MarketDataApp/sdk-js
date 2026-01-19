@@ -1,0 +1,58 @@
+import fs from "fs/promises";
+import path from "path";
+
+/**
+ * Saves a Blob to a file.
+ *
+ * @param blob - The Blob to save.
+ * @param filename - Optional filename. If not provided, a default one will be generated in the 'output' directory.
+ * @returns The absolute path of the saved file.
+ */
+export async function saveBlobToFile(
+	blob: Blob,
+	filename?: string,
+): Promise<string> {
+	let targetPath: string;
+
+	if (filename) {
+		if (!filename.endsWith(".csv")) {
+			throw new Error(`Filename must end with .csv: ${filename}`);
+		}
+		targetPath = path.resolve(filename);
+	} else {
+		const now = new Date();
+		const timestamp = now
+			.toISOString()
+			.replace(/[-T:.Z]/g, "")
+			.slice(0, 14);
+		const ms = String(now.getMilliseconds()).padStart(3, "0");
+		const name = `${timestamp}_${ms}.csv`;
+
+		const outputDir = path.resolve("output");
+		try {
+			await fs.access(outputDir);
+		} catch {
+			await fs.mkdir(outputDir, { recursive: true });
+		}
+		targetPath = path.join(outputDir, name);
+	}
+
+	const parentDir = path.dirname(targetPath);
+	try {
+		await fs.access(parentDir);
+	} catch {
+		await fs.mkdir(parentDir, { recursive: true });
+	}
+
+	try {
+		await fs.access(targetPath);
+		throw new Error(`Filename already exists: ${targetPath}`);
+	} catch (e) {
+		if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+	}
+
+	const arrayBuffer = await blob.arrayBuffer();
+	await fs.writeFile(targetPath, Buffer.from(arrayBuffer));
+
+	return targetPath;
+}

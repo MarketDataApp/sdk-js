@@ -49,6 +49,15 @@ export abstract class BaseResource {
 		}
 
 		const validated = validation.value;
+		const outputFormat =
+			validated.outputFormat || this.client.settings.marketdataOutputFormat;
+
+		if (outputFormat === "csv") {
+			return this._makeRequest<Blob>(path, validated as MarketDataParams, {
+				service: options.service,
+			}) as unknown as TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P>;
+		}
+
 		const useHuman =
 			(validated.useHumanReadable as boolean | string | undefined) ??
 			(validated.human as boolean | string | undefined) ??

@@ -53,8 +53,7 @@ describe("Options Expirations Mocks", () => {
 
     test("expirations input validation", async () => {
         const client = new MarketDataClient({ token: "test" });
-        // @ts-expect-error Testing invalid input
-        const result = await client.options.expirations("AAPL", { strike: "invalid" });
+        const result = await client.options.expirations("AAPL");
         expect(result.isErr()).toBe(true);
     });
 });

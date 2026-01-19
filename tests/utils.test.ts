@@ -5,7 +5,6 @@ describe("utils", () => {
 	describe("formatDate", () => {
 		it("formats Date objects correctly", () => {
 			const date = new Date("2023-01-01T12:00:00Z");
-			// formatDate returns YYYY-MM-DD
 			expect(formatDate(date)).toBe("2023-01-01");
 		});
 
@@ -19,13 +18,10 @@ describe("utils", () => {
 		});
 
 		it("formats Unix timestamps correctly", () => {
-			// 1672531200 = 2023-01-01 00:00:00 UTC
 			expect(formatDate(1672531200)).toBe("2023-01-01");
 		});
 
 		it("formats Excel serial dates correctly", () => {
-			// 44927 = 2023-01-01 approx (depending on leap year logic, Python says 0 < val < 60000)
-			// 1899-12-30 + 10 = 1900-01-09
 			expect(formatDate(10)).toBe("1900-01-09");
 			expect(formatDate(44927)).toBe("2023-01-01");
 		});
