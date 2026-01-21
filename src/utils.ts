@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "neverthrow";
+import { err, ok, type Result, type ResultAsync } from "neverthrow";
 import type { z } from "zod";
 import { ValidationError } from "@/error";
 
@@ -139,3 +139,35 @@ export const cleanAndValidateParams = <
 export type Unpacked<T> = T extends (infer U)[] ? U : T;
 
 export type UnpackedObject<T> = { [K in keyof T]: Unpacked<T[K]> };
+
+import type { MarketDataResult } from "@/types";
+
+export function attachMarketDataMethods<T>(
+	result: ResultAsync<T, unknown>,
+	saveBlobToFile: (blob: Blob, filename?: string) => Promise<string>,
+): MarketDataResult<T> {
+	const r = result as unknown as MarketDataResult<T>;
+	r.blob = async function (this: ResultAsync<T, unknown>): Promise<Blob> {
+		const res = await this;
+		if (res.isOk()) {
+			const val = res.value;
+			if (val instanceof Blob) {
+				return val;
+			}
+			return new Blob([JSON.stringify(val)], {
+				type: "application/json",
+			});
+		}
+		throw res.error;
+	};
+
+	r.save = async function (
+		this: Record<string, unknown>,
+		filename?: string,
+	): Promise<string> {
+		const blob = await (this.blob as () => Promise<Blob>)();
+		return saveBlobToFile(blob, filename);
+	};
+
+	return r;
+}

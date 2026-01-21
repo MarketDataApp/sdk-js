@@ -257,6 +257,43 @@ async function main() {
 	}
 	console.log();
 
+	// Test 15: Blob and Save (JSON)
+	testLabel("Test 15: Blob and Save (JSON)");
+	const resultJson = sdk.stocks.prices("AAPL");
+	const blobJson = await resultJson.blob();
+	console.log("✓ JSON Blob created:", blobJson.type, blobJson.size, "bytes");
+
+	const pathJson = await resultJson.save("test_aapl.json");
+	console.log("✓ JSON saved to:", pathJson);
+	console.log();
+
+	// Test 16: Blob and Save (CSV)
+	testLabel("Test 16: Blob and Save (CSV)");
+	const resultCsv = sdk.stocks.prices("AAPL", { format: "csv" });
+	const blobCsv = await resultCsv.blob();
+	console.log("✓ CSV Blob created:", blobCsv.type, blobCsv.size, "bytes");
+
+	const pathCsv = await resultCsv.save("test_aapl.csv");
+	console.log("✓ CSV saved to:", pathCsv);
+	console.log();
+
+	// Test 17: Save (Extension Mismatch Validation)
+	testLabel("Test 17: Save (Extension Mismatch Validation)");
+	try {
+		console.log("Testing invalid save: JSON as .csv");
+		await sdk.stocks.prices("AAPL").save("invalid.csv");
+		console.error("❌ Error: Should have failed");
+	} catch (error) {
+		console.log("✓ Success! Caught expected error:", (error as Error).message);
+	}
+	console.log();
+
+	// Test 18: Auto-filename Save
+	testLabel("Test 18: Auto-filename Save");
+	const autoPath = await sdk.stocks.prices("AAPL", { format: "csv" }).save();
+	console.log("✓ Auto-saved to:", autoPath);
+	console.log();
+
 	console.log("=".repeat(60));
 	console.log("Test Suite Complete");
 	console.log("=".repeat(60));

@@ -98,6 +98,10 @@ export const UserUniversalAPIParamsInputSchema = z.preprocess(
 			out.useHumanReadable = out.human;
 			delete out.human;
 		}
+		if ("format" in out) {
+			out.outputFormat = out.format;
+			delete out.format;
+		}
 		if ("output_format" in out) {
 			out.outputFormat = out.output_format;
 			delete out.output_format;

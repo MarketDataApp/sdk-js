@@ -28,6 +28,7 @@ import type {
 	MarketDataResult,
 	UserRateLimits,
 } from "@/types";
+import { attachMarketDataMethods } from "@/utils";
 
 import pkg from "../package.json";
 
@@ -94,7 +95,7 @@ export class MarketDataClient implements IMarketDataClient {
 	): MarketDataResult<T> {
 		const includeApiVersion = options.includeApiVersion ?? true;
 		const url = this._buildUrl(path, params, includeApiVersion);
-		const headers = { ...this.headers, ...options.headers };
+		const headers = this._getHeaders(params, options);
 
 		this.logger.debug(`Making request to: ${url.toString()}`);
 
@@ -180,27 +181,9 @@ export class MarketDataClient implements IMarketDataClient {
 				},
 			),
 			(e) => this._mapFetchError(e),
-		) as unknown as MarketDataResult<T>;
+		);
 
-		result.blob = async function (): Promise<Blob> {
-			const data = await this;
-			if (data.isErr()) {
-				throw data.error;
-			}
-			if (data.value instanceof Blob) {
-				return data.value;
-			}
-			return new Blob([JSON.stringify(data.value)], {
-				type: "application/json",
-			});
-		};
-
-		result.save = async function (filename?: string): Promise<string> {
-			const blob = await this.blob();
-			return saveBlobToFile(blob, filename);
-		};
-
-		return result;
+		return attachMarketDataMethods(result, saveBlobToFile);
 	}
 
 	private async _handleResponseError(
@@ -300,13 +283,8 @@ export class MarketDataClient implements IMarketDataClient {
 				await this._handleResponseError(response, service);
 			}
 
-			if (
-				(params &&
-					(params.outputFormat === "csv" || params.format === "csv")) ||
-				(!params && this.settings.marketdataOutputFormat === "csv" && !schema)
-			) {
-				const blob = await response.blob();
-				return blob as unknown as T;
+			if (this._isCsvRequest(params, schema)) {
+				return this._handleCsvResponse(response) as unknown as T;
 			}
 
 			const json = await response.json();
@@ -372,5 +350,41 @@ export class MarketDataClient implements IMarketDataClient {
 				requestsReset: Number(headers.get("x-api-ratelimit-reset")) || 0,
 			};
 		}
+	}
+
+	private async _handleCsvResponse(response: Response): Promise<Blob> {
+		const contentType = response.headers.get("content-type");
+		if (contentType?.includes("application/json")) {
+			const json = await response.json();
+			const errmsg = json.errmsg || JSON.stringify(json);
+			throw new RequestError(`API returned error: ${errmsg}`);
+		}
+		return response.blob();
+	}
+
+	private _getHeaders(
+		params?: MarketDataParams,
+		options: {
+			headers?: Record<string, string>;
+			schema?: z.ZodType<unknown>;
+		} = {},
+	): Record<string, string> {
+		return {
+			...this.headers,
+			Accept: this._isCsvRequest(params, options.schema)
+				? "text/csv"
+				: "application/json",
+			...options.headers,
+		};
+	}
+
+	private _isCsvRequest(
+		params?: MarketDataParams,
+		schema?: z.ZodType<unknown>,
+	): boolean {
+		if (params && (params.outputFormat === "csv" || params.format === "csv")) {
+			return true;
+		}
+		return !params && this.settings.marketdataOutputFormat === "csv" && !schema;
 	}
 }

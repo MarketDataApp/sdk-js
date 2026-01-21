@@ -21,6 +21,7 @@ export function processParams(
 ): MarketDataParams {
 	const outputFormat =
 		(inputParams.outputFormat as string) ||
+		(inputParams.format as string) ||
 		settings.marketdataOutputFormat ||
 		"internal";
 

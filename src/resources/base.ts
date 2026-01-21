@@ -2,6 +2,7 @@ import { err, errAsync, ok, okAsync, type Result } from "neverthrow";
 
 import type { z } from "zod";
 import { ValidationError } from "@/error";
+import { saveBlobToFile } from "@/fileUtils";
 import { DEFAULT_EXCLUDE_KEYS } from "@/internalSettings";
 import { processParams } from "@/params";
 import type {
@@ -10,8 +11,8 @@ import type {
 	MarketDataResult,
 	TypedResult,
 } from "@/types";
-
 import {
+	attachMarketDataMethods,
 	getDataRecords,
 	transformHumanKeys,
 	type UnpackedObject,
@@ -72,7 +73,7 @@ export abstract class BaseResource {
 			options.humanSchema,
 		);
 
-		return this._makeRequest<Record<string, unknown>>(
+		const result = this._makeRequest<Record<string, unknown>>(
 			path,
 			validated as MarketDataParams,
 			{
@@ -100,7 +101,13 @@ export abstract class BaseResource {
 					options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
 				),
 			);
-		}) as TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P>;
+		});
+
+		return attachMarketDataMethods(result, saveBlobToFile) as TypedResult<
+			UnpackedObject<T>[],
+			UnpackedObject<H>[],
+			P
+		>;
 	}
 
 	protected _getSchema<T, H>(

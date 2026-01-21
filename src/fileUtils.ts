@@ -27,6 +27,15 @@ export async function saveBlobToFile(
 		if (!filename.endsWith(".csv")) {
 			throw new Error(`Filename must end with .csv: ${filename}`);
 		}
+
+		const expectedExt = blob.type === "application/json" ? ".json" : ".csv";
+		if (ext !== expectedExt) {
+			let detail = `Cannot save ${blob.type === "application/json" ? "JSON" : "CSV"} data as ${ext}`;
+			if (blob.type === "application/json" && ext === ".csv") {
+				detail += ". The blob appears to be JSON despite a CSV request.";
+			}
+			throw new Error(`Extension mismatch: ${detail}`);
+		}
 		targetPath = path.resolve(filename);
 	} else {
 		const now = new Date();
