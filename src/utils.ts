@@ -1,0 +1,100 @@
+export const formatDate = (date: Date | string | number): string => {
+	if (date instanceof Date) {
+		return date.toISOString().split("T")[0];
+	}
+	if (typeof date === "string") {
+		const d = new Date(date);
+		if (!Number.isNaN(d.getTime()) && date.includes("-")) {
+			return d.toISOString().split("T")[0];
+		}
+		return date;
+	}
+	if (typeof date === "number") {
+		if (date > 0 && date < 60000) {
+			const excelBase = new Date(1899, 11, 30);
+			const d = new Date(excelBase.getTime() + date * 24 * 60 * 60 * 1000);
+			return d.toISOString().split("T")[0];
+		}
+		const isMs = date > 10000000000;
+		return new Date(isMs ? date : date * 1000).toISOString().split("T")[0];
+	}
+	return String(date);
+};
+
+export const formatValue = (value: unknown): string | undefined => {
+	if (value === null || value === undefined) return undefined;
+	if (value === true || value === false) return String(value).toLowerCase();
+	if (value instanceof Date) return formatDate(value);
+	if (Array.isArray(value)) return value.map(formatValue).join(",");
+	return String(value);
+};
+
+export const getDataRecords = <T extends Record<string, unknown>>(
+	data: T,
+	excludeKeys: readonly string[] = [],
+): stockRequestResult<T> => {
+	const keys = (Object.keys(data) as (keyof T)[]).filter(
+		(k) => !excludeKeys.includes(k as string),
+	);
+	if (keys.length === 0) return [];
+
+	const length = keys.reduce((max, key) => {
+		const val = data[key];
+		return Array.isArray(val) ? Math.max(max, val.length) : max;
+	}, 1);
+
+	return Array.from({ length }, (_, i) => {
+		return Object.fromEntries(
+			keys.map((key) => {
+				const val = data[key];
+				return [key, Array.isArray(val) ? val[i] : val];
+			}),
+		) as { [K in keyof T]: Unpacked<T[K]> };
+	});
+};
+
+export const normalizeArgs = <T>(
+	arg1: unknown,
+	arg2: unknown,
+	key: keyof T,
+): T => {
+	if (
+		typeof arg1 === "string" ||
+		typeof arg1 === "number" ||
+		typeof arg1 === "boolean" ||
+		Array.isArray(arg1)
+	) {
+		return { ...(arg2 as object), [key]: arg1 } as T;
+	}
+	return arg1 as T;
+};
+
+export const splitDatesByTimeframe = (
+	start: Date,
+	end: Date,
+	days: number,
+): [Date, Date][] => {
+	if (start >= end) {
+		throw new Error("start must be before end");
+	}
+
+	const ranges: [Date, Date][] = [];
+	let current = new Date(start);
+	const timeframeMs = days * 24 * 60 * 60 * 1000;
+
+	while (true) {
+		const nextCut = new Date(current.getTime() + timeframeMs);
+		if (nextCut >= end) {
+			ranges.push([current, end]);
+			break;
+		}
+		ranges.push([current, nextCut]);
+		current = nextCut;
+	}
+
+	return ranges;
+};
+
+export type stockRequestResult<T> = { [K in keyof T]: Unpacked<T[K]> }[];
+
+export type Unpacked<T> = T extends (infer U)[] ? U : T;
