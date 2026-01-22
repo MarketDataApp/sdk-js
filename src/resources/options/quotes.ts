@@ -75,7 +75,7 @@ export function quotes(
 
 	return ResultAsync.combine(requests).map((results) => {
 		return results.flat() as OptionsQuotesResponse & OptionsQuotesHumanResponse;
-	}) as TypedResult<
+	}) as unknown as TypedResult<
 		OptionsQuotesResponse,
 		OptionsQuotesHumanResponse,
 		OptionsQuotesParams & MarketDataParams
