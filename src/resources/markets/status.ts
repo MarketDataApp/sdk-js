@@ -16,6 +16,8 @@ export function status<P extends MarketStatusParams & MarketDataParams>(
 	this: MarketsResource,
 	params: P = {} as P,
 ): TypedResult<MarketStatusResponse, MarketStatusHumanResponse, P> {
+	this.logger.debug("Fetching market status...");
+
 	return this._fetch(Endpoints.MARKETS_STATUS, params, {
 		inputSchema: MarketStatusParamsSchema,
 		regularSchema: MarketStatusSchema,

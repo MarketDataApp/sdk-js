@@ -38,6 +38,8 @@ export function strikes(
 	const params = normalizeArgs(arg1, arg2, "symbol") as OptionsStrikesParams &
 		MarketDataParams;
 
+	this.logger.debug("Fetching options strikes...");
+
 	return this._makeRequest<
 		OptionsStrikesResponse | OptionsStrikesHumanResponse
 	>(`${Endpoints.OPTIONS_STRIKES}${params.symbol}/`, params, {

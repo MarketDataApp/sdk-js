@@ -42,6 +42,8 @@ export function prices(
 	const params = normalizeArgs(arg1, arg2, "symbols") as StocksPricesParams &
 		MarketDataParams;
 
+	this.logger.debug("Fetching stock prices...");
+
 	return this._fetch(Endpoints.STOCKS_PRICES, params, {
 		inputSchema: StocksPricesParamsSchema,
 		regularSchema: StockPriceSchema,

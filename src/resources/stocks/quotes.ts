@@ -44,6 +44,8 @@ export function quotes(
 
 	const { symbols, ...queryParams } = params;
 
+	this.logger.debug("Fetching stock quotes...");
+
 	return this._fetch(
 		Endpoints.STOCKS_BULK_QUOTES,
 		{ ...queryParams, symbols } as MarketDataParams,

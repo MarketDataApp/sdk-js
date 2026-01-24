@@ -40,6 +40,8 @@ export function candles(
 	const params = normalizeArgs(arg1, arg2, "symbol") as FundsCandlesParams &
 		MarketDataParams;
 
+	this.logger.debug("Fetching fund candles...");
+
 	return this._fetch(
 		`${Endpoints.FUNDS_CANDLES}${params.resolution || "D"}/${params.symbol}/`,
 		params,

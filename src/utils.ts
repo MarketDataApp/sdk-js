@@ -171,3 +171,16 @@ export function attachMarketDataMethods<T>(
 
 	return r;
 }
+
+export function formatDurationLog(durationMs: number): string {
+	if (durationMs < 1000) {
+		return `${Math.floor(durationMs).toString().padStart(3, "0")}ms`;
+	}
+	if (durationMs < 10000) {
+		return `${(durationMs / 1000).toFixed(2)}s`;
+	}
+	if (durationMs < 100000) {
+		return `${(durationMs / 1000).toFixed(1).padStart(4, "0")}s`;
+	}
+	return `${(durationMs / 1000).toFixed(0).padStart(5, " ")}s`;
+}

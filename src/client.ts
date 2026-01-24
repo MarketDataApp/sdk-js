@@ -28,7 +28,7 @@ import type {
 	MarketDataResult,
 	UserRateLimits,
 } from "@/types";
-import { attachMarketDataMethods } from "@/utils";
+import { attachMarketDataMethods, formatDurationLog } from "@/utils";
 
 import pkg from "../package.json";
 
@@ -68,6 +68,14 @@ export class MarketDataClient implements IMarketDataClient {
 			config.logger ||
 			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
 
+		this.logger.info("Initializing MarketDataClient");
+		const tokenLog = this.token
+			? `${"*".repeat(Math.max(0, this.token.length - 4))}${this.token.slice(-4)}`
+			: "None";
+		this.logger.debug(`Token: ${tokenLog}`);
+		this.logger.info(`Base URL: ${this.baseUrl}`);
+		this.logger.info(`API Version: ${this.apiVersion}`);
+
 		this.headers = {
 			Accept: "application/json",
 			"User-Agent": `marketdata-js-${pkg.version}`,
@@ -91,13 +99,12 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
 			signal?: AbortSignal;
+			responseLogLevel?: LogLevel;
 		} = {},
 	): MarketDataResult<T> {
 		const includeApiVersion = options.includeApiVersion ?? true;
 		const url = this._buildUrl(path, params, includeApiVersion);
 		const headers = this._getHeaders(params, options);
-
-		this.logger.debug(`Making request to: ${url.toString()}`);
 
 		return this._executeWithRetry<T>(
 			url,
@@ -109,6 +116,7 @@ export class MarketDataClient implements IMarketDataClient {
 				skipRateLimitCheck: options.skipRateLimitCheck,
 				skipRetry: options.skipRetry,
 				signal: options.signal,
+				responseLogLevel: options.responseLogLevel,
 			},
 		);
 	}
@@ -162,6 +170,7 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
 			signal?: AbortSignal;
+			responseLogLevel?: LogLevel;
 		} = {},
 	): MarketDataResult<T> {
 		const result = ResultAsync.fromPromise(
@@ -255,6 +264,7 @@ export class MarketDataClient implements IMarketDataClient {
 		options: {
 			skipRateLimitCheck?: boolean;
 			signal?: AbortSignal;
+			responseLogLevel?: LogLevel;
 		} = {},
 	): Promise<T> {
 		try {
@@ -271,11 +281,21 @@ export class MarketDataClient implements IMarketDataClient {
 				this._checkRateLimits();
 			}
 
+			this._preRequestLogs(url.toString());
+			const start = performance.now();
+
 			const response = await fetch(url.toString(), {
 				headers,
 				method: "GET",
 				signal: options.signal,
 			});
+
+			const duration = performance.now() - start;
+			this._postRequestLogs(
+				response,
+				duration,
+				options.responseLogLevel ?? LogLevel.INFO,
+			);
 
 			this._updateRateLimits(response.headers);
 
@@ -288,9 +308,9 @@ export class MarketDataClient implements IMarketDataClient {
 			}
 
 			const json = await response.json();
-			this.logger.debug(
-				`Response JSON: ${JSON.stringify(json).substring(0, 200)}`,
-			);
+			// this.logger.debug(
+			// 	`Response JSON: ${JSON.stringify(json).substring(0, 200)}`,
+			// );
 
 			if (schema) {
 				const result = schema.safeParse(json);
@@ -319,6 +339,28 @@ export class MarketDataClient implements IMarketDataClient {
 		}
 	}
 
+	private _preRequestLogs(url: string): void {
+		this.logger.debug(`Making request to URL: ${url}`);
+	}
+
+	private _postRequestLogs(
+		response: Response,
+		duration: number,
+		logLevel: LogLevel,
+	): void {
+		const cfRequestId = response.headers.get("cf-ray") || "None";
+		const durationLog = formatDurationLog(duration);
+		const method = "GET"; // Currently only GET is supported
+		const status = response.status;
+		const url = response.url;
+		const message = `${method} ${status} ${durationLog} ${cfRequestId} ${url}`;
+
+		if (logLevel === LogLevel.DEBUG) this.logger.debug(message);
+		else if (logLevel === LogLevel.INFO) this.logger.info(message);
+		else if (logLevel === LogLevel.WARN) this.logger.warn(message);
+		else if (logLevel === LogLevel.ERROR) this.logger.error(message);
+	}
+
 	private async _setupRateLimits(): Promise<void> {
 		if (this._rateLimitSetup) return this._rateLimitSetup;
 
@@ -327,6 +369,7 @@ export class MarketDataClient implements IMarketDataClient {
 				includeApiVersion: false,
 				skipRateLimitCheck: true,
 				service: Service.USER,
+				responseLogLevel: LogLevel.DEBUG,
 			});
 
 			if (result.isErr()) {

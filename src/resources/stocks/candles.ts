@@ -75,6 +75,8 @@ export function candles(
 			? splitDatesByTimeframe(fromDate, toDate, 365)
 			: [[fromDate, toDate]];
 
+	this.logger.debug("Fetching stock candles...");
+
 	const schema = this._getSchema(
 		validated,
 		StockCandleSchema,

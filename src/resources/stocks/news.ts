@@ -44,6 +44,8 @@ export function news(
 
 	const { symbol, ...queryParams } = params;
 
+	this.logger.debug("Fetching stock news...");
+
 	return this._fetch(
 		`${Endpoints.STOCKS_NEWS}${symbol}/`,
 		queryParams as MarketDataParams,

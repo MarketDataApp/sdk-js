@@ -51,6 +51,8 @@ export function quotes(
 			? params.symbols.split(",")
 			: [];
 
+	this.logger.debug("Fetching options quotes...");
+
 	const requests = symbols.map((symbol) => {
 		return this._makeRequest<Record<string, unknown>>(
 			`${Endpoints.OPTIONS_QUOTES}${symbol}/`,

@@ -60,7 +60,7 @@ describe("CSV Output Support", () => {
 		const client = new MarketDataClient({
 			token: "test-token",
 		});
-		// @ts-expect-error: Accessing internal settings for testing
+
 		// biome-ignore lint/suspicious/noExplicitAny: Accessing internal settings for testing
 		(client.settings as any).marketdataOutputFormat = OutputFormat.CSV;
 

@@ -45,6 +45,8 @@ export function expirations(
 		"symbol",
 	) as OptionsExpirationsParams & MarketDataParams;
 
+	this.logger.debug("Fetching options expirations...");
+
 	return this._makeRequest<
 		OptionsExpirationsResponse | OptionsExpirationsHumanResponse
 	>(`${Endpoints.OPTIONS_EXPIRATIONS}${params.symbol}/`, params, {

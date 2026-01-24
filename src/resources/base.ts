@@ -24,6 +24,9 @@ export abstract class BaseResource {
 	}
 
 	protected readonly client: IMarketDataClient;
+	protected get logger() {
+		return this.client.logger;
+	}
 
 	protected _fetch<
 		T extends Record<string, unknown>,

@@ -42,6 +42,8 @@ export function earnings(
 	const params = normalizeArgs(arg1, arg2, "symbol") as StocksEarningsParams &
 		MarketDataParams;
 
+	this.logger.debug("Fetching stock earnings...");
+
 	return this._fetch(`${Endpoints.STOCKS_EARNINGS}${params.symbol}/`, params, {
 		inputSchema: StocksEarningsParamsSchema,
 		regularSchema: StockEarningsSchema,

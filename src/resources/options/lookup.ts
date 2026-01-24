@@ -42,6 +42,8 @@ export function lookup(
 
 	const encodedLookup = encodeURIComponent(params.lookup);
 
+	this.logger.debug("Fetching options lookup...");
+
 	return this._makeRequest<OptionsLookupResponse | OptionsLookupHumanResponse>(
 		`${Endpoints.OPTIONS_LOOKUP}${encodedLookup}/`,
 		params,

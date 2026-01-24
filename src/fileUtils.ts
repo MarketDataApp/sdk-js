@@ -28,6 +28,7 @@ export async function saveBlobToFile(
 			throw new Error(`Filename must end with .csv: ${filename}`);
 		}
 
+		const ext = path.extname(filename);
 		const expectedExt = blob.type === "application/json" ? ".json" : ".csv";
 		if (ext !== expectedExt) {
 			let detail = `Cannot save ${blob.type === "application/json" ? "JSON" : "CSV"} data as ${ext}`;

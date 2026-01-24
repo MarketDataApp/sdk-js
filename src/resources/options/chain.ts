@@ -41,6 +41,8 @@ export function chain(
 	const params = normalizeArgs(arg1, arg2, "symbol") as OptionsChainParams &
 		MarketDataParams;
 
+	this.logger.debug("Fetching options chain...");
+
 	return this._fetch(`${Endpoints.OPTIONS_CHAIN}${params.symbol}/`, params, {
 		inputSchema: OptionsChainParamsSchema,
 		regularSchema: OptionsChainSchema,
