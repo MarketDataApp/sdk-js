@@ -24,10 +24,6 @@ export async function saveBlobToFile(
 	let targetPath: string;
 
 	if (filename) {
-		if (!filename.endsWith(".csv")) {
-			throw new Error(`Filename must end with .csv: ${filename}`);
-		}
-
 		const ext = path.extname(filename);
 		const expectedExt = blob.type === "application/json" ? ".json" : ".csv";
 		if (ext !== expectedExt) {
@@ -45,7 +41,8 @@ export async function saveBlobToFile(
 			.replace(/[-T:.Z]/g, "")
 			.slice(0, 14);
 		const ms = String(now.getMilliseconds()).padStart(3, "0");
-		const name = `${timestamp}_${ms}.csv`;
+		const expectedExt = blob.type === "application/json" ? ".json" : ".csv";
+		const name = `${timestamp}_${ms}${expectedExt}`;
 
 		const outputDir = path.resolve("output");
 		try {
