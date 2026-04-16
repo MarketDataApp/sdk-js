@@ -1,3 +1,7 @@
+import { err, ok, type Result, type ResultAsync } from "neverthrow";
+import type { z } from "zod";
+import { ValidationError } from "@/error";
+
 export const formatDate = (date: Date | string | number): string => {
 	if (date instanceof Date) {
 		return date.toISOString().split("T")[0];
@@ -32,7 +36,7 @@ export const formatValue = (value: unknown): string | undefined => {
 export const getDataRecords = <T extends Record<string, unknown>>(
 	data: T,
 	excludeKeys: readonly string[] = [],
-): stockRequestResult<T> => {
+): { [K in keyof T]: Unpacked<T[K]> }[] => {
 	const keys = (Object.keys(data) as (keyof T)[]).filter(
 		(k) => !excludeKeys.includes(k as string),
 	);
@@ -95,6 +99,88 @@ export const splitDatesByTimeframe = (
 	return ranges;
 };
 
-export type stockRequestResult<T> = { [K in keyof T]: Unpacked<T[K]> }[];
+export const transformHumanKeys = (
+	data: Record<string, unknown>,
+): Record<string, unknown> => {
+	const transformed: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(data)) {
+		const newKey = key
+			.replace(/ /g, "_")
+			.replace(/\$/g, "Price")
+			.replace(/%/g, "Percent")
+			.replace(/__/g, "_");
+		transformed[newKey] = value;
+	}
+	return transformed;
+};
+
+export const cleanAndValidateParams = <
+	T extends z.ZodTypeAny,
+	U extends z.ZodTypeAny,
+>(
+	params: unknown,
+	schema: T,
+	universalSchema: U,
+): Result<z.infer<T> & z.infer<U>, ValidationError> => {
+	const result = schema.safeParse(params);
+	if (!result.success) {
+		return err(new ValidationError(result.error.message));
+	}
+	const universalResult = universalSchema.safeParse(params);
+	if (!universalResult.success) {
+		return err(new ValidationError(universalResult.error.message));
+	}
+	return ok({
+		...(result.data as object),
+		...(universalResult.data as object),
+	} as z.infer<T> & z.infer<U>);
+};
 
 export type Unpacked<T> = T extends (infer U)[] ? U : T;
+
+export type UnpackedObject<T> = { [K in keyof T]: Unpacked<T[K]> };
+
+import type { MarketDataResult } from "@/types";
+
+export function attachMarketDataMethods<T>(
+	result: ResultAsync<T, unknown>,
+	saveBlobToFile: (blob: Blob, filename?: string) => Promise<string>,
+): MarketDataResult<T> {
+	const r = result as unknown as MarketDataResult<T>;
+	r.blob = async function (this: ResultAsync<T, unknown>): Promise<Blob> {
+		const res = await this;
+		if (res.isOk()) {
+			const val = res.value;
+			if (val instanceof Blob) {
+				return val;
+			}
+			return new Blob([JSON.stringify(val)], {
+				type: "application/json",
+			});
+		}
+		throw res.error;
+	};
+
+	r.save = async function (
+		this: Record<string, unknown>,
+		filename?: string,
+	): Promise<string> {
+		const blob = await (this.blob as () => Promise<Blob>)();
+		return saveBlobToFile(blob, filename);
+	};
+
+	return r;
+}
+
+export function formatDurationLog(durationMs: number): string {
+	if (durationMs < 1000) {
+		return `${Math.floor(durationMs).toString().padStart(3, "0")}ms`;
+	}
+	if (durationMs < 10000) {
+		return `${(durationMs / 1000).toFixed(2)}s`;
+	}
+	if (durationMs < 100000) {
+		return `${(durationMs / 1000).toFixed(1).padStart(4, "0")}s`;
+	}
+	return `${(durationMs / 1000).toFixed(0).padStart(5, " ")}s`;
+}

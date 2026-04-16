@@ -16,19 +16,26 @@ export interface Logger {
 export class DefaultLogger implements Logger {
 	constructor(private level: LogLevel = LogLevel.INFO) {}
 
+	private _log(
+		level: string,
+		message: string,
+		method: "debug" | "info" | "warn" | "error",
+	): void {
+		const timestamp = new Date().toISOString().replace("T", " ").split(".")[0];
+		// Python format: %(asctime)s - %(name)s - %(levelname)s - %(message)s
+		console[method](`${timestamp} - marketdata - ${level} - ${message}`);
+	}
+
 	public debug(message: string): void {
-		if (this.level <= LogLevel.DEBUG)
-			console.debug(`[${new Date().toISOString()}] [DEBUG] ${message}`);
+		if (this.level <= LogLevel.DEBUG) this._log("DEBUG", message, "debug");
 	}
 
 	public error(message: string): void {
-		if (this.level <= LogLevel.ERROR)
-			console.error(`[${new Date().toISOString()}] [ERROR] ${message}`);
+		if (this.level <= LogLevel.ERROR) this._log("ERROR", message, "error");
 	}
 
 	public info(message: string): void {
-		if (this.level <= LogLevel.INFO)
-			console.info(`[${new Date().toISOString()}] [INFO] ${message}`);
+		if (this.level <= LogLevel.INFO) this._log("INFO", message, "info");
 	}
 
 	public setLogLevel(level: LogLevel): void {
@@ -36,7 +43,6 @@ export class DefaultLogger implements Logger {
 	}
 
 	public warn(message: string): void {
-		if (this.level <= LogLevel.WARN)
-			console.warn(`[${new Date().toISOString()}] [WARN] ${message}`);
+		if (this.level <= LogLevel.WARN) this._log("WARNING", message, "warn");
 	}
 }

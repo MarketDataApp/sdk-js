@@ -31,4 +31,3 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
-test_real_api.ts

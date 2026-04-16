@@ -7,50 +7,54 @@ const mockData = loadMock("stocks_candles_response_200");
 const mockHumanData = loadMock("stocks_candles_human_response_200");
 
 describe("StocksResource (Mock Candles)", () => {
-    const client = new MarketDataClient({ token: "test-token" });
+	const client = new MarketDataClient({ token: "test-token" });
 
-    it("candles returns correct data structure from mock", async () => {
-        fetchMock.mockImplementation(async (url: string) => {
-            if (url.includes("stocks/candles/")) {
-                return createMockResponse({ json: mockData });
-            }
-            return createMockResponse({ ok: false, status: 404, text: "Not Found" });
-        });
+	it("candles returns correct data structure from mock", async () => {
+		fetchMock.mockImplementation(async (url: string) => {
+			if (url.includes("stocks/candles/")) {
+				return createMockResponse({ json: mockData });
+			}
+			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
+		});
 
-        const result = unwrapOk(await client.stocks.candles({
-            symbol: "AAPL",
-            resolution: "D",
-            from: "2023-01-01",
-            to: "2023-01-10",
-        }));
+		const result = unwrapOk(
+			await client.stocks.candles({
+				symbol: "AAPL",
+				resolution: "D",
+				from: "2023-01-01",
+				to: "2023-01-10",
+			}),
+		);
 
-        expect(result).toBeDefined();
-        expect(Array.isArray(result)).toBe(true);
-        expect(result.length).toBeGreaterThan(0);
-        expect(result[0]).toHaveProperty("t");
-        expect(result[0]).toHaveProperty("o");
-    });
+		expect(result).toBeDefined();
+		expect(Array.isArray(result)).toBe(true);
+		expect(result.length).toBeGreaterThan(0);
+		expect(result[0]).toHaveProperty("t");
+		expect(result[0]).toHaveProperty("o");
+	});
 
-    it("candles returns correct human-readable data structure from mock", async () => {
-        fetchMock.mockImplementation(async (url: string) => {
-            if (url.includes("stocks/candles/")) {
-                return createMockResponse({ json: mockHumanData });
-            }
-            return createMockResponse({ ok: false, status: 404, text: "Not Found" });
-        });
+	it("candles returns correct human-readable data structure from mock", async () => {
+		fetchMock.mockImplementation(async (url: string) => {
+			if (url.includes("stocks/candles/")) {
+				return createMockResponse({ json: mockHumanData });
+			}
+			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
+		});
 
-        const result = unwrapOk(await client.stocks.candles({
-            symbol: "AAPL",
-            resolution: "D",
-            from: "2023-01-01",
-            to: "2023-01-10",
-            useHumanReadable: true,
-        }));
+		const result = unwrapOk(
+			await client.stocks.candles({
+				symbol: "AAPL",
+				resolution: "D",
+				from: "2023-01-01",
+				to: "2023-01-10",
+				useHumanReadable: true,
+			}),
+		);
 
-        expect(result).toBeDefined();
-        expect(Array.isArray(result)).toBe(true);
-        expect(result.length).toBeGreaterThan(0);
-        expect(result[0]).toHaveProperty("Date");
-        expect(result[0]).toHaveProperty("Open");
-    });
+		expect(result).toBeDefined();
+		expect(Array.isArray(result)).toBe(true);
+		expect(result.length).toBeGreaterThan(0);
+		expect(result[0]).toHaveProperty("Date");
+		expect(result[0]).toHaveProperty("Open");
+	});
 });

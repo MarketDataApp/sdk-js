@@ -1,7 +1,9 @@
-import { err, errAsync, ok, type Result } from "neverthrow";
+import { err, errAsync, ok, okAsync, type Result } from "neverthrow";
 
 import type { z } from "zod";
 import { ValidationError } from "@/error";
+import { saveBlobToFile } from "@/fileUtils";
+import { DEFAULT_EXCLUDE_KEYS } from "@/internalSettings";
 import { processParams } from "@/params";
 import type {
 	IMarketDataClient,
@@ -9,9 +11,12 @@ import type {
 	MarketDataResult,
 	TypedResult,
 } from "@/types";
-import { getDataRecords } from "@/utils";
-
-const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
+import {
+	attachMarketDataMethods,
+	getDataRecords,
+	transformHumanKeys,
+	type UnpackedObject,
+} from "@/utils";
 
 export abstract class BaseResource {
 	constructor(client: IMarketDataClient) {
@@ -19,6 +24,9 @@ export abstract class BaseResource {
 	}
 
 	protected readonly client: IMarketDataClient;
+	protected get logger() {
+		return this.client.logger;
+	}
 
 	protected _fetch<
 		T extends Record<string, unknown>,
@@ -34,28 +42,75 @@ export abstract class BaseResource {
 			service: string;
 			excludeKeys?: string[];
 		},
-	): TypedResult<T, H, P> {
+	): TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P> {
 		const validation = this._validateAndNormalize(params, options.inputSchema);
 		if (validation.isErr()) {
-			return errAsync(validation.error) as TypedResult<T, H, P>;
+			return errAsync(validation.error) as TypedResult<
+				UnpackedObject<T>[],
+				UnpackedObject<H>[],
+				P
+			>;
 		}
 
 		const validated = validation.value;
+		const outputFormat =
+			validated.outputFormat || this.client.settings.marketdataOutputFormat;
+
+		if (outputFormat === "csv") {
+			return this._makeRequest<Blob>(path, validated as MarketDataParams, {
+				service: options.service,
+			}) as unknown as TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P>;
+		}
+
+		const useHuman =
+			(validated.useHumanReadable as boolean | string | undefined) ??
+			(validated.human as boolean | string | undefined) ??
+			this.client.settings.marketdataUseHumanReadable;
+
+		const isHuman =
+			useHuman === true || useHuman === "true" || useHuman === "1";
+
 		const schema = this._getSchema(
 			validated as MarketDataParams,
 			options.regularSchema,
 			options.humanSchema,
 		);
 
-		return this._makeRequest<T | H>(path, validated as MarketDataParams, {
-			schema,
-			service: options.service,
-		}).map((response) =>
-			getDataRecords(
-				response,
-				options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
-			),
-		) as TypedResult<T, H, P>;
+		const result = this._makeRequest<Record<string, unknown>>(
+			path,
+			validated as MarketDataParams,
+			{
+				// biome-ignore lint/suspicious/noExplicitAny: Generic schema requires any type assertion
+				schema: isHuman ? undefined : (schema as z.ZodType<any>),
+				service: options.service,
+			},
+		).andThen((response) => {
+			let data = response;
+			if (isHuman) {
+				const transformed = transformHumanKeys(data as Record<string, unknown>);
+				const parseResult = options.humanSchema.safeParse(transformed);
+				if (!parseResult.success) {
+					return errAsync(
+						new ValidationError(JSON.stringify(parseResult.error.issues)),
+					);
+				}
+				// biome-ignore lint/suspicious/noExplicitAny: Parsed data needs to be cast to any for further processing
+				data = parseResult.data as any;
+			}
+			return okAsync(
+				getDataRecords(
+					// biome-ignore lint/suspicious/noExplicitAny: Data records utility handles any type input
+					data as any,
+					options.excludeKeys || [...DEFAULT_EXCLUDE_KEYS],
+				),
+			);
+		});
+
+		return attachMarketDataMethods(result, saveBlobToFile) as TypedResult<
+			UnpackedObject<T>[],
+			UnpackedObject<H>[],
+			P
+		>;
 	}
 
 	protected _getSchema<T, H>(
@@ -64,10 +119,14 @@ export abstract class BaseResource {
 		humanSchema?: z.ZodType<H>,
 	): z.ZodType<T | H> | undefined {
 		const useHuman =
-			(params.useHumanReadable as boolean | undefined) ??
+			(params.useHumanReadable as boolean | string | undefined) ??
+			(params.human as boolean | string | undefined) ??
 			this.client.settings.marketdataUseHumanReadable;
 
-		if (useHuman && humanSchema) {
+		const isHuman =
+			useHuman === true || useHuman === "true" || useHuman === "1";
+
+		if (isHuman && humanSchema) {
 			return humanSchema;
 		}
 

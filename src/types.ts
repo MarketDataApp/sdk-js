@@ -4,7 +4,6 @@ import { DateFormat, Mode, OutputFormat } from "@/enums";
 import type { MarketDataClientError } from "@/error";
 import type { Logger } from "@/logger";
 import type { MarketDataSettings } from "@/settings";
-import type { stockRequestResult } from "@/utils";
 
 export interface IMarketDataClient {
 	_makeRequest<T>(
@@ -28,16 +27,18 @@ export interface IMarketDataClient {
 	readonly token?: string;
 }
 
-export type MarketDataResult<T> = ResultAsync<T, MarketDataClientError>;
+export interface MarketDataResult<T>
+	extends ResultAsync<T, MarketDataClientError> {
+	save(filename?: string): Promise<string>;
+	blob(): Promise<Blob>;
+}
 
-export type TypedResult<
-	T extends Record<string, unknown>,
-	H extends Record<string, unknown>,
-	P,
-> = MarketDataResult<
-	P extends { useHumanReadable: true } | { human: true }
-		? stockRequestResult<H>
-		: stockRequestResult<T>
+export type TypedResult<T, H, P> = MarketDataResult<
+	P extends { outputFormat: "csv" }
+		? Blob
+		: P extends { useHumanReadable: true } | { human: true }
+			? H
+			: T
 >;
 
 export interface UserRateLimits {
@@ -61,7 +62,7 @@ export const BaseMarketDataParamsSchema = z.object({
 	columns: z.array(z.string()).optional(),
 	dateFormat: z.enum(DateFormat).optional(),
 	mode: z.enum(Mode).optional(),
-	outputFormat: z.enum(OutputFormat).optional().default(OutputFormat.JSON),
+	outputFormat: z.enum(OutputFormat).optional(),
 	useHumanReadable: BooleanString.optional(),
 });
 
@@ -96,6 +97,10 @@ export const UserUniversalAPIParamsInputSchema = z.preprocess(
 		if ("human" in out) {
 			out.useHumanReadable = out.human;
 			delete out.human;
+		}
+		if ("format" in out) {
+			out.outputFormat = out.format;
+			delete out.format;
 		}
 		if ("output_format" in out) {
 			out.outputFormat = out.output_format;

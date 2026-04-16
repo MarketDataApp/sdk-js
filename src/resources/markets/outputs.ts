@@ -12,5 +12,13 @@ export const MarketStatusSchema = z.object({
 	status: z.array(z.string()),
 });
 
-export type MarketStatusHumanResponse = z.infer<typeof MarketStatusHumanSchema>;
-export type MarketStatusResponse = z.infer<typeof MarketStatusSchema>;
+import type { UnpackedObject } from "@/utils";
+
+export type MarketStatusHumanRawResponse = z.infer<
+	typeof MarketStatusHumanSchema
+>;
+export type MarketStatusRawResponse = z.infer<typeof MarketStatusSchema>;
+
+export type MarketStatusHumanResponse =
+	UnpackedObject<MarketStatusHumanRawResponse>[];
+export type MarketStatusResponse = UnpackedObject<MarketStatusRawResponse>[];

@@ -1,12 +1,25 @@
+export const CHECK_RATE_LIMITS = true;
+
 export const Endpoints = {
 	API_STATUS: "status/",
+	FUNDS_CANDLES: "funds/candles/",
 	MARKETS_STATUS: "markets/status/",
+	OPTIONS_CHAIN: "options/chain/",
+	OPTIONS_EXPIRATIONS: "options/expirations/",
+	OPTIONS_LOOKUP: "options/lookup/",
+	OPTIONS_QUOTES: "options/quotes/",
+	OPTIONS_STRIKES: "options/strikes/",
 	STOCKS_CANDLES: "stocks/candles/",
+	STOCKS_EARNINGS: "stocks/earnings/",
+	STOCKS_NEWS: "stocks/news/",
 	STOCKS_PRICES: "stocks/prices/",
+	STOCKS_BULK_QUOTES: "stocks/bulkquotes/",
 	USER: "user/",
 } as const;
 
 export const GLOBAL_EXCLUDED_PARAMS = ["outputFormat", "filename"] as const;
+
+export const DEFAULT_EXCLUDE_KEYS = ["s"] as const;
 
 export const isRetriableStatusCode = (statusCode: number): boolean =>
 	statusCode > 500;
@@ -15,12 +28,23 @@ export const MAX_CONCURRENT_REQUESTS = 50;
 
 export const REFRESH_API_STATUS_INTERVAL_MS = 4.5 * 60 * 1000;
 
-export enum Service {
-	CANDLES = "/v1/stocks/candles/",
-	PRICES = "/v1/stocks/prices/",
-	STATUS = "/v1/markets/status/",
-	USER = "/v1/user/",
-}
+export const Service = {
+	CANDLES: `/v1/${Endpoints.STOCKS_CANDLES}`,
+	EARNINGS: `/v1/${Endpoints.STOCKS_EARNINGS}`,
+	FUNDS_CANDLES: `/v1/${Endpoints.FUNDS_CANDLES}`,
+	NEWS: `/v1/${Endpoints.STOCKS_NEWS}`,
+	OPTIONS_CHAIN: `/v1/${Endpoints.OPTIONS_CHAIN}`,
+	OPTIONS_EXPIRATIONS: `/v1/${Endpoints.OPTIONS_EXPIRATIONS}`,
+	OPTIONS_LOOKUP: `/v1/${Endpoints.OPTIONS_LOOKUP}`,
+	OPTIONS_QUOTES: `/v1/${Endpoints.OPTIONS_QUOTES}`,
+	OPTIONS_STRIKES: `/v1/${Endpoints.OPTIONS_STRIKES}`,
+	PRICES: `/v1/${Endpoints.STOCKS_PRICES}`,
+	STOCKS_QUOTES: `/v1/${Endpoints.STOCKS_BULK_QUOTES}`,
+	STATUS: `/v1/${Endpoints.MARKETS_STATUS}`,
+	USER: `/v1/${Endpoints.USER}`,
+} as const;
+
+export type Service = (typeof Service)[keyof typeof Service];
 
 export const STATUS_FETCH_TIMEOUT_MS = 10000;
 
