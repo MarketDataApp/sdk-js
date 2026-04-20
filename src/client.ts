@@ -142,10 +142,26 @@ export class MarketDataClient implements IMarketDataClient {
 		return url;
 	}
 
-	private _checkRateLimits(): void {
+	// In-flight credits reserved by this client but not yet reconciled against
+	// a server response. Prevents TOCTOU over-dispatch when N coroutines pass
+	// the "remaining" check simultaneously before any of them lands a response.
+	private _inflightReservedCredits = 0;
+
+	private _reserveRateLimitCredit(): void {
 		if (!CHECK_RATE_LIMITS) return;
-		if (this.rateLimits && this.rateLimits.requestsRemaining <= 0) {
-			throw new RateLimitError("Rate limit exceeded");
+		if (this.rateLimits) {
+			const available =
+				this.rateLimits.requestsRemaining - this._inflightReservedCredits;
+			if (available <= 0) {
+				throw new RateLimitError("Rate limit exceeded");
+			}
+		}
+		this._inflightReservedCredits += 1;
+	}
+
+	private _releaseRateLimitCredit(): void {
+		if (this._inflightReservedCredits > 0) {
+			this._inflightReservedCredits -= 1;
 		}
 	}
 
@@ -267,6 +283,7 @@ export class MarketDataClient implements IMarketDataClient {
 			responseLogLevel?: LogLevel;
 		} = {},
 	): Promise<T> {
+		let reserved = false;
 		try {
 			if (
 				CHECK_RATE_LIMITS &&
@@ -278,7 +295,8 @@ export class MarketDataClient implements IMarketDataClient {
 			}
 
 			if (this.token && !options.skipRateLimitCheck) {
-				this._checkRateLimits();
+				this._reserveRateLimitCredit();
+				reserved = true;
 			}
 
 			this._preRequestLogs(url.toString());
@@ -336,6 +354,8 @@ export class MarketDataClient implements IMarketDataClient {
 			throw new AbortError(
 				error instanceof Error ? error : new Error(String(error)),
 			);
+		} finally {
+			if (reserved) this._releaseRateLimitCredit();
 		}
 	}
 
@@ -384,15 +404,30 @@ export class MarketDataClient implements IMarketDataClient {
 	}
 
 	private _updateRateLimits(headers: Headers): void {
-		if (headers.has("x-api-ratelimit-remaining")) {
-			this.rateLimits = {
-				requestsConsumed: Number(headers.get("x-api-ratelimit-consumed")) || 0,
-				requestsLimit: Number(headers.get("x-api-ratelimit-limit")) || 0,
-				requestsRemaining:
-					Number(headers.get("x-api-ratelimit-remaining")) || 0,
-				requestsReset: Number(headers.get("x-api-ratelimit-reset")) || 0,
-			};
+		if (!headers.has("x-api-ratelimit-remaining")) return;
+
+		const incoming: UserRateLimits = {
+			requestsConsumed: Number(headers.get("x-api-ratelimit-consumed")) || 0,
+			requestsLimit: Number(headers.get("x-api-ratelimit-limit")) || 0,
+			requestsRemaining: Number(headers.get("x-api-ratelimit-remaining")) || 0,
+			requestsReset: Number(headers.get("x-api-ratelimit-reset")) || 0,
+		};
+
+		// Responses can arrive out of order under concurrent dispatch. Discard
+		// snapshots older than what we already have. Within a single rate-limit
+		// window, `consumed` is monotonic on the server side; a fresh window is
+		// signalled by `requestsReset` advancing.
+		if (this.rateLimits) {
+			if (incoming.requestsReset < this.rateLimits.requestsReset) return;
+			if (
+				incoming.requestsReset === this.rateLimits.requestsReset &&
+				incoming.requestsConsumed < this.rateLimits.requestsConsumed
+			) {
+				return;
+			}
 		}
+
+		this.rateLimits = incoming;
 	}
 
 	private async _handleCsvResponse(response: Response): Promise<Blob> {
