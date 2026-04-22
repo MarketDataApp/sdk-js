@@ -1,3 +1,4 @@
+import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
 import {
 	type OptionsLookupHumanResponse,
@@ -6,9 +7,8 @@ import {
 	OptionsLookupSchema,
 } from "@/resources/options/outputs";
 import type { OptionsLookupParams } from "@/resources/options/types";
-
-import type { MarketDataParams, TypedResult } from "@/types";
-import { normalizeArgs } from "@/utils";
+import type { MarketDataParams, TypedPromise } from "@/types";
+import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
 export function lookup<
@@ -17,7 +17,7 @@ export function lookup<
 	this: OptionsResource,
 	lookupStr: string,
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	OptionsLookupResponse,
 	OptionsLookupHumanResponse,
 	P & { lookup: string }
@@ -26,13 +26,13 @@ export function lookup<
 export function lookup<P extends OptionsLookupParams & MarketDataParams>(
 	this: OptionsResource,
 	params: P,
-): TypedResult<OptionsLookupResponse, OptionsLookupHumanResponse, P>;
+): TypedPromise<OptionsLookupResponse, OptionsLookupHumanResponse, P>;
 
 export function lookup(
 	this: OptionsResource,
 	arg1: string | (OptionsLookupParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	OptionsLookupResponse,
 	OptionsLookupHumanResponse,
 	OptionsLookupParams & MarketDataParams
@@ -44,18 +44,21 @@ export function lookup(
 
 	this.logger.debug("Fetching options lookup...");
 
-	return this._makeRequest<OptionsLookupResponse | OptionsLookupHumanResponse>(
-		`${Endpoints.OPTIONS_LOOKUP}${encodedLookup}/`,
-		params,
-		{
-			schema: this._getSchema(
-				params,
-				OptionsLookupSchema,
-				OptionsLookupHumanSchema,
-			),
-			service: Service.OPTIONS_LOOKUP,
-		},
-	) as TypedResult<
+	return MarketDataPromise.fromResult(
+		this._makeRequest<OptionsLookupResponse | OptionsLookupHumanResponse>(
+			`${Endpoints.OPTIONS_LOOKUP}${encodedLookup}/`,
+			params,
+			{
+				schema: this._getSchema(
+					params,
+					OptionsLookupSchema,
+					OptionsLookupHumanSchema,
+				),
+				service: Service.OPTIONS_LOOKUP,
+			},
+		),
+		saveBlobToFile,
+	) as TypedPromise<
 		OptionsLookupResponse,
 		OptionsLookupHumanResponse,
 		OptionsLookupParams & MarketDataParams
