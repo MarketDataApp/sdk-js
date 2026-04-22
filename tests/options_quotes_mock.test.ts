@@ -17,16 +17,10 @@ describe("OptionsResource (Mock Quotes)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = await client.options.quotes({
+		const data = await client.options.quotes({
 			symbols: "AAPL271217C00255000",
 		});
 
-		if (result.isErr()) {
-			console.error("Error:", result.error);
-			throw new Error(`Unexpected error: ${result.error.message}`);
-		}
-
-		const data = result.value;
 		expect(data).toBeDefined();
 		expect(Array.isArray(data)).toBe(true);
 		expect(data.length).toBeGreaterThan(0);
@@ -42,18 +36,11 @@ describe("OptionsResource (Mock Quotes)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = await client.options.quotes({
+		const data = await client.options.quotes({
 			symbols: ["AAPL271217C00255000"],
 			useHumanReadable: true,
 		});
 
-		if (result.isErr()) {
-			console.error("Full error:", JSON.stringify(result.error, null, 2));
-			console.error("Error message:", result.error.message);
-			throw new Error(`Test failed with error: ${result.error.message}`);
-		}
-
-		const data = result.value;
 		expect(data).toBeDefined();
 		expect(Array.isArray(data)).toBe(true);
 		expect(data.length).toBeGreaterThan(0);
@@ -74,13 +61,27 @@ describe("OptionsResource (Mock Quotes)", () => {
 		});
 
 		const symbols = ["AAPL271217C00255000", "MSFT271217C00255000"];
-		const result = await client.options.quotes(symbols);
-
-		if (result.isErr()) {
-			throw new Error(`Unexpected error: ${result.error.message}`);
-		}
+		const data = await client.options.quotes(symbols);
 
 		expect(callCount).toBe(2);
-		expect(result.value.length).toBe(2);
+		expect(data.length).toBe(2);
+	});
+
+	it("quotes fan-out exposes save/blob at the Promise boundary", async () => {
+		fetchMock.mockImplementation(async (url: string) => {
+			if (url.includes("options/quotes/")) {
+				return createMockResponse({ json: mockData });
+			}
+			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
+		});
+
+		const pending = client.options.quotes({
+			symbols: "AAPL271217C00255000",
+		});
+		expect(typeof pending.save).toBe("function");
+		expect(typeof pending.blob).toBe("function");
+
+		const blob = await pending.blob();
+		expect(blob).toBeInstanceOf(Blob);
 	});
 });
