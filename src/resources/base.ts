@@ -9,11 +9,11 @@ import type {
 	IMarketDataClient,
 	MarketDataParams,
 	MarketDataResult,
-	TypedResult,
+	TypedPromise,
 } from "@/types";
 import {
-	attachMarketDataMethods,
 	getDataRecords,
+	MarketDataPromise,
 	transformHumanKeys,
 	type UnpackedObject,
 } from "@/utils";
@@ -42,14 +42,13 @@ export abstract class BaseResource {
 			service: string;
 			excludeKeys?: string[];
 		},
-	): TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P> {
+	): TypedPromise<UnpackedObject<T>[], UnpackedObject<H>[], P> {
 		const validation = this._validateAndNormalize(params, options.inputSchema);
 		if (validation.isErr()) {
-			return errAsync(validation.error) as TypedResult<
-				UnpackedObject<T>[],
-				UnpackedObject<H>[],
-				P
-			>;
+			return MarketDataPromise.fromResult(
+				errAsync(validation.error),
+				saveBlobToFile,
+			) as TypedPromise<UnpackedObject<T>[], UnpackedObject<H>[], P>;
 		}
 
 		const validated = validation.value;
@@ -57,9 +56,12 @@ export abstract class BaseResource {
 			validated.outputFormat || this.client.settings.marketdataOutputFormat;
 
 		if (outputFormat === "csv") {
-			return this._makeRequest<Blob>(path, validated as MarketDataParams, {
-				service: options.service,
-			}) as unknown as TypedResult<UnpackedObject<T>[], UnpackedObject<H>[], P>;
+			return MarketDataPromise.fromResult(
+				this._makeRequest<Blob>(path, validated as MarketDataParams, {
+					service: options.service,
+				}),
+				saveBlobToFile,
+			) as unknown as TypedPromise<UnpackedObject<T>[], UnpackedObject<H>[], P>;
 		}
 
 		const useHuman =
@@ -106,7 +108,7 @@ export abstract class BaseResource {
 			);
 		});
 
-		return attachMarketDataMethods(result, saveBlobToFile) as TypedResult<
+		return MarketDataPromise.fromResult(result, saveBlobToFile) as TypedPromise<
 			UnpackedObject<T>[],
 			UnpackedObject<H>[],
 			P
