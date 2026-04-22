@@ -10,7 +10,7 @@ import {
 	type OptionsChainParams,
 	OptionsChainParamsSchema,
 } from "@/resources/options/types";
-import type { MarketDataParams, TypedResult } from "@/types";
+import type { MarketDataParams, TypedPromise } from "@/types";
 import { normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
@@ -20,7 +20,7 @@ export function chain<
 	this: OptionsResource,
 	symbol: string,
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	OptionsChainResponse,
 	OptionsChainHumanResponse,
 	P & { symbol: string }
@@ -28,12 +28,12 @@ export function chain<
 export function chain<P extends OptionsChainParams & MarketDataParams>(
 	this: OptionsResource,
 	params: P,
-): TypedResult<OptionsChainResponse, OptionsChainHumanResponse, P>;
+): TypedPromise<OptionsChainResponse, OptionsChainHumanResponse, P>;
 export function chain(
 	this: OptionsResource,
 	arg1: string | (OptionsChainParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	OptionsChainResponse,
 	OptionsChainHumanResponse,
 	OptionsChainParams & MarketDataParams
@@ -49,7 +49,7 @@ export function chain(
 		humanSchema: OptionsChainHumanSchema,
 		service: Service.OPTIONS_CHAIN,
 		excludeKeys: ["s"],
-	}) as TypedResult<
+	}) as TypedPromise<
 		OptionsChainResponse,
 		OptionsChainHumanResponse,
 		OptionsChainParams & MarketDataParams

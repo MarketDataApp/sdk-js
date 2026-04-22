@@ -9,13 +9,13 @@ import {
 	type MarketStatusParams,
 	MarketStatusParamsSchema,
 } from "@/resources/markets/types";
-import type { MarketDataParams, TypedResult } from "@/types";
+import type { MarketDataParams, TypedPromise } from "@/types";
 import type { MarketsResource } from "./index";
 
 export function status<P extends MarketStatusParams & MarketDataParams>(
 	this: MarketsResource,
 	params: P = {} as P,
-): TypedResult<MarketStatusResponse, MarketStatusHumanResponse, P> {
+): TypedPromise<MarketStatusResponse, MarketStatusHumanResponse, P> {
 	this.logger.debug("Fetching market status...");
 
 	return this._fetch(Endpoints.MARKETS_STATUS, params, {

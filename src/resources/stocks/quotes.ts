@@ -8,7 +8,7 @@ import {
 
 import type { StocksQuotesParams } from "@/resources/stocks/types";
 import { StocksQuotesParamsSchema } from "@/resources/stocks/types";
-import type { MarketDataParams, TypedResult } from "@/types";
+import type { MarketDataParams, TypedPromise } from "@/types";
 
 import { normalizeArgs } from "@/utils";
 import type { StocksResource } from "./index";
@@ -19,7 +19,7 @@ export function quotes<
 	this: StocksResource,
 	symbols: string | string[],
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	StockQuoteResponse,
 	StockQuoteHumanResponse,
 	P & { symbols: string | string[] }
@@ -28,13 +28,13 @@ export function quotes<
 export function quotes<P extends StocksQuotesParams & MarketDataParams>(
 	this: StocksResource,
 	params: P,
-): TypedResult<StockQuoteResponse, StockQuoteHumanResponse, P>;
+): TypedPromise<StockQuoteResponse, StockQuoteHumanResponse, P>;
 
 export function quotes(
 	this: StocksResource,
 	arg1: string | string[] | (StocksQuotesParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	StockQuoteResponse,
 	StockQuoteHumanResponse,
 	StocksQuotesParams & MarketDataParams
@@ -55,7 +55,7 @@ export function quotes(
 			humanSchema: StockQuoteHumanSchema,
 			service: Service.STOCKS_QUOTES,
 		},
-	) as TypedResult<
+	) as TypedPromise<
 		StockQuoteResponse,
 		StockQuoteHumanResponse,
 		StocksQuotesParams & MarketDataParams

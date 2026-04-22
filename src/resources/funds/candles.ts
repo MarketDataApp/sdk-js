@@ -9,7 +9,7 @@ import {
 	type FundsCandlesParams,
 	FundsCandlesParamsSchema,
 } from "@/resources/funds/types";
-import type { MarketDataParams, TypedResult } from "@/types";
+import type { MarketDataParams, TypedPromise } from "@/types";
 import { normalizeArgs } from "@/utils";
 import type { FundsResource } from "./index";
 
@@ -19,7 +19,7 @@ export function candles<
 	this: FundsResource,
 	symbol: string,
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	FundsCandleResponse,
 	FundsCandleHumanResponse,
 	P & { symbol: string }
@@ -27,12 +27,12 @@ export function candles<
 export function candles<P extends FundsCandlesParams & MarketDataParams>(
 	this: FundsResource,
 	params: P,
-): TypedResult<FundsCandleResponse, FundsCandleHumanResponse, P>;
+): TypedPromise<FundsCandleResponse, FundsCandleHumanResponse, P>;
 export function candles(
 	this: FundsResource,
 	arg1: string | (FundsCandlesParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	FundsCandleResponse,
 	FundsCandleHumanResponse,
 	FundsCandlesParams & MarketDataParams
