@@ -36,6 +36,8 @@ jobs:
 
       - name: Test (vitest)
         run: pnpm exec vitest run
+        env:
+          MARKETDATA_TOKEN: ${{ secrets.MARKETDATA_TOKEN }}
 
       - name: Build
         run: pnpm build
