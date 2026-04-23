@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, loadMock, unwrapOk } from "./test-utils";
+import { createMockResponse, loadMock } from "./test-utils";
 
 const mockData = loadMock("stocks_earnings_response_200");
 const mockHumanData = loadMock("stocks_earnings_human_response_200");
@@ -17,7 +17,7 @@ describe("StocksResource (Mock Earnings)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(await client.stocks.earnings("AAPL"));
+		const result = await client.stocks.earnings("AAPL");
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result).toHaveLength(2);
@@ -38,9 +38,9 @@ describe("StocksResource (Mock Earnings)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.stocks.earnings("AAPL", { useHumanReadable: true }),
-		);
+		const result = await client.stocks.earnings("AAPL", {
+			useHumanReadable: true,
+		});
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result).toHaveLength(2);

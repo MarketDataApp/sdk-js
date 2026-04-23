@@ -4,6 +4,7 @@ import { DateFormat, Mode, OutputFormat } from "@/enums";
 import type { MarketDataClientError } from "@/error";
 import type { Logger } from "@/logger";
 import type { MarketDataSettings } from "@/settings";
+import type { MarketDataPromise } from "@/utils";
 
 export interface IMarketDataClient {
 	_makeRequest<T>(
@@ -27,13 +28,17 @@ export interface IMarketDataClient {
 	readonly token?: string;
 }
 
-export interface MarketDataResult<T>
-	extends ResultAsync<T, MarketDataClientError> {
-	save(filename?: string): Promise<string>;
-	blob(): Promise<Blob>;
-}
+export type MarketDataResult<T> = ResultAsync<T, MarketDataClientError>;
 
 export type TypedResult<T, H, P> = MarketDataResult<
+	P extends { outputFormat: "csv" }
+		? Blob
+		: P extends { useHumanReadable: true } | { human: true }
+			? H
+			: T
+>;
+
+export type TypedPromise<T, H, P> = MarketDataPromise<
 	P extends { outputFormat: "csv" }
 		? Blob
 		: P extends { useHumanReadable: true } | { human: true }

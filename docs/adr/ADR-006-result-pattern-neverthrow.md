@@ -1,7 +1,9 @@
 # ADR-006: Result Pattern with neverthrow
 
 ## Status
-Accepted
+Superseded by [ADR-007](./ADR-007-result-inside-promise-outside.md) (2026-04-21).
+
+> The public API no longer exposes `ResultAsync`. neverthrow is retained for internal composition only. See ADR-007 for the reversal rationale. This document is preserved as a historical record of the original decision.
 
 ## Context
 

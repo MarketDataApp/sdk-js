@@ -142,79 +142,76 @@ if (client.rateLimits) {
 
 ## Error Handling
 
-The SDK uses the Result pattern via [neverthrow](https://github.com/supermacro/neverthrow) for functional, type-safe error handling. All methods return `MarketDataResult<T>` which explicitly represents success or failure.
-
-### Functional Pattern (Recommended)
+Every method returns a `Promise` that resolves with the response or rejects with a `MarketDataClientError`. Use ordinary `try`/`catch` with `await`:
 
 ```typescript
-const result = await client.stocks.prices('AAPL');
+import {
+  MarketDataClient,
+  MarketDataClientError,
+  RateLimitError,
+  RequestError,
+  ValidationError,
+} from 'marketdata-sdk';
 
-result.match(
-  (prices) => console.log('Success:', prices.mid),
-  (error) => console.error('Failed:', error.message)
-);
-```
-
-### Checking Results
-
-```typescript
-const result = await client.stocks.prices('AAPL');
-
-if (result.isOk()) {
-  console.log('Prices:', result.value);
-} else {
-  console.error('Error:', result.error.message);
-}
-```
-
-### Exception-Based (Alternative)
-
-If you prefer traditional exceptions, use `.unwrap()`:
-
-```typescript
 try {
-  const result = await client.stocks.prices('AAPL');
-  const prices = result.unwrap();
-  console.log(prices);
+  const prices = await client.stocks.prices('AAPL');
+  console.log(prices[0].mid);
 } catch (error) {
   if (error instanceof RateLimitError) {
     console.error('Rate limit exceeded');
+  } else if (error instanceof ValidationError) {
+    console.error('Invalid parameters:', error.message);
   } else if (error instanceof RequestError) {
-    console.error('Request failed, retries exhausted');
+    console.error('Request failed after retries:', error.message);
+  } else if (error instanceof MarketDataClientError) {
+    console.error('SDK error:', error.message);
   } else {
-    console.error('Unexpected error:', error);
+    throw error;
   }
 }
 ```
 
-### Functional Composition
+### Error classes
+
+All SDK errors extend `MarketDataClientError`:
+
+- `ValidationError` — request parameters failed Zod validation, or the server response failed schema validation.
+- `RateLimitError` — pre-flight credit check or 429 from the server.
+- `RequestError` — transport / HTTP failure (e.g. 5xx after retries exhausted).
+
+### Chainable `.save()` / `.blob()`
+
+Every returned Promise also supports chained CSV/JSON helpers. No intermediate `await` is required:
 
 ```typescript
-const result = await client.stocks.prices('AAPL')
-  .map((prices) => prices.filter(p => p.mid > 100))
-  .mapErr((error) => {
-    console.error('Failed to fetch:', error.message);
-    return error;
-  });
+// Save directly to disk
+const path = await client.stocks.prices('AAPL', { format: 'csv' }).save('aapl.csv');
 
-if (result.isOk()) {
-  console.log('Filtered prices:', result.value);
-}
+// Or get a Blob
+const blob = await client.stocks.prices('AAPL', { format: 'csv' }).blob();
 ```
 
-### Chaining Operations
+Both helpers throw `MarketDataClientError` on request failure, same as a plain `await`.
+
+### Result-style error handling (opt-in)
+
+If you prefer explicit error values over exceptions (e.g. for functional composition), wrap any call in the pattern of your choice:
 
 ```typescript
-const result = await client.stocks.prices('AAPL')
-  .andThen((prices) => {
-    if (prices.length === 0) {
-      return errAsync(new Error('No prices found'));
-    }
-    return okAsync(prices);
-  });
+import { ResultAsync } from 'neverthrow';
+
+const result = await ResultAsync.fromPromise(
+  client.stocks.prices('AAPL'),
+  (err) => err as MarketDataClientError,
+);
+
+result.match(
+  (prices) => console.log(prices),
+  (err) => console.error(err.message),
+);
 ```
 
-For more details, see [ADR-006: Result Pattern with neverthrow](docs/adr/ADR-006-result-pattern-neverthrow.md).
+For architectural background on the public API contract, see [ADR-007: Result Inside, Promise Outside](docs/adr/ADR-007-result-inside-promise-outside.md).
 
 
 ## License

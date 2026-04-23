@@ -1,5 +1,6 @@
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { ValidationError } from "@/error";
+import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
 import {
 	type OptionsQuotesHumanResponse,
@@ -9,8 +10,13 @@ import {
 } from "@/resources/options/outputs";
 
 import type { OptionsQuotesParams } from "@/resources/options/types";
-import type { MarketDataParams, TypedResult } from "@/types";
-import { getDataRecords, normalizeArgs, transformHumanKeys } from "@/utils";
+import type { MarketDataParams, TypedPromise } from "@/types";
+import {
+	getDataRecords,
+	MarketDataPromise,
+	normalizeArgs,
+	transformHumanKeys,
+} from "@/utils";
 import type { OptionsResource } from "./index";
 
 export function quotes<
@@ -19,7 +25,7 @@ export function quotes<
 	this: OptionsResource,
 	symbols: string | string[],
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	OptionsQuotesResponse,
 	OptionsQuotesHumanResponse,
 	P & { symbols: string | string[] }
@@ -27,12 +33,12 @@ export function quotes<
 export function quotes<P extends OptionsQuotesParams & MarketDataParams>(
 	this: OptionsResource,
 	params: P,
-): TypedResult<OptionsQuotesResponse, OptionsQuotesHumanResponse, P>;
+): TypedPromise<OptionsQuotesResponse, OptionsQuotesHumanResponse, P>;
 export function quotes(
 	this: OptionsResource,
 	arg1: string | string[] | (OptionsQuotesParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	OptionsQuotesResponse,
 	OptionsQuotesHumanResponse,
 	OptionsQuotesParams & MarketDataParams
@@ -75,9 +81,13 @@ export function quotes(
 		});
 	});
 
-	return ResultAsync.combine(requests).map((results) => {
-		return results.flat() as OptionsQuotesResponse & OptionsQuotesHumanResponse;
-	}) as unknown as TypedResult<
+	return MarketDataPromise.fromResult(
+		ResultAsync.combine(requests).map((results) => {
+			return results.flat() as OptionsQuotesResponse &
+				OptionsQuotesHumanResponse;
+		}),
+		saveBlobToFile,
+	) as unknown as TypedPromise<
 		OptionsQuotesResponse,
 		OptionsQuotesHumanResponse,
 		OptionsQuotesParams & MarketDataParams

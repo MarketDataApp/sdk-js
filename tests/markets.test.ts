@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, unwrapOk } from "./test-utils";
+import { createMockResponse } from "./test-utils";
 
 describe("MarketsResource", () => {
 	it("fetches market status with correct params", async () => {
@@ -21,7 +21,7 @@ describe("MarketsResource", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(await client.markets.status({ country: "US" }));
+		const result = await client.markets.status({ country: "US" });
 
 		expect(fetchMock).toHaveBeenCalledTimes(2);
 		const url = new URL(fetchMock.mock.calls[1][0]);
@@ -55,9 +55,7 @@ describe("MarketsResource", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.markets.status({ useHumanReadable: true }),
-		);
+		const result = await client.markets.status({ useHumanReadable: true });
 
 		expect(result).toEqual([
 			{

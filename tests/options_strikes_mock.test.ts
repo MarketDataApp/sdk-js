@@ -17,16 +17,8 @@ describe("OptionsResource (Mock Strikes)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = await client.options.strikes({
-			symbol: "AAPL",
-		});
+		const data = await client.options.strikes({ symbol: "AAPL" });
 
-		if (result.isErr()) {
-			console.error("Error:", result.error);
-			throw new Error(`Unexpected error: ${result.error.message}`);
-		}
-
-		const data = result.value;
 		expect(data).toBeDefined();
 		expect(data.s).toBe("ok");
 		expect(data.updated).toBeDefined();
@@ -43,18 +35,11 @@ describe("OptionsResource (Mock Strikes)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = await client.options.strikes({
+		const data = await client.options.strikes({
 			symbol: "AAPL",
 			useHumanReadable: true,
 		});
 
-		if (result.isErr()) {
-			console.error("Full error:", JSON.stringify(result.error, null, 2));
-			console.error("Error message:", result.error.message);
-			throw new Error(`Test failed with error: ${result.error.message}`);
-		}
-
-		const data = result.value;
 		expect(data).toBeDefined();
 		expect(data.Date).toBeDefined();
 		const keys = Object.keys(data).filter((k) => k !== "Date");
@@ -70,7 +55,7 @@ describe("OptionsResource (Mock Strikes)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = await client.options.strikes("AAPL");
-		expect(result.isOk()).toBe(true);
+		const data = await client.options.strikes("AAPL");
+		expect(data).toBeDefined();
 	});
 });

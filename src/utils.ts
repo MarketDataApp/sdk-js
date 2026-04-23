@@ -1,5 +1,6 @@
 import { err, ok, type Result, type ResultAsync } from "neverthrow";
 import type { z } from "zod";
+import type { MarketDataClientError } from "@/error";
 import { ValidationError } from "@/error";
 
 export const formatDate = (date: Date | string | number): string => {
@@ -140,36 +141,51 @@ export type Unpacked<T> = T extends (infer U)[] ? U : T;
 
 export type UnpackedObject<T> = { [K in keyof T]: Unpacked<T[K]> };
 
-import type { MarketDataResult } from "@/types";
+type SaveBlobToFile = (blob: Blob, filename?: string) => Promise<string>;
 
-export function attachMarketDataMethods<T>(
-	result: ResultAsync<T, unknown>,
-	saveBlobToFile: (blob: Blob, filename?: string) => Promise<string>,
-): MarketDataResult<T> {
-	const r = result as unknown as MarketDataResult<T>;
-	r.blob = async function (this: ResultAsync<T, unknown>): Promise<Blob> {
-		const res = await this;
-		if (res.isOk()) {
-			const val = res.value;
-			if (val instanceof Blob) {
-				return val;
-			}
-			return new Blob([JSON.stringify(val)], {
-				type: "application/json",
-			});
+export class MarketDataPromise<T> extends Promise<T> {
+	static get [Symbol.species](): PromiseConstructor {
+		return Promise;
+	}
+
+	private _saveBlobToFile?: SaveBlobToFile;
+
+	static fromResult<T>(
+		result: ResultAsync<T, MarketDataClientError>,
+		saveBlobToFile: SaveBlobToFile,
+	): MarketDataPromise<T> {
+		const mp = new MarketDataPromise<T>((resolve, reject) => {
+			result.match(
+				(v) => resolve(v),
+				(e) => reject(e),
+			);
+		});
+		mp._saveBlobToFile = saveBlobToFile;
+		return mp;
+	}
+
+	async blob(): Promise<Blob> {
+		const value = await this;
+		if (value instanceof Blob) return value;
+		return new Blob([JSON.stringify(value)], { type: "application/json" });
+	}
+
+	async save(filename?: string): Promise<string> {
+		if (!this._saveBlobToFile) {
+			throw new Error("MarketDataPromise.save() requires saveBlobToFile");
 		}
-		throw res.error;
-	};
+		const blob = await this.blob();
+		return this._saveBlobToFile(blob, filename);
+	}
+}
 
-	r.save = async function (
-		this: Record<string, unknown>,
-		filename?: string,
-	): Promise<string> {
-		const blob = await (this.blob as () => Promise<Blob>)();
-		return saveBlobToFile(blob, filename);
-	};
-
-	return r;
+export async function unwrap<T, E>(r: ResultAsync<T, E>): Promise<T> {
+	return r.match(
+		(v) => v,
+		(e) => {
+			throw e;
+		},
+	);
 }
 
 export function formatDurationLog(durationMs: number): string {

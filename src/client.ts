@@ -8,7 +8,6 @@ import {
 	RequestError,
 	ValidationError,
 } from "@/error";
-import { saveBlobToFile } from "@/fileUtils";
 import {
 	CHECK_RATE_LIMITS,
 	Endpoints,
@@ -28,7 +27,7 @@ import type {
 	MarketDataResult,
 	UserRateLimits,
 } from "@/types";
-import { attachMarketDataMethods, formatDurationLog } from "@/utils";
+import { formatDurationLog } from "@/utils";
 
 import pkg from "../package.json";
 
@@ -189,7 +188,7 @@ export class MarketDataClient implements IMarketDataClient {
 			responseLogLevel?: LogLevel;
 		} = {},
 	): MarketDataResult<T> {
-		const result = ResultAsync.fromPromise(
+		return ResultAsync.fromPromise(
 			pRetry(
 				() =>
 					this._performFetch(url, headers, params, schema, service, options),
@@ -207,8 +206,6 @@ export class MarketDataClient implements IMarketDataClient {
 			),
 			(e) => this._mapFetchError(e),
 		);
-
-		return attachMarketDataMethods(result, saveBlobToFile);
 	}
 
 	private async _handleResponseError(

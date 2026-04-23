@@ -8,7 +8,7 @@ import {
 
 import type { StocksNewsParams } from "@/resources/stocks/types";
 import { StocksNewsInternalParamsSchema } from "@/resources/stocks/types";
-import type { MarketDataParams, TypedResult } from "@/types";
+import type { MarketDataParams, TypedPromise } from "@/types";
 
 import { normalizeArgs } from "@/utils";
 import type { StocksResource } from "./index";
@@ -19,7 +19,7 @@ export function news<
 	this: StocksResource,
 	symbol: string,
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	StockNewsResponse,
 	StockNewsHumanResponse,
 	P & { symbol: string }
@@ -28,13 +28,13 @@ export function news<
 export function news<P extends StocksNewsParams & MarketDataParams>(
 	this: StocksResource,
 	params: P,
-): TypedResult<StockNewsResponse, StockNewsHumanResponse, P>;
+): TypedPromise<StockNewsResponse, StockNewsHumanResponse, P>;
 
 export function news(
 	this: StocksResource,
 	arg1: string | (StocksNewsParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	StockNewsResponse,
 	StockNewsHumanResponse,
 	StocksNewsParams & MarketDataParams
@@ -55,7 +55,7 @@ export function news(
 			humanSchema: StockNewsHumanSchema,
 			service: Service.NEWS,
 		},
-	) as TypedResult<
+	) as TypedPromise<
 		StockNewsResponse,
 		StockNewsHumanResponse,
 		StocksNewsParams & MarketDataParams

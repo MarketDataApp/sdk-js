@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, loadMock, unwrapOk } from "./test-utils";
+import { createMockResponse, loadMock } from "./test-utils";
 
 const mockData = loadMock("stocks_quotes_response_200");
 const mockHumanData = loadMock("stocks_quotes_human_response_200");
@@ -17,9 +17,7 @@ describe("StocksResource Quotes (Mock Data)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.stocks.quotes({ symbols: ["AAPL", "MSFT"] }),
-		);
+		const result = await client.stocks.quotes({ symbols: ["AAPL", "MSFT"] });
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result).toHaveLength(2);
@@ -47,9 +45,9 @@ describe("StocksResource Quotes (Mock Data)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.stocks.quotes("AAPL", { useHumanReadable: true }),
-		);
+		const result = await client.stocks.quotes("AAPL", {
+			useHumanReadable: true,
+		});
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result).toHaveLength(1);
@@ -72,19 +70,17 @@ describe("StocksResource Quotes (Mock Data)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result1 = unwrapOk(await client.stocks.quotes("AAPL"));
+		const result1 = await client.stocks.quotes("AAPL");
 		expect(result1).toBeDefined();
 
-		const result2 = unwrapOk(await client.stocks.quotes(["AAPL", "MSFT"]));
+		const result2 = await client.stocks.quotes(["AAPL", "MSFT"]);
 		expect(result2).toHaveLength(2);
 
-		const result3 = unwrapOk(
-			await client.stocks.quotes({
-				symbols: "AAPL",
-				"52week": true,
-				extended: true,
-			}),
-		);
+		const result3 = await client.stocks.quotes({
+			symbols: "AAPL",
+			"52week": true,
+			extended: true,
+		});
 		expect(result3).toBeDefined();
 
 		const url = new URL(

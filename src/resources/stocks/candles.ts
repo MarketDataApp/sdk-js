@@ -1,6 +1,7 @@
 import { errAsync, ResultAsync } from "neverthrow";
 import pLimit from "p-limit";
 import { MarketDataClientError, RequestError } from "@/error";
+import { saveBlobToFile } from "@/fileUtils";
 import {
 	Endpoints,
 	MAX_CONCURRENT_REQUESTS,
@@ -19,9 +20,14 @@ import {
 	type StocksCandlesParams,
 	StocksCandlesParamsSchema,
 } from "@/resources/stocks/types";
-import type { MarketDataParams, TypedResult } from "@/types";
+import type { MarketDataParams, TypedPromise } from "@/types";
 
-import { getDataRecords, normalizeArgs, splitDatesByTimeframe } from "@/utils";
+import {
+	getDataRecords,
+	MarketDataPromise,
+	normalizeArgs,
+	splitDatesByTimeframe,
+} from "@/utils";
 import type { StocksResource } from "./index";
 
 export function candles<
@@ -30,7 +36,7 @@ export function candles<
 	this: StocksResource,
 	symbol: string,
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	StockCandleResponse,
 	StockCandleHumanResponse,
 	P & { symbol: string }
@@ -39,13 +45,13 @@ export function candles<
 export function candles<P extends StocksCandlesParams & MarketDataParams>(
 	this: StocksResource,
 	params: P,
-): TypedResult<StockCandleResponse, StockCandleHumanResponse, P>;
+): TypedPromise<StockCandleResponse, StockCandleHumanResponse, P>;
 
 export function candles(
 	this: StocksResource,
 	arg1: string | (StocksCandlesParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	StockCandleResponse,
 	StockCandleHumanResponse,
 	StocksCandlesParams & MarketDataParams
@@ -58,7 +64,10 @@ export function candles(
 		StocksCandlesParamsSchema,
 	);
 	if (normalization.isErr()) {
-		return errAsync(normalization.error) as TypedResult<
+		return MarketDataPromise.fromResult(
+			errAsync(normalization.error),
+			saveBlobToFile,
+		) as TypedPromise<
 			StockCandleResponse,
 			StockCandleHumanResponse,
 			StocksCandlesParams & MarketDataParams
@@ -104,10 +113,13 @@ export function candles(
 		).andThen((res) => res);
 	});
 
-	return ResultAsync.combine(requests).map((responses) => {
-		const merged = mergeResponses(responses);
-		return getDataRecords(merged, ["s"]);
-	}) as TypedResult<
+	return MarketDataPromise.fromResult(
+		ResultAsync.combine(requests).map((responses) => {
+			const merged = mergeResponses(responses);
+			return getDataRecords(merged, ["s"]);
+		}),
+		saveBlobToFile,
+	) as TypedPromise<
 		StockCandleResponse,
 		StockCandleHumanResponse,
 		StocksCandlesParams & MarketDataParams

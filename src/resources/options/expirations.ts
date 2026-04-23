@@ -1,3 +1,4 @@
+import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
 import {
 	type OptionsExpirationsHumanResponse,
@@ -6,9 +7,8 @@ import {
 	OptionsExpirationsSchema,
 } from "@/resources/options/outputs";
 import type { OptionsExpirationsParams } from "@/resources/options/types";
-
-import type { MarketDataParams, TypedResult } from "@/types";
-import { normalizeArgs } from "@/utils";
+import type { MarketDataParams, TypedPromise } from "@/types";
+import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
 export function expirations<
@@ -17,7 +17,7 @@ export function expirations<
 	this: OptionsResource,
 	symbol: string,
 	params?: P,
-): TypedResult<
+): TypedPromise<
 	OptionsExpirationsResponse,
 	OptionsExpirationsHumanResponse,
 	P & { symbol: string }
@@ -28,13 +28,13 @@ export function expirations<
 >(
 	this: OptionsResource,
 	params: P,
-): TypedResult<OptionsExpirationsResponse, OptionsExpirationsHumanResponse, P>;
+): TypedPromise<OptionsExpirationsResponse, OptionsExpirationsHumanResponse, P>;
 
 export function expirations(
 	this: OptionsResource,
 	arg1: string | (OptionsExpirationsParams & MarketDataParams),
 	arg2: MarketDataParams = {},
-): TypedResult<
+): TypedPromise<
 	OptionsExpirationsResponse,
 	OptionsExpirationsHumanResponse,
 	OptionsExpirationsParams & MarketDataParams
@@ -47,16 +47,19 @@ export function expirations(
 
 	this.logger.debug("Fetching options expirations...");
 
-	return this._makeRequest<
-		OptionsExpirationsResponse | OptionsExpirationsHumanResponse
-	>(`${Endpoints.OPTIONS_EXPIRATIONS}${params.symbol}/`, params, {
-		schema: this._getSchema(
-			params,
-			OptionsExpirationsSchema,
-			OptionsExpirationsHumanSchema,
-		),
-		service: Service.OPTIONS_EXPIRATIONS,
-	}) as TypedResult<
+	return MarketDataPromise.fromResult(
+		this._makeRequest<
+			OptionsExpirationsResponse | OptionsExpirationsHumanResponse
+		>(`${Endpoints.OPTIONS_EXPIRATIONS}${params.symbol}/`, params, {
+			schema: this._getSchema(
+				params,
+				OptionsExpirationsSchema,
+				OptionsExpirationsHumanSchema,
+			),
+			service: Service.OPTIONS_EXPIRATIONS,
+		}),
+		saveBlobToFile,
+	) as TypedPromise<
 		OptionsExpirationsResponse,
 		OptionsExpirationsHumanResponse,
 		OptionsExpirationsParams & MarketDataParams
