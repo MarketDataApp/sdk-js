@@ -30,14 +30,6 @@ export interface IMarketDataClient {
 
 export type MarketDataResult<T> = ResultAsync<T, MarketDataClientError>;
 
-export type TypedResult<T, H, P> = MarketDataResult<
-	P extends { outputFormat: "csv" }
-		? Blob
-		: P extends { useHumanReadable: true } | { human: true }
-			? H
-			: T
->;
-
 export type TypedPromise<T, H, P> = MarketDataPromise<
 	P extends { outputFormat: "csv" }
 		? Blob
