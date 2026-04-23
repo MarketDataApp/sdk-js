@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, loadMock, unwrapOk } from "./test-utils";
+import { createMockResponse, loadMock } from "./test-utils";
 
 const mockData = loadMock("funds_candles_response_200");
 const mockHumanData = loadMock("funds_candles_human_response_200");
@@ -17,14 +17,12 @@ describe("FundsResource (Mock Candles)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.funds.candles({
-				symbol: "VFFVX",
-				resolution: "D",
-				from: "2020-01-01",
-				to: "2020-01-10",
-			}),
-		);
+		const result = await client.funds.candles({
+			symbol: "VFFVX",
+			resolution: "D",
+			from: "2020-01-01",
+			to: "2020-01-10",
+		});
 
 		expect(result).toBeDefined();
 		expect(Array.isArray(result)).toBe(true);
@@ -42,15 +40,13 @@ describe("FundsResource (Mock Candles)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.funds.candles({
-				symbol: "VFFVX",
-				resolution: "D",
-				from: "2020-01-01",
-				to: "2020-01-10",
-				useHumanReadable: true,
-			}),
-		);
+		const result = await client.funds.candles({
+			symbol: "VFFVX",
+			resolution: "D",
+			from: "2020-01-01",
+			to: "2020-01-10",
+			useHumanReadable: true,
+		});
 
 		expect(result).toBeDefined();
 		expect(Array.isArray(result)).toBe(true);
@@ -68,11 +64,9 @@ describe("FundsResource (Mock Candles)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.funds.candles("VFFVX", {
-				resolution: "D",
-			}),
-		);
+		const result = await client.funds.candles("VFFVX", {
+			resolution: "D",
+		});
 
 		expect(result).toBeDefined();
 		expect(result.length).toBeGreaterThan(0);

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { DateFormat } from "@/enums";
-import { RequestError } from "@/error";
+import { RequestError, ValidationError } from "@/error";
 import { fetchMock } from "./setup";
-import { createMockResponse, unwrapOk } from "./test-utils";
+import { createMockResponse } from "./test-utils";
 
 describe("MarketDataClient", () => {
 	it("initializes with config", () => {
@@ -42,14 +42,12 @@ describe("MarketDataClient", () => {
 				return createMockResponse({ ok: false, status: 404 });
 			});
 
-			const result = unwrapOk(
-				await client.stocks.prices({
-					symbols: ["AAPL", "MSFT"],
+			const result = await client.stocks.prices({
+				symbols: ["AAPL", "MSFT"],
 
-					dateformat: DateFormat.UNIX,
-					headers: true,
-				}),
-			);
+				dateformat: DateFormat.UNIX,
+				headers: true,
+			});
 
 			expect(fetchMock).toHaveBeenCalledTimes(2);
 			const url = new URL(fetchMock.mock.calls[1][0]);
@@ -98,12 +96,10 @@ describe("MarketDataClient", () => {
 				return createMockResponse({ ok: false, status: 404 });
 			});
 
-			const result = unwrapOk(
-				await client.stocks.prices({
-					symbols: "AAPL",
-					useHumanReadable: true,
-				}),
-			);
+			const result = await client.stocks.prices({
+				symbols: "AAPL",
+				useHumanReadable: true,
+			});
 
 			expect(result).toEqual([
 				{
@@ -116,17 +112,14 @@ describe("MarketDataClient", () => {
 			]);
 		});
 
-		it("handles validation errors gracefully (returns ErrorResult)", async () => {
+		it("throws ValidationError on invalid params", async () => {
 			const client = new MarketDataClient();
 
-			const result = await client.stocks.prices({
-				symbols: 123 as unknown as string,
-			});
-
-			expect(result.isErr()).toBe(true);
-			if (result.isErr()) {
-				expect(result.error.name).toBe("ValidationError");
-			}
+			await expect(
+				client.stocks.prices({
+					symbols: 123 as unknown as string,
+				}),
+			).rejects.toBeInstanceOf(ValidationError);
 		});
 
 		it("retries on failure", async () => {
@@ -180,7 +173,7 @@ describe("MarketDataClient", () => {
 				return createMockResponse({ ok: false, status: 404 });
 			});
 
-			const result = unwrapOk(await client.stocks.prices({ symbols: "AAPL" }));
+			const result = await client.stocks.prices({ symbols: "AAPL" });
 
 			expect(stockPriceCallCount).toBe(3);
 			expect(result).toEqual([
@@ -194,7 +187,7 @@ describe("MarketDataClient", () => {
 			]);
 		});
 
-		it("returns error result after max retries", async () => {
+		it("throws RequestError after max retries", async () => {
 			const client = new MarketDataClient({ token: "test-token" });
 
 			fetchMock.mockImplementation(async (url: string) => {
@@ -221,13 +214,10 @@ describe("MarketDataClient", () => {
 				return createMockResponse({ ok: false, status: 502, text: "Fail" });
 			});
 
-			const result = await client.stocks.prices({ symbols: "AAPL" });
-
+			await expect(
+				client.stocks.prices({ symbols: "AAPL" }),
+			).rejects.toBeInstanceOf(RequestError);
 			expect(fetchMock).toHaveBeenCalledTimes(5);
-			expect(result.isErr()).toBe(true);
-			if (result.isErr()) {
-				expect(result.error).toBeInstanceOf(RequestError);
-			}
 		});
 	});
 });

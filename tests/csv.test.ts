@@ -42,15 +42,9 @@ describe("CSV Output Support", () => {
 			},
 		});
 
-		const result = await client.stocks.prices("AAPL", {
+		const data = await client.stocks.prices("AAPL", {
 			outputFormat: OutputFormat.CSV,
 		});
-
-		if (result.isErr()) {
-			console.error("Test failed with error:", result.error);
-		}
-		expect(result.isOk()).toBe(true);
-		const data = result._unsafeUnwrap();
 
 		expect(data).toBeInstanceOf(Blob);
 		expect(await (data as unknown as Blob).text()).toBe(csvContent);
@@ -92,10 +86,7 @@ describe("CSV Output Support", () => {
 			},
 		});
 
-		const result = await client.stocks.prices("MSFT");
-
-		expect(result.isOk()).toBe(true);
-		const data = result._unsafeUnwrap();
+		const data = await client.stocks.prices("MSFT");
 
 		expect(data).toBeInstanceOf(Blob);
 		expect(await (data as unknown as Blob).text()).toBe(csvContent);

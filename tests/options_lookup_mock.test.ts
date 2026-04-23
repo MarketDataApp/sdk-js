@@ -13,18 +13,14 @@ describe("Options Lookup Mocks", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const client = new MarketDataClient({
-			token: "test",
-		});
+		const client = new MarketDataClient({ token: "test" });
 
-		const result = await client.options.lookup("AAPL");
-		expect(result.isOk()).toBe(true);
-		if (result.isOk()) {
-			expect((result.value as Record<string, unknown>).s).toBe("ok");
-			expect((result.value as Record<string, unknown>).optionSymbol).toBe(
-				"AAPL230728C00200000",
-			);
-		}
+		const result = (await client.options.lookup("AAPL")) as Record<
+			string,
+			unknown
+		>;
+		expect(result.s).toBe("ok");
+		expect(result.optionSymbol).toBe("AAPL230728C00200000");
 	});
 
 	test("lookup human readable", async () => {
@@ -36,19 +32,12 @@ describe("Options Lookup Mocks", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const client = new MarketDataClient({
-			token: "test",
-		});
+		const client = new MarketDataClient({ token: "test" });
 
-		const result = await client.options.lookup("AAPL", {
+		const result = (await client.options.lookup("AAPL", {
 			useHumanReadable: true,
-		});
+		})) as Record<string, unknown>;
 
-		expect(result.isOk()).toBe(true);
-		if (result.isOk()) {
-			expect((result.value as Record<string, unknown>).Symbol).toBe(
-				"AAPL230728C00200000",
-			);
-		}
+		expect(result.Symbol).toBe("AAPL230728C00200000");
 	});
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { fetchMock } from "./setup";
-import { createMockResponse, loadMock, unwrapOk } from "./test-utils";
+import { createMockResponse, loadMock } from "./test-utils";
 
 const mockData = loadMock("stocks_news_response_200");
 const mockHumanData = loadMock("stocks_news_human_response_200");
@@ -17,7 +17,7 @@ describe("StocksResource News (Mock Data)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(await client.stocks.news({ symbol: "AAPL" }));
+		const result = await client.stocks.news({ symbol: "AAPL" });
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result.length).toBeGreaterThan(0);
@@ -41,9 +41,10 @@ describe("StocksResource News (Mock Data)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(
-			await client.stocks.news({ symbol: "AAPL", useHumanReadable: true }),
-		);
+		const result = await client.stocks.news({
+			symbol: "AAPL",
+			useHumanReadable: true,
+		});
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result.length).toBeGreaterThan(0);
@@ -67,7 +68,7 @@ describe("StocksResource News (Mock Data)", () => {
 			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
 		});
 
-		const result = unwrapOk(await client.stocks.news("AAPL", {}));
+		const result = await client.stocks.news("AAPL", {});
 		expect(Array.isArray(result)).toBe(true);
 		expect(result[0].symbol).toBe("AAPL");
 	});

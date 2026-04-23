@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
+import { RateLimitError } from "@/error";
 import type { UserRateLimits } from "@/types";
 import { fetchMock } from "./setup";
 import { createMockResponse } from "./test-utils";
@@ -23,8 +24,6 @@ describe("rate-limit race-condition fix", () => {
 			);
 			expect(client.rateLimits?.requestsConsumed).toBe(2);
 
-			// Late-arriving response from an earlier in-flight request:
-			// lower consumed, same window → ignore.
 			priv._updateRateLimits(
 				new Headers({
 					"x-api-ratelimit-limit": "100",
@@ -81,7 +80,6 @@ describe("rate-limit race-condition fix", () => {
 				}),
 			);
 
-			// Window rolled over — lower consumed, higher reset.
 			priv._updateRateLimits(
 				new Headers({
 					"x-api-ratelimit-limit": "100",
@@ -111,8 +109,6 @@ describe("rate-limit race-condition fix", () => {
 				}),
 			);
 
-			// Stale response straddling window rollover — reset is from prior
-			// window; must not overwrite the new-window snapshot.
 			priv._updateRateLimits(
 				new Headers({
 					"x-api-ratelimit-limit": "100",
@@ -165,22 +161,22 @@ describe("rate-limit race-condition fix", () => {
 				return createMockResponse({ ok: false, status: 404 });
 			});
 
-			const results = await Promise.all([
+			const results = await Promise.allSettled([
 				client.stocks.prices({ symbols: "AAPL" }),
 				client.stocks.prices({ symbols: "MSFT" }),
 				client.stocks.prices({ symbols: "GOOGL" }),
 			]);
 
-			const oks = results.filter((r) => r.isOk());
-			const errs = results.filter((r) => r.isErr());
+			const oks = results.filter((r) => r.status === "fulfilled");
+			const errs = results.filter((r) => r.status === "rejected");
 
 			expect(oks.length).toBe(2);
 			expect(errs.length).toBe(1);
 			for (const e of errs) {
-				if (e.isErr()) expect(e.error.name).toBe("RateLimitError");
+				if (e.status === "rejected")
+					expect(e.reason).toBeInstanceOf(RateLimitError);
 			}
 
-			// Only the two dispatchable requests actually hit the network.
 			expect(pricesCallCount).toBe(2);
 		});
 
@@ -222,8 +218,7 @@ describe("rate-limit race-condition fix", () => {
 
 			const priv = client as unknown as { _inflightReservedCredits: number };
 
-			const result = await client.stocks.prices({ symbols: "AAPL" });
-			expect(result.isOk()).toBe(true);
+			await client.stocks.prices({ symbols: "AAPL" });
 			expect(priv._inflightReservedCredits).toBe(0);
 		});
 
@@ -264,8 +259,9 @@ describe("rate-limit race-condition fix", () => {
 
 			const priv = client as unknown as { _inflightReservedCredits: number };
 
-			const result = await client.stocks.prices({ symbols: "AAPL" });
-			expect(result.isErr()).toBe(true);
+			await expect(
+				client.stocks.prices({ symbols: "AAPL" }),
+			).rejects.toBeDefined();
 			expect(priv._inflightReservedCredits).toBe(0);
 		});
 
@@ -293,8 +289,9 @@ describe("rate-limit race-condition fix", () => {
 
 			const priv = client as unknown as { _inflightReservedCredits: number };
 
-			const result = await client.stocks.prices({ symbols: "AAPL" });
-			expect(result.isErr()).toBe(true);
+			await expect(
+				client.stocks.prices({ symbols: "AAPL" }),
+			).rejects.toBeDefined();
 			expect(priv._inflightReservedCredits).toBe(0);
 		});
 	});

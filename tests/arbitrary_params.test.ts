@@ -15,9 +15,11 @@ describe("Arbitrary Parameters", () => {
 		});
 		global.fetch = fetchMock;
 
-		// We pass a custom parameter. TypeScript should allow this because
-		// the params type extends MarketDataParams which has an index signature.
-		await client.stocks.quotes("AAPL", { custom_param: "custom_value" });
+		// The response mock doesn't match StockQuoteSchema; we only care that the
+		// fetch URL carries the custom parameter, so swallow the validation throw.
+		await client.stocks
+			.quotes("AAPL", { custom_param: "custom_value" })
+			.catch(() => undefined);
 
 		const calls = fetchMock.mock.calls;
 		const quotesCall = calls.find((call) =>
