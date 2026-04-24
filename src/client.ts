@@ -1,4 +1,5 @@
 import { ResultAsync } from "neverthrow";
+import pLimit, { type LimitFunction } from "p-limit";
 import pRetry, { AbortError } from "p-retry";
 import { z } from "zod";
 import { APIStatusResult, globalApiStatus } from "@/apiStatus";
@@ -14,7 +15,11 @@ import {
 	ServerError,
 	ValidationError,
 } from "@/error";
-import { CHECK_RATE_LIMITS, isRetriableStatusCode } from "@/internalSettings";
+import {
+	CHECK_RATE_LIMITS,
+	isRetriableStatusCode,
+	MAX_CONCURRENT_REQUESTS,
+} from "@/internalSettings";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
 import { FundsResource } from "@/resources/funds/index";
 import { MarketsResource } from "@/resources/markets/index";
@@ -172,6 +177,14 @@ export class MarketDataClient implements IMarketDataClient {
 		return url;
 	}
 
+	// Global sliding-window pool shared across every endpoint on this
+	// client. The server caps concurrent requests per account at 50; this
+	// enforces it client-side so we never send more than that in parallel,
+	// regardless of how many resource methods fan out simultaneously.
+	public readonly _concurrencyPool: LimitFunction = pLimit(
+		MAX_CONCURRENT_REQUESTS,
+	);
+
 	// In-flight credits reserved by this client but not yet reconciled against
 	// a server response. Prevents TOCTOU over-dispatch when N coroutines pass
 	// the "remaining" check simultaneously before any of them lands a response.
@@ -222,7 +235,9 @@ export class MarketDataClient implements IMarketDataClient {
 		return ResultAsync.fromPromise(
 			pRetry(
 				() =>
-					this._performFetch(url, headers, params, schema, service, options),
+					this._concurrencyPool(() =>
+						this._performFetch(url, headers, params, schema, service, options),
+					),
 				{
 					retries: options.skipRetry ? 0 : this.settings.marketdataMaxRetries,
 					minTimeout: this.settings.marketdataRetryInitialWait * 1000,
