@@ -144,8 +144,11 @@ describe("error hierarchy — wired into client", () => {
 		).rejects.toBeInstanceOf(BadRequestError);
 	});
 
-	it("maps 404 to NotFoundError", async () => {
-		const client = new MarketDataClient({ token: "t" });
+	it("404 resolves as no_data rather than throwing NotFoundError", async () => {
+		// Per spec §5 / ADR decision, 404 is "no data" — the SDK returns an
+		// empty result with `no_data: true` instead of throwing. The
+		// NotFoundError class is still exported for callers who want to
+		// opt into a throw (via custom interceptor, etc.).
 		fetchMock.mockImplementation(async () =>
 			createMockResponse({
 				ok: false,
@@ -153,8 +156,14 @@ describe("error hierarchy — wired into client", () => {
 				text: '{"s":"no_data"}',
 			}),
 		);
-		await expect(
-			client.stocks.prices({ symbols: "AAPL", skipRateLimitCheck: true }),
-		).rejects.toBeInstanceOf(NotFoundError);
+		const client = new MarketDataClient({ token: "t" });
+		await client.ready;
+		const pending = client.stocks.prices({ symbols: "AAPL" });
+		const data = await pending;
+		expect(data).toEqual([]);
+		expect(pending.no_data).toBe(true);
+		expect(await pending.hasData()).toBe(false);
+		// The class is still instantiable for consumers who want it:
+		expect(new NotFoundError("x")).toBeInstanceOf(NotFoundError);
 	});
 });
