@@ -238,6 +238,56 @@ const candles = await client.stocks.candles('AAPL', {
 });
 ```
 
+---
+
+### `quotes()`
+
+Current (delayed) NBBO quotes for one or more symbols. The free tier gets AAPL; other symbols require an authenticated token.
+
+```typescript
+const rows = await client.stocks.quotes(['AAPL', 'MSFT']);
+for (const r of rows) {
+  console.log(r.symbol, r.bid, r.ask, r.last);
+}
+```
+
+Single or array form. With `human: true` you get `"Symbol"`, `"Bid Price"`, etc. Premium plans also accept `from`/`to`/`date` for historical quote snapshots.
+
+---
+
+### `earnings()`
+
+Historical and upcoming earnings reports. Premium endpoint.
+
+```typescript
+const rows = await client.stocks.earnings('AAPL', {
+  from: '2024-01-01',
+  to: '2024-12-31',
+});
+for (const r of rows) {
+  console.log(r.reportDate, r.eps, r.estimate);
+}
+```
+
+Parameters mirror the candles surface (`from`/`to`/`date`/`countback`). Use `report` to filter by period (`'fy'`, `'fq'`).
+
+---
+
+### `news()`
+
+Recent news articles for a symbol. Beta endpoint.
+
+```typescript
+const rows = await client.stocks.news('AAPL');
+for (const a of rows) {
+  console.log(new Date(a.publicationDate * 1000), a.source, a.headline);
+}
+```
+
+Filter with `from`/`to`/`date`/`countback`.
+
+---
+
 ## Type Safety
 
 All methods use TypeScript's advanced type system with:

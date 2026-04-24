@@ -53,22 +53,24 @@ const status = await client.markets.status();
 
 ### Resources
 
-- **[Stocks Resource](docs/stocks.md)** - Stock prices and candles (OHLCV data)
-  - `prices()` - Get current stock prices
-  - `candles()` - Get historical OHLCV data with automatic date splitting
-- **[Markets Resource](docs/markets.md)** - Market status and availability
-  - `status()` - Get current market status
+- **[Stocks](docs/stocks.md)** — `prices`, `quotes`, `candles`, `earnings`, `news`
+- **[Options](docs/options.md)** — `chain`, `quotes`, `expirations`, `lookup`, `strikes`
+- **[Funds](docs/funds.md)** — `candles`
+- **[Markets](docs/markets.md)** — `status`
+- **[Utilities](docs/utilities.md)** — `status`, `headers`, `user`
 
 ### Architecture Decision Records (ADRs)
 
 Detailed documentation of architectural decisions and implementation patterns:
 
-- **[ADR-001: Modular Resource Architecture](docs/adr/ADR-001-modular-resource-architecture.md)** - How resources are organized and structured
-- **[ADR-002: Zod Schema Validation](docs/adr/ADR-002-zod-schema-validation.md)** - Input/output validation strategy
-- **[ADR-003: Retry Logic and Service Status](docs/adr/ADR-003-retry-logic-and-service-status.md)** - Intelligent retry mechanism and status checking
-- **[ADR-004: Rate Limiting Strategy](docs/adr/ADR-004-rate-limiting-strategy.md)** - Proactive rate limit  tracking and enforcement
-- **[ADR-005: TypeScript Type System](docs/adr/ADR-005-typescript-type-system.md)** - Advanced TypeScript patterns and type safety
-- **[ADR-006: Result Pattern with neverthrow](docs/adr/ADR-006-result-pattern-neverthrow.md)** - Functional error handling with Result types
+- **[ADR-001: Modular Resource Architecture](docs/adr/ADR-001-modular-resource-architecture.md)** — How resources are organized and structured
+- **[ADR-002: Zod Schema Validation](docs/adr/ADR-002-zod-schema-validation.md)** — Input/output validation strategy
+- **[ADR-003: Retry Logic and Service Status](docs/adr/ADR-003-retry-logic-and-service-status.md)** — Intelligent retry mechanism and status checking
+- **[ADR-004: Rate Limiting Strategy](docs/adr/ADR-004-rate-limiting-strategy.md)** — Proactive rate limit tracking and enforcement
+- **[ADR-005: TypeScript Type System](docs/adr/ADR-005-typescript-type-system.md)** — Advanced TypeScript patterns and type safety
+- **[ADR-006: Result Pattern with neverthrow](docs/adr/ADR-006-result-pattern-neverthrow.md)** — Superseded by ADR-007
+- **[ADR-007: Result inside, Promise outside](docs/adr/ADR-007-result-inside-promise-outside.md)** — Current public-API contract
+- **[ADR-008: Eager startup validation](docs/adr/ADR-008-eager-startup-validation.md)** — Fail-fast on invalid tokens at construction
 
 ## Configuration
 
