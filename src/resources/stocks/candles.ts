@@ -1,6 +1,6 @@
 import { errAsync, ResultAsync } from "neverthrow";
 import pLimit from "p-limit";
-import { MarketDataClientError, RequestError } from "@/error";
+import { MarketDataClientError, NetworkError } from "@/error";
 import { saveBlobToFile } from "@/fileUtils";
 import {
 	Endpoints,
@@ -109,7 +109,7 @@ export function candles(
 				),
 			),
 			(e) =>
-				e instanceof MarketDataClientError ? e : new RequestError(String(e)),
+				e instanceof MarketDataClientError ? e : new NetworkError(String(e)),
 		).andThen((res) => res);
 	});
 
