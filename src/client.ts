@@ -3,9 +3,15 @@ import pRetry, { AbortError } from "p-retry";
 import { z } from "zod";
 import { APIStatusResult, globalApiStatus } from "@/apiStatus";
 import {
+	AuthenticationError,
+	BadRequestError,
+	type ErrorContext,
 	MarketDataClientError,
+	NetworkError,
+	NotFoundError,
+	ParseError,
 	RateLimitError,
-	RequestError,
+	ServerError,
 	ValidationError,
 } from "@/error";
 import {
@@ -224,23 +230,36 @@ export class MarketDataClient implements IMarketDataClient {
 			);
 		}
 
-		if (response.status === 429) {
-			const error = CHECK_RATE_LIMITS
-				? new RateLimitError(`Rate limit exceeded: ${errmsg}`)
-				: new RequestError(`Request failed (${response.status}): ${errmsg}`);
-			throw new AbortError(error);
-		}
+		const context: ErrorContext = {
+			request_id: response.headers.get("cf-ray") ?? undefined,
+			status_code: response.status,
+			request_url: response.url,
+			timestamp: new Date(),
+		};
 
-		const requestError = new RequestError(
-			`Request failed (${response.status}): ${errmsg}`,
-		);
+		const error = this._buildHttpError(response.status, errmsg, context);
 
 		if (isRetriableStatusCode(response.status) && service) {
-			await this._checkServiceStatus(service, requestError);
-			throw requestError;
+			await this._checkServiceStatus(service, error);
+			throw error;
 		}
 
-		throw new AbortError(requestError);
+		throw new AbortError(error);
+	}
+
+	private _buildHttpError(
+		status: number,
+		errmsg: string,
+		context: ErrorContext,
+	): MarketDataClientError {
+		const prefix = `Request failed (${status}): ${errmsg}`;
+		if (status === 400) return new BadRequestError(prefix, context);
+		if (status === 401) return new AuthenticationError(prefix, context);
+		if (status === 404) return new NotFoundError(prefix, context);
+		if (status === 429)
+			return new RateLimitError(`Rate limit exceeded: ${errmsg}`, context);
+		if (status >= 500) return new ServerError(prefix, context);
+		return new BadRequestError(prefix, context);
 	}
 
 	private _initAuth(): void {
@@ -257,15 +276,13 @@ export class MarketDataClient implements IMarketDataClient {
 			const original = (e as AbortError).originalError;
 			if (original instanceof MarketDataClientError) return original;
 			if (original instanceof z.ZodError)
-				return new ValidationError(original.message);
-			return new RequestError(
+				return new ParseError(original.message);
+			return new NetworkError(
 				original instanceof Error ? original.message : String(original),
 			);
 		}
-		if (e instanceof z.ZodError) {
-			return new ValidationError(e.message);
-		}
-		return new RequestError(e instanceof Error ? e.message : String(e));
+		if (e instanceof z.ZodError) return new ParseError(e.message);
+		return new NetworkError(e instanceof Error ? e.message : String(e));
 	}
 
 	private async _performFetch<T>(
@@ -336,17 +353,12 @@ export class MarketDataClient implements IMarketDataClient {
 			}
 			return json as T;
 		} catch (error) {
-			if (error instanceof AbortError) {
-				throw error;
-			}
+			if (error instanceof AbortError) throw error;
 
-			if (
-				error instanceof RequestError &&
-				!(error instanceof ValidationError) &&
-				!(error instanceof RateLimitError)
-			) {
-				throw error;
-			}
+			// Let ServerError propagate bare so p-retry can retry (5xx is
+			// the only retriable class per spec). Everything else —
+			// validation, parse, unexpected — is terminal.
+			if (error instanceof ServerError) throw error;
 
 			throw new AbortError(
 				error instanceof Error ? error : new Error(String(error)),
@@ -432,7 +444,7 @@ export class MarketDataClient implements IMarketDataClient {
 		if (contentType?.includes("application/json")) {
 			const json = await response.json();
 			const errmsg = json.errmsg || JSON.stringify(json);
-			throw new RequestError(`API returned error: ${errmsg}`);
+			throw new BadRequestError(`API returned error: ${errmsg}`);
 		}
 		return response.blob();
 	}

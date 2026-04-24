@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { DateFormat } from "@/enums";
-import { RequestError, ValidationError } from "@/error";
+import { ServerError, ValidationError } from "@/error";
 import { fetchMock } from "./setup";
 import { createMockResponse } from "./test-utils";
 
@@ -187,7 +187,7 @@ describe("MarketDataClient", () => {
 			]);
 		});
 
-		it("throws RequestError after max retries", async () => {
+		it("throws ServerError after max retries on 5xx", async () => {
 			const client = new MarketDataClient({ token: "test-token" });
 
 			fetchMock.mockImplementation(async (url: string) => {
@@ -216,7 +216,7 @@ describe("MarketDataClient", () => {
 
 			await expect(
 				client.stocks.prices({ symbols: "AAPL" }),
-			).rejects.toBeInstanceOf(RequestError);
+			).rejects.toBeInstanceOf(ServerError);
 			expect(fetchMock).toHaveBeenCalledTimes(5);
 		});
 	});
