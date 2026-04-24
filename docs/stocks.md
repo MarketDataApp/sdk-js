@@ -25,12 +25,12 @@ Fetches stock prices for one or more symbols. This method includes API status ch
 prices<P extends Omit<StocksPricesParams, 'symbols'> & MarketDataParams>(
   symbols: string | string[],
   params?: P
-): TypedResult<StockPriceResponse, StockPriceHumanResponse, P & { symbols: string | string[] }>
+): TypedPromise<StockPriceResponse, StockPriceHumanResponse, P & { symbols: string | string[] }>
 
 // Overload 2: Object parameter
 prices<P extends StocksPricesParams & MarketDataParams>(
   params: P
-): TypedResult<StockPriceResponse, StockPriceHumanResponse, P>
+): TypedPromise<StockPriceResponse, StockPriceHumanResponse, P>
 ```
 
 #### Parameters
@@ -118,12 +118,12 @@ Fetches stock candles (OHLCV data) for a symbol with support for various timefra
 candles<P extends Omit<StocksCandlesParams, 'symbol'> & MarketDataParams>(
   symbol: string,
   params?: P
-): TypedResult<StockCandleResponse, StockCandleHumanResponse, P & { symbol: string }>
+): TypedPromise<StockCandleResponse, StockCandleHumanResponse, P & { symbol: string }>
 
 // Overload 2: Object parameter
 candles<P extends StocksCandlesParams & MarketDataParams>(
   params: P
-): TypedResult<StockCandleResponse, StockCandleHumanResponse, P>
+): TypedPromise<StockCandleResponse, StockCandleHumanResponse, P>
 ```
 
 #### Parameters
@@ -242,32 +242,48 @@ const candles = await client.stocks.candles('AAPL', {
 
 All methods use TypeScript's advanced type system with:
 - **Function overloads** for flexible calling patterns
-- **Conditional types** (`TypedResult`) for automatic return type inference
+- **Conditional types** (`TypedPromise`) for automatic return type inference
 - **Zod schema validation** for runtime type safety
 - **Discriminated unions** for `format` and `human` parameters
 
-See [ADR-005](adr/ADR-005-typescript-type-system.md) for detailed explanation of the type system.
+See [ADR-005](adr/ADR-005-typescript-type-system.md) for detailed explanation of the type system and [ADR-007](adr/ADR-007-result-inside-promise-outside.md) for the Promise-outside boundary.
 
 ## Error Handling
 
-All methods can throw:
-- `RateLimitError` - When API rate limit is exceeded
-- `RequestError` - For retriable HTTP errors (5xx, timeouts)
-- `AbortError` - For permanent errors (4xx) or when service is offline
+Methods return a `MarketDataPromise<T>` that rejects with a subclass of `MarketDataClientError`:
 
-The SDK automatically retries transient errors with exponential backoff. See [ADR-003](adr/ADR-003-retry-logic-and-service-status.md) for details.
+- `AuthenticationError` — 401
+- `BadRequestError` — 400
+- `NotFoundError` — 404 (not thrown by default; 404 resolves to empty with `no_data: true`)
+- `RateLimitError` — 429
+- `ServerError` — 5xx (retriable with exponential backoff)
+- `NetworkError` — transport failure or 99s timeout
+- `ParseError` — response failed schema validation
+- `ValidationError` — client-side input validation
+
+```typescript
+import { MarketDataClient, AuthenticationError } from 'marketdata-sdk';
+
+const client = new MarketDataClient();
+try {
+  const prices = await client.stocks.prices('AAPL');
+  console.log(prices);
+} catch (err) {
+  if (err instanceof AuthenticationError) console.error('Bad token');
+  else throw err;
+}
+```
+
+Every error carries `request_id` (cf-ray), `status_code`, `request_url`, `timestamp`, and a formatted `support_info` string. See [ADR-003](adr/ADR-003-retry-logic-and-service-status.md) for the retry logic.
 
 ## Rate Limiting
 
-The SDK automatically tracks and enforces rate limits. Access current rate limit status via:
+The SDK automatically tracks and enforces rate limits. The eager `/user/` call in the constructor populates `client.rateLimits` before any resource call — await `client.ready` if you need a synchronous guarantee:
 
 ```typescript
 const client = new MarketDataClient({ token: 'YOUR_TOKEN' });
+await client.ready; // populates rateLimits on construction
 
-// Make some requests
-await client.stocks.prices('AAPL');
-
-// Check rate limits
 if (client.rateLimits) {
   console.log(`Limit: ${client.rateLimits.requestsLimit}`);
   console.log(`Remaining: ${client.rateLimits.requestsRemaining}`);
@@ -276,4 +292,4 @@ if (client.rateLimits) {
 }
 ```
 
-See [ADR-004](adr/ADR-004-rate-limiting-strategy.md) for details on rate limiting strategy.
+See [ADR-004](adr/ADR-004-rate-limiting-strategy.md) and [ADR-008](adr/ADR-008-eager-startup-validation.md) for the rate-limiting and eager-startup strategies.
