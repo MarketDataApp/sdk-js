@@ -39,8 +39,11 @@ describe("Options Expirations Mocks", () => {
 		expect(result.Expirations[0]).toBe("2025-12-12");
 	});
 
-	test("expirations input validation", async () => {
+	test("expirations returns no_data sentinel on 404", async () => {
+		// Mock default is a 404 for options paths; per spec §5 that now
+		// resolves to `{s: "no_data"}` rather than throwing.
 		const client = new MarketDataClient({ token: "test" });
-		await expect(client.options.expirations("AAPL")).rejects.toBeDefined();
+		const result = await client.options.expirations("AAPL");
+		expect(result.s).toBe("no_data");
 	});
 });

@@ -41,6 +41,15 @@ import pkg from "../package.json";
 
 export const FETCH_TIMEOUT_MS = 99_000;
 
+/**
+ * Sentinel payload returned by `_performFetch` when the server responds
+ * with 404. Base resource `_fetch` detects this by identity and flags the
+ * returned `MarketDataPromise` as `no_data: true`.
+ */
+export const NO_DATA_SENTINEL = Object.freeze({
+	s: "no_data" as const,
+});
+
 export class MarketDataClient implements IMarketDataClient {
 	public readonly funds: FundsResource;
 	public readonly headers: Record<string, string>;
@@ -389,6 +398,16 @@ export class MarketDataClient implements IMarketDataClient {
 			);
 
 			this._updateRateLimits(response.headers);
+
+			// Spec §5: 404 is "no data" — return an empty sentinel rather
+			// than throw. Resource pipelines downstream detect `s: "no_data"`
+			// and flag the returned MarketDataPromise as empty.
+			if (response.status === 404) {
+				if (this._isCsvRequest(params, schema)) {
+					return new Blob([], { type: "text/csv" }) as unknown as T;
+				}
+				return NO_DATA_SENTINEL as unknown as T;
+			}
 
 			if (!response.ok) {
 				await this._handleResponseError(response, service);

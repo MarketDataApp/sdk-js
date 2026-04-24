@@ -143,25 +143,73 @@ export type UnpackedObject<T> = { [K in keyof T]: Unpacked<T[K]> };
 
 type SaveBlobToFile = (blob: Blob, filename?: string) => Promise<string>;
 
+export type ResponseFormat = "json" | "csv" | "html";
+
 export class MarketDataPromise<T> extends Promise<T> {
 	static get [Symbol.species](): PromiseConstructor {
 		return Promise;
 	}
 
 	private _saveBlobToFile?: SaveBlobToFile;
+	private _format: ResponseFormat = "json";
+	private _noData = false;
 
 	static fromResult<T>(
 		result: ResultAsync<T, MarketDataClientError>,
 		saveBlobToFile: SaveBlobToFile,
+		meta: {
+			format?: ResponseFormat;
+			noData?: boolean;
+			isNoData?: (value: T) => boolean;
+		} = {},
 	): MarketDataPromise<T> {
-		const mp = new MarketDataPromise<T>((resolve, reject) => {
+		let mp!: MarketDataPromise<T>;
+		mp = new MarketDataPromise<T>((resolve, reject) => {
 			result.match(
-				(v) => resolve(v),
+				(v) => {
+					if (meta.isNoData?.(v)) mp._noData = true;
+					resolve(v);
+				},
 				(e) => reject(e),
 			);
 		});
 		mp._saveBlobToFile = saveBlobToFile;
+		mp._format = meta.format ?? "json";
+		mp._noData = meta.noData ?? false;
 		return mp;
+	}
+
+	/** True when the request asked for (or defaulted to) JSON output. */
+	public isJson(): boolean {
+		return this._format === "json";
+	}
+
+	/** True when the request asked for CSV output and the resolved value is a Blob. */
+	public isCsv(): boolean {
+		return this._format === "csv";
+	}
+
+	/** True when the resolved value is an HTML blob (reserved for future use). */
+	public isHtml(): boolean {
+		return this._format === "html";
+	}
+
+	/** True when the server returned 404, translated to an empty result. */
+	public get no_data(): boolean {
+		return this._noData;
+	}
+
+	/**
+	 * Resolves to whether the response actually carries data. Awaits the
+	 * underlying value; returns false for 404-translated empties or any
+	 * empty array / Blob of zero length.
+	 */
+	public async hasData(): Promise<boolean> {
+		if (this._noData) return false;
+		const value = await this;
+		if (value instanceof Blob) return value.size > 0;
+		if (Array.isArray(value)) return value.length > 0;
+		return value != null;
 	}
 
 	async blob(): Promise<Blob> {
@@ -176,6 +224,11 @@ export class MarketDataPromise<T> extends Promise<T> {
 		}
 		const blob = await this.blob();
 		return this._saveBlobToFile(blob, filename);
+	}
+
+	/** Alias for `save()` to match the SDK requirements §8 spec naming. */
+	saveToFile(filename?: string): Promise<string> {
+		return this.save(filename);
 	}
 }
 
