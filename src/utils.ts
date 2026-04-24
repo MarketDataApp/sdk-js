@@ -179,15 +179,6 @@ export class MarketDataPromise<T> extends Promise<T> {
 	}
 }
 
-export async function unwrap<T, E>(r: ResultAsync<T, E>): Promise<T> {
-	return r.match(
-		(v) => v,
-		(e) => {
-			throw e;
-		},
-	);
-}
-
 export function formatDurationLog(durationMs: number): string {
 	if (durationMs < 1000) {
 		return `${Math.floor(durationMs).toString().padStart(3, "0")}ms`;
