@@ -124,8 +124,6 @@ describe("rate-limit race-condition fix", () => {
 
 	describe("concurrent reservation — prevents TOCTOU over-dispatch", () => {
 		it("blocks dispatch beyond `remaining` when N > remaining requests fan out", async () => {
-			const client = new MarketDataClient({ token: "test-token" });
-
 			let pricesCallCount = 0;
 			fetchMock.mockImplementation(async (url: string) => {
 				if (url.includes("/user/") && !url.includes("v1/user/")) {
@@ -160,6 +158,9 @@ describe("rate-limit race-condition fix", () => {
 				}
 				return createMockResponse({ ok: false, status: 404 });
 			});
+
+			const client = new MarketDataClient({ token: "test-token" });
+			await client.ready;
 
 			const results = await Promise.allSettled([
 				client.stocks.prices({ symbols: "AAPL" }),

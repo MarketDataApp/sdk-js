@@ -11,6 +11,7 @@ export * from "@/resources/options/outputs";
 export * from "@/resources/options/types";
 export * from "@/resources/stocks/outputs";
 export * from "@/resources/stocks/types";
+export * from "@/resources/utilities/outputs";
 export type {
 	MarketDataConfig,
 	TypedPromise,

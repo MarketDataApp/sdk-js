@@ -1,17 +1,39 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 import { DateFormat, Mode, OutputFormat } from "@/enums";
+import { LogLevel } from "@/logger";
 
 dotenv.config();
 
 import { BooleanString } from "@/types";
 
+const CommaSeparatedStringArray = z
+	.union([z.string(), z.array(z.string())])
+	.transform((v) =>
+		typeof v === "string"
+			? v
+					.split(",")
+					.map((s) => s.trim())
+					.filter(Boolean)
+			: v,
+	);
+
+const LogLevelFromString = z
+	.union([z.nativeEnum(LogLevel), z.string()])
+	.transform((v) => {
+		if (typeof v === "number") return v;
+		const key = v.toUpperCase() as keyof typeof LogLevel;
+		if (key in LogLevel) return LogLevel[key];
+		throw new Error(`Invalid MARKETDATA_LOGGING_LEVEL: ${v}`);
+	});
+
 export const MarketDataSettingsSchema = z.object({
 	marketdataAddHeaders: BooleanString.optional(),
 	marketdataApiVersion: z.string().default("v1"),
 	marketdataBaseUrl: z.string().default("https://api.marketdata.app"),
-	marketdataColumns: z.array(z.string()).optional(),
+	marketdataColumns: CommaSeparatedStringArray.optional(),
 	marketdataDateFormat: z.enum(DateFormat).optional(),
+	marketdataLoggingLevel: LogLevelFromString.optional(),
 	marketdataMaxRetries: z.coerce.number().optional().default(3),
 	marketdataMode: z.enum(Mode).optional(),
 	marketdataOutputFormat: z
@@ -34,7 +56,9 @@ export const loadSettings = (
 		marketdataAddHeaders: process.env.MARKETDATA_ADD_HEADERS,
 		marketdataApiVersion: process.env.MARKETDATA_API_VERSION,
 		marketdataBaseUrl: process.env.MARKETDATA_BASE_URL,
+		marketdataColumns: process.env.MARKETDATA_COLUMNS,
 		marketdataDateFormat: process.env.MARKETDATA_DATE_FORMAT,
+		marketdataLoggingLevel: process.env.MARKETDATA_LOGGING_LEVEL,
 		marketdataMaxRetries: process.env.MARKETDATA_MAX_RETRIES,
 		marketdataMode: process.env.MARKETDATA_MODE,
 		marketdataOutputFormat: process.env.MARKETDATA_OUTPUT_FORMAT,
