@@ -23,7 +23,7 @@ Fetches the current status and availability of various markets. This method incl
 ```typescript
 status<P extends MarketStatusParams & MarketDataParams>(
   params?: P
-): TypedResult<MarketStatusResponse, MarketStatusHumanResponse, P>
+): TypedPromise<MarketStatusResponse, MarketStatusHumanResponse, P>
 ```
 
 #### Parameters
@@ -80,7 +80,7 @@ console.log(json);
 
 The `status()` method uses TypeScript's advanced type system with:
 - **Function overloads** for flexible calling patterns
-- **Conditional types** (`TypedResult`) for automatic return type inference
+- **Conditional types** (`TypedPromise`) for automatic return type inference
 - **Zod schema validation** for runtime type safety
 - **Discriminated unions** for `format` and `human` parameters
 
@@ -88,12 +88,17 @@ See [ADR-005](adr/ADR-005-typescript-type-system.md) for detailed explanation of
 
 ## Error Handling
 
-The `status()` method can throw:
-- `RateLimitError` - When API rate limit is exceeded
-- `RequestError` - For retriable HTTP errors (5xx, timeouts)
-- `AbortError` - For permanent errors (4xx) or when service is offline
+The `status()` method returns a `Promise` that rejects with a subclass of `MarketDataClientError`:
+- `AuthenticationError` - Invalid or missing token (401/403)
+- `BadRequestError` - Malformed request (400)
+- `NotFoundError` - Resource not found (when the API reports an error rather than empty data)
+- `RateLimitError` - API rate limit exceeded (429)
+- `ServerError` - Retriable server errors (5xx)
+- `NetworkError` - Network/transport failures and timeouts
+- `ParseError` - Response could not be decoded
+- `ValidationError` - Client-side parameter validation failed
 
-The SDK automatically retries transient errors with exponential backoff. See [ADR-003](adr/ADR-003-retry-logic-and-service-status.md) for details.
+The SDK automatically retries transient errors (`ServerError`, `NetworkError`, `RateLimitError`) with exponential backoff. A 404 from the data endpoint resolves with an empty payload and `no_data: true` rather than throwing. See [ADR-003](adr/ADR-003-retry-logic-and-service-status.md) for details.
 
 ## Rate Limiting
 
