@@ -88,7 +88,14 @@ const client = new MarketDataClient({
 });
 ```
 
-## Examples
+## Runnable examples
+
+Fully-wired scripts live under [`examples/`](./examples/):
+
+- **[`stock_candles_example`](./examples/stock_candles_example)** — fetch a year of AAPL candles, write CSV, render an interactive lightweight-charts HTML file, open it in the browser. Run with `cd examples && pnpm install && pnpm candles`.
+- **[`options_chain_monitor`](./examples/options_chain_monitor)** — poll an options chain on an interval and render a colourful `cli-table3` dashboard that highlights bid/ask/last deltas. Run with `pnpm monitor AAPL 2026-06-19`.
+
+## Inline examples
 
 ### Stock Prices
 

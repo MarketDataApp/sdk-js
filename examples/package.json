@@ -1,0 +1,21 @@
+{
+	"name": "marketdata-sdk-examples",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Runnable examples for the marketdata-sdk JavaScript SDK.",
+	"scripts": {
+		"candles": "tsx stock_candles_example/index.ts",
+		"monitor": "tsx options_chain_monitor/index.ts"
+	},
+	"dependencies": {
+		"chalk": "^5.3.0",
+		"cli-table3": "^0.6.5",
+		"marketdata-sdk": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.3",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	}
+}
