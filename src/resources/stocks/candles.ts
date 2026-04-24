@@ -1,12 +1,7 @@
 import { errAsync, ResultAsync } from "neverthrow";
-import pLimit from "p-limit";
 import { MarketDataClientError, NetworkError } from "@/error";
 import { saveBlobToFile } from "@/fileUtils";
-import {
-	Endpoints,
-	MAX_CONCURRENT_REQUESTS,
-	Service,
-} from "@/internalSettings";
+import { Endpoints, Service } from "@/internalSettings";
 import {
 	type StockCandleHumanRawResponse,
 	type StockCandleHumanResponse,
@@ -91,13 +86,12 @@ export function candles(
 		StockCandleSchema,
 		StockCandleHumanSchema,
 	);
-	const limit = pLimit(MAX_CONCURRENT_REQUESTS);
 	const requests = ranges.map(([start, end]) => {
 		const rangeParams = { ...validated, from: start, to: end };
 		const { symbol, resolution, ...queryParams } = rangeParams;
 
 		return ResultAsync.fromPromise(
-			limit(() =>
+			Promise.resolve(
 				this._makeRequest<StockCandleRawResponse | StockCandleHumanRawResponse>(
 					`${Endpoints.STOCKS_CANDLES}${validated.resolution as string}/${validated.symbol}/`,
 
