@@ -27,6 +27,7 @@
 		"dev": "tsup --watch",
 		"test": "vitest",
 		"test:coverage": "vitest run --coverage",
+		"test:integration": "MARKETDATA_RUN_INTEGRATION_TESTS=true vitest run tests/integration",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome check src tests",
 		"format": "biome check --write src tests",

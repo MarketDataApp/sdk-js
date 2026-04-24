@@ -49,3 +49,29 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  integration:
+    # Live-API tests gated by `MARKETDATA_RUN_INTEGRATION_TESTS=true`.
+    # Runs on pushes to main and on PRs from the same repo (secret is
+    # available). Fork PRs skip this job automatically because the
+    # secret is empty.
+    runs-on: ubuntu-latest
+    needs: check
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Integration tests
+        run: pnpm test:integration
+        env:
+          MARKETDATA_TOKEN: ${{ secrets.MARKETDATA_TOKEN }}
