@@ -15,17 +15,13 @@ import {
 	RateLimitError,
 	ServerError,
 } from "@/error";
-import {
-	CHECK_RATE_LIMITS,
-	Endpoints,
-	isRetriableStatusCode,
-	Service,
-} from "@/internalSettings";
+import { CHECK_RATE_LIMITS, isRetriableStatusCode } from "@/internalSettings";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
 import { FundsResource } from "@/resources/funds/index";
 import { MarketsResource } from "@/resources/markets/index";
 import { OptionsResource } from "@/resources/options/index";
 import { StocksResource } from "@/resources/stocks/index";
+import { UtilitiesResource } from "@/resources/utilities/index";
 import { loadSettings, type MarketDataSettings } from "@/settings";
 import type {
 	IMarketDataClient,
@@ -38,6 +34,8 @@ import { formatDurationLog } from "@/utils";
 
 import pkg from "../package.json";
 
+export const FETCH_TIMEOUT_MS = 99_000;
+
 export class MarketDataClient implements IMarketDataClient {
 	public readonly funds: FundsResource;
 	public readonly headers: Record<string, string>;
@@ -45,8 +43,17 @@ export class MarketDataClient implements IMarketDataClient {
 	public readonly markets: MarketsResource;
 	public readonly options: OptionsResource;
 	public rateLimits?: UserRateLimits;
+	/**
+	 * Resolves when the eager `/user/` validation has completed. Invalid
+	 * tokens reject this Promise with `AuthenticationError` so the first
+	 * request fails fast. Transient startup errors (network, 5xx) are
+	 * logged and swallowed — `ready` still resolves so the caller can
+	 * retry on a real request.
+	 */
+	public readonly ready: Promise<void>;
 	public readonly settings: MarketDataSettings;
 	public readonly stocks: StocksResource;
+	public readonly utilities: UtilitiesResource;
 
 	public get apiVersion(): string {
 		return this.settings.marketdataApiVersion;
@@ -70,9 +77,10 @@ export class MarketDataClient implements IMarketDataClient {
 			marketdataRetryFactor: config.retryFactor,
 			marketdataRetryMaxWait: config.retryMaxWait,
 		});
-		this.logger =
-			config.logger ||
-			new DefaultLogger(config.debug ? LogLevel.DEBUG : LogLevel.INFO);
+		const defaultLevel = config.debug
+			? LogLevel.DEBUG
+			: (this.settings.marketdataLoggingLevel ?? LogLevel.INFO);
+		this.logger = config.logger || new DefaultLogger(defaultLevel);
 
 		this.logger.info("Initializing MarketDataClient");
 		const tokenLog = this.token
@@ -92,6 +100,25 @@ export class MarketDataClient implements IMarketDataClient {
 		this.markets = new MarketsResource(this);
 		this.funds = new FundsResource(this);
 		this.options = new OptionsResource(this);
+		this.utilities = new UtilitiesResource(this);
+
+		this.ready = this._runStartupValidation(
+			config.skipStartupValidation ?? false,
+		);
+	}
+
+	private async _runStartupValidation(skip: boolean): Promise<void> {
+		if (skip || !this.token) return;
+		try {
+			await this.utilities.user();
+		} catch (e) {
+			if (e instanceof AuthenticationError) throw e;
+			this.logger.warn(
+				`Startup /user/ validation failed: ${
+					e instanceof Error ? e.message : String(e)
+				}. Proceeding without rate-limit snapshot.`,
+			);
+		}
 	}
 
 	public _makeRequest<T>(
@@ -126,8 +153,6 @@ export class MarketDataClient implements IMarketDataClient {
 			},
 		);
 	}
-
-	private _rateLimitSetup?: Promise<void>;
 
 	private _buildUrl(
 		path: string,
@@ -306,13 +331,8 @@ export class MarketDataClient implements IMarketDataClient {
 	): Promise<T> {
 		let reserved = false;
 		try {
-			if (
-				CHECK_RATE_LIMITS &&
-				this.token &&
-				!this.rateLimits &&
-				!options.skipRateLimitCheck
-			) {
-				await this._setupRateLimits();
+			if (!options.skipRateLimitCheck) {
+				await this.ready;
 			}
 
 			if (this.token && !options.skipRateLimitCheck) {
@@ -323,10 +343,22 @@ export class MarketDataClient implements IMarketDataClient {
 			this._preRequestLogs(url.toString());
 			const start = performance.now();
 
+			const timeoutSignal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+			const signal = options.signal
+				? AbortSignal.any([options.signal, timeoutSignal])
+				: timeoutSignal;
+
 			const response = await fetch(url.toString(), {
 				headers,
 				method: "GET",
-				signal: options.signal,
+				signal,
+			}).catch((err) => {
+				if (timeoutSignal.aborted) {
+					throw new NetworkError(
+						`Request timed out after ${FETCH_TIMEOUT_MS / 1000}s`,
+					);
+				}
+				throw err;
 			});
 
 			const duration = performance.now() - start;
@@ -403,28 +435,6 @@ export class MarketDataClient implements IMarketDataClient {
 		else if (logLevel === LogLevel.INFO) this.logger.info(message);
 		else if (logLevel === LogLevel.WARN) this.logger.warn(message);
 		else if (logLevel === LogLevel.ERROR) this.logger.error(message);
-	}
-
-	private async _setupRateLimits(): Promise<void> {
-		if (this._rateLimitSetup) return this._rateLimitSetup;
-
-		this._rateLimitSetup = (async () => {
-			const result = await this._makeRequest(Endpoints.USER, undefined, {
-				includeApiVersion: false,
-				skipRateLimitCheck: true,
-				service: Service.USER,
-				responseLogLevel: LogLevel.DEBUG,
-			});
-
-			if (result.isErr()) {
-				this.logger.error(
-					`Failed to setup rate limits: ${result.error.message}`,
-				);
-			}
-			this._rateLimitSetup = undefined;
-		})();
-
-		return this._rateLimitSetup;
 	}
 
 	private _updateRateLimits(headers: Headers): void {

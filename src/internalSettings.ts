@@ -3,6 +3,7 @@ export const CHECK_RATE_LIMITS = true;
 export const Endpoints = {
 	API_STATUS: "status/",
 	FUNDS_CANDLES: "funds/candles/",
+	HEADERS: "headers/",
 	MARKETS_STATUS: "markets/status/",
 	OPTIONS_CHAIN: "options/chain/",
 	OPTIONS_EXPIRATIONS: "options/expirations/",
