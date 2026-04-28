@@ -34,6 +34,6 @@ describe("Arbitrary Parameters", () => {
 		}
 
 		expect(quotesCall).toBeDefined();
-		expect(quotesCall![0]).toContain("custom_param=custom_value");
+		expect(quotesCall?.[0]).toContain("custom_param=custom_value");
 	});
 });

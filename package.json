@@ -1,7 +1,7 @@
 {
-	"name": "marketdata-sdk-js",
+	"name": "marketdata-sdk",
 	"version": "0.0.1",
-	"description": "",
+	"description": "Official TypeScript/JavaScript SDK for the MarketData API.",
 	"type": "module",
 	"engines": {
 		"node": ">=20.0.0"
@@ -9,6 +9,7 @@
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"sideEffects": false,
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -16,22 +17,35 @@
 			"require": "./dist/index.cjs"
 		}
 	},
+	"files": ["dist", "README.md", "LICENSE"],
 	"scripts": {
 		"build": "tsup",
 		"dev": "tsup --watch",
 		"test": "vitest",
-		"lint": "biome check src",
-		"format": "biome check --write src"
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check src tests",
+		"format": "biome check --write src tests",
+		"prepublishOnly": "pnpm lint && pnpm typecheck && pnpm exec vitest run && pnpm build"
 	},
 	"keywords": [
 		"marketdata",
 		"sdk",
 		"api",
 		"finance",
-		"stocks"
+		"stocks",
+		"options",
+		"typescript"
 	],
-	"author": "",
-	"license": "ISC",
+	"author": "MarketData.app",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/MarketDataApp/sdk-js.git"
+	},
+	"bugs": {
+		"url": "https://github.com/MarketDataApp/sdk-js/issues"
+	},
+	"homepage": "https://github.com/MarketDataApp/sdk-js#readme",
 	"packageManager": "pnpm@10.24.0",
 	"dependencies": {
 		"dotenv": "^17.2.3",
