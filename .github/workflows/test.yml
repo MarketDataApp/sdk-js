@@ -34,10 +34,18 @@ jobs:
       - name: Typecheck
         run: pnpm exec tsc --noEmit
 
-      - name: Test (vitest)
-        run: pnpm exec vitest run
+      - name: Test with coverage
+        run: pnpm test:coverage
         env:
           MARKETDATA_TOKEN: ${{ secrets.MARKETDATA_TOKEN }}
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '22.x'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/cobertura-coverage.xml
+          fail_ci_if_error: false
 
       - name: Build
         run: pnpm build
