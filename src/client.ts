@@ -12,7 +12,6 @@ import {
 	ParseError,
 	RateLimitError,
 	ServerError,
-	ValidationError,
 } from "@/error";
 import {
 	CHECK_RATE_LIMITS,
