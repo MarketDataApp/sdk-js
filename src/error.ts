@@ -63,6 +63,19 @@ export class AuthenticationError extends MarketDataClientError {}
 export class BadRequestError extends MarketDataClientError {}
 
 /**
+ * HTTP 402 — request denied by the user's plan: data older than the plan
+ * allows, premium endpoint on Free/Trial, or `mode=cached` on Free/Trial.
+ */
+export class PaymentRequiredError extends MarketDataClientError {}
+
+/**
+ * HTTP 403 — access denied. Typically the multi-IP block: the account is
+ * temporarily locked because it was used from more than one IP. Wait ~5
+ * minutes and retry.
+ */
+export class ForbiddenError extends MarketDataClientError {}
+
+/**
  * HTTP 404 — the server has no data matching the query. SDK surfaces this as
  * an empty response with `no_data=true` rather than throwing; the class is
  * still exported for callers who prefer to opt into the throw path.

@@ -3,10 +3,12 @@ import { MarketDataClient } from "@/client";
 import {
 	AuthenticationError,
 	BadRequestError,
+	ForbiddenError,
 	MarketDataClientError,
 	NetworkError,
 	NotFoundError,
 	ParseError,
+	PaymentRequiredError,
 	RateLimitError,
 	RequestError,
 	ServerError,
@@ -20,6 +22,8 @@ describe("error hierarchy", () => {
 		for (const Cls of [
 			AuthenticationError,
 			BadRequestError,
+			PaymentRequiredError,
+			ForbiddenError,
 			NotFoundError,
 			RateLimitError,
 			ServerError,
@@ -156,5 +160,47 @@ describe("error hierarchy — wired into client", () => {
 		await expect(
 			client.stocks.prices({ symbols: "AAPL", skipRateLimitCheck: true }),
 		).rejects.toBeInstanceOf(NotFoundError);
+	});
+
+	it("maps 402 to PaymentRequiredError", async () => {
+		const client = new MarketDataClient({ token: "t" });
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({
+				ok: false,
+				status: 402,
+				text: '{"s":"error","errmsg":"Plan does not include this endpoint"}',
+			}),
+		);
+		await expect(
+			client.stocks.prices({ symbols: "AAPL", skipRateLimitCheck: true }),
+		).rejects.toBeInstanceOf(PaymentRequiredError);
+	});
+
+	it("maps 403 to ForbiddenError (multi-IP block)", async () => {
+		const client = new MarketDataClient({ token: "t" });
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({
+				ok: false,
+				status: 403,
+				text: '{"s":"error","errmsg":"Account temporarily blocked: multiple IPs"}',
+			}),
+		);
+		await expect(
+			client.stocks.prices({ symbols: "AAPL", skipRateLimitCheck: true }),
+		).rejects.toBeInstanceOf(ForbiddenError);
+	});
+
+	it("maps 413 to BadRequestError", async () => {
+		const client = new MarketDataClient({ token: "t" });
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({
+				ok: false,
+				status: 413,
+				text: '{"s":"error","errmsg":"Payload too large"}',
+			}),
+		);
+		await expect(
+			client.stocks.prices({ symbols: "AAPL", skipRateLimitCheck: true }),
+		).rejects.toBeInstanceOf(BadRequestError);
 	});
 });
