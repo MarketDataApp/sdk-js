@@ -281,11 +281,14 @@ export class MarketDataClient implements IMarketDataClient {
 			if (original instanceof MarketDataClientError) return original;
 			if (original instanceof z.ZodError)
 				return new ParseError(original.message);
+			if (original instanceof SyntaxError)
+				return new ParseError(original.message);
 			return new NetworkError(
 				original instanceof Error ? original.message : String(original),
 			);
 		}
 		if (e instanceof z.ZodError) return new ParseError(e.message);
+		if (e instanceof SyntaxError) return new ParseError(e.message);
 		return new NetworkError(e instanceof Error ? e.message : String(e));
 	}
 
@@ -363,6 +366,14 @@ export class MarketDataClient implements IMarketDataClient {
 			// the only retriable class per spec). Everything else —
 			// validation, parse, unexpected — is terminal.
 			if (error instanceof ServerError) throw error;
+
+			// JSON.parse on a 2xx response body — this is response data,
+			// not transport. Classify as ParseError, not NetworkError.
+			if (error instanceof SyntaxError) {
+				throw new AbortError(
+					new ParseError(`Invalid JSON in response body: ${error.message}`),
+				);
+			}
 
 			throw new AbortError(
 				error instanceof Error ? error : new Error(String(error)),

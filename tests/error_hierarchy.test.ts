@@ -203,4 +203,20 @@ describe("error hierarchy — wired into client", () => {
 			client.stocks.prices({ symbols: "AAPL", skipRateLimitCheck: true }),
 		).rejects.toBeInstanceOf(BadRequestError);
 	});
+
+	it("maps malformed JSON in a 200 response to ParseError, not NetworkError", async () => {
+		const client = new MarketDataClient({ token: "t" });
+		fetchMock.mockImplementation(async () => ({
+			ok: true,
+			status: 200,
+			headers: new Headers(),
+			json: async () => {
+				throw new SyntaxError("Unexpected token < in JSON at position 0");
+			},
+			text: async () => "<html>upstream proxy garbled this</html>",
+		}));
+		await expect(
+			client.stocks.prices({ symbols: "AAPL", skipRateLimitCheck: true }),
+		).rejects.toBeInstanceOf(ParseError);
+	});
 });
