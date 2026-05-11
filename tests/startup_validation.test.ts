@@ -37,6 +37,33 @@ describe("eager startup validation", () => {
 		await expect(client.ready).rejects.toBeInstanceOf(AuthenticationError);
 	});
 
+	it("does not emit unhandledRejection when `ready` rejects and caller never awaits it", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({
+				ok: false,
+				status: 401,
+				text: '{"s":"error","errmsg":"Unauthorized"}',
+			}),
+		);
+
+		const unhandled: unknown[] = [];
+		const handler = (reason: unknown) => unhandled.push(reason);
+		process.on("unhandledRejection", handler);
+		try {
+			const client = new MarketDataClient({ token: "bad" });
+			// Flush enough ticks for the /user/ fetch and downstream throw to
+			// settle. If the constructor failed to attach a synchronous catch,
+			// Node would emit unhandledRejection by now.
+			await new Promise((r) => setImmediate(r));
+			await new Promise((r) => setImmediate(r));
+			expect(unhandled).toEqual([]);
+			// Rejection is still observable to consumers who do await `ready`.
+			await expect(client.ready).rejects.toBeInstanceOf(AuthenticationError);
+		} finally {
+			process.off("unhandledRejection", handler);
+		}
+	});
+
 	it("swallows transient startup failures so subsequent requests can retry", async () => {
 		let first = true;
 		fetchMock.mockImplementation(async (url: string) => {

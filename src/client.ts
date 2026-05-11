@@ -105,6 +105,11 @@ export class MarketDataClient implements IMarketDataClient {
 		this.ready = this._runStartupValidation(
 			config.skipStartupValidation ?? false,
 		);
+		// Attach a no-op handler synchronously so an AuthenticationError on a
+		// bad token doesn't surface as an unhandledRejection when the caller
+		// never awaits `client.ready`. The rejection stays observable to anyone
+		// who does await it (including the internal gate in _executeWithRetry).
+		this.ready.catch(() => {});
 	}
 
 	private async _runStartupValidation(skip: boolean): Promise<void> {
