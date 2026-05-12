@@ -13,7 +13,6 @@ import { saveBlobToFile } from "../src/fileUtils";
 
 describe("CSV Output Support", () => {
 	it("returns a Blob when outputFormat is CSV", async () => {
-		const client = new MarketDataClient({ token: "test-token" });
 		const csvContent = "symbol,price\nAAPL,150.00";
 		const mockBlob = new Blob([csvContent], { type: "text/csv" });
 
@@ -42,6 +41,9 @@ describe("CSV Output Support", () => {
 			},
 		});
 
+		const client = new MarketDataClient({ token: "test-token" });
+		await client.ready;
+
 		const data = await client.stocks.prices("AAPL", {
 			outputFormat: OutputFormat.CSV,
 		});
@@ -51,13 +53,6 @@ describe("CSV Output Support", () => {
 	});
 
 	it("returns a Blob when global outputFormat is CSV", async () => {
-		const client = new MarketDataClient({
-			token: "test-token",
-		});
-
-		// biome-ignore lint/suspicious/noExplicitAny: Accessing internal settings for testing
-		(client.settings as any).marketdataOutputFormat = OutputFormat.CSV;
-
 		const csvContent = "symbol,price\nMSFT,300.00";
 		const mockBlob = new Blob([csvContent], { type: "text/csv" });
 
@@ -86,6 +81,11 @@ describe("CSV Output Support", () => {
 			},
 		});
 
+		const client = new MarketDataClient({ token: "test-token" });
+		// biome-ignore lint/suspicious/noExplicitAny: Accessing internal settings for testing
+		(client.settings as any).marketdataOutputFormat = OutputFormat.CSV;
+		await client.ready;
+
 		const data = await client.stocks.prices("MSFT");
 
 		expect(data).toBeInstanceOf(Blob);
@@ -95,7 +95,6 @@ describe("CSV Output Support", () => {
 
 describe("Chained Methods Support", () => {
 	it("allows saving directly via .save()", async () => {
-		const client = new MarketDataClient({ token: "test-token" });
 		const csvContent = "chained,content";
 		const mockBlob = new Blob([csvContent], { type: "text/csv" });
 
@@ -111,6 +110,9 @@ describe("Chained Methods Support", () => {
 			blob: async () => mockBlob,
 		});
 
+		const client = new MarketDataClient({ token: "test-token" });
+		await client.ready;
+
 		const savedPath = await client.stocks
 			.prices("AAPL", { outputFormat: "csv" })
 			.save("my_file.csv");
@@ -123,7 +125,6 @@ describe("Chained Methods Support", () => {
 	});
 
 	it("allows retrieving blob via .blob()", async () => {
-		const client = new MarketDataClient({ token: "test-token" });
 		const mockBlob = new Blob(["blob content"], { type: "text/plain" });
 
 		mockFetch.mockResolvedValueOnce({
@@ -137,6 +138,9 @@ describe("Chained Methods Support", () => {
 			headers: new Headers(),
 			blob: async () => mockBlob,
 		});
+
+		const client = new MarketDataClient({ token: "test-token" });
+		await client.ready;
 
 		const blob = await client.stocks
 			.prices("AAPL", { outputFormat: "csv" })

@@ -125,5 +125,11 @@ export interface MarketDataConfig {
 	retryFactor?: number;
 	retryInitialWait?: number;
 	retryMaxWait?: number;
+	/**
+	 * When true, skips the eager `/user/` validation that runs during
+	 * construction. Use on serverless platforms where cold-start latency
+	 * matters more than fail-fast on bad tokens.
+	 */
+	skipStartupValidation?: boolean;
 	token?: string;
 }
