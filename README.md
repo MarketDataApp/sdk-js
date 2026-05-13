@@ -86,6 +86,27 @@ const client = new MarketDataClient({
 });
 ```
 
+## Runnable examples
+
+End-to-end scripts live under [`examples/`](./examples/) as a sibling pnpm workspace package. Install once, then run any of:
+
+| Script | Command | What it does |
+|---|---|---|
+| [Lightweight Charts](./examples/charts/lightweight-charts) | `pnpm chart:lightweight` | TradingView Lightweight Charts 4 — OHLC + volume, synced time scales. |
+| [Apache ECharts](./examples/charts/echarts) | `pnpm chart:echarts` | ECharts 5 — candlestick + volume in linked grids with dataZoom. |
+| [Chart.js financial](./examples/charts/chartjs) | `pnpm chart:chartjs` | Chart.js 4 + `chartjs-chart-financial` plugin on a time axis. |
+| [Plotly.js](./examples/charts/plotly) | `pnpm chart:plotly` | Plotly candlestick trace + volume bars with a rangeslider. |
+| [Highcharts Stock](./examples/charts/highcharts-stock) | `pnpm chart:highcharts` | Highcharts Stock with range selector. **Commercial license required for production.** |
+| [Options chain monitor](./examples/options_chain_monitor) | `pnpm monitor AAPL 2026-06-19` | Live terminal table that highlights bid/ask/last deltas between polls. |
+
+Each chart script fetches one year of daily candles for AAPL through the SDK and writes a self-contained HTML file next to the script that loads the chart library from a public CDN — no bundler, no install per library. Run from the `examples/` directory:
+
+```bash
+cd examples
+pnpm install
+pnpm chart:lightweight   # or any other script above
+```
+
 ## Examples
 
 ### Stock Prices
