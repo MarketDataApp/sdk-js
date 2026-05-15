@@ -161,14 +161,20 @@ export class MarketDataPromise<T> extends Promise<T> {
 			format?: ResponseFormat;
 			noData?: boolean;
 			isNoData?: (value: T) => boolean;
+			emptyValue?: T;
 		} = {},
 	): MarketDataPromise<T> {
+		const hasEmptyValue = "emptyValue" in meta;
 		let mp!: MarketDataPromise<T>;
 		mp = new MarketDataPromise<T>((resolve, reject) => {
 			result.match(
 				(v) => {
-					if (meta.isNoData?.(v)) mp._noData = true;
-					resolve(v);
+					if (meta.isNoData?.(v)) {
+						mp._noData = true;
+						resolve(hasEmptyValue ? (meta.emptyValue as T) : v);
+					} else {
+						resolve(v);
+					}
 				},
 				(e) => reject(e),
 			);

@@ -31,6 +31,7 @@ describe("utilities namespace", () => {
 			skipStartupValidation: true,
 		});
 		const u = await client.utilities.user();
+		if (!u) throw new Error("expected non-null user response");
 		expect(u.plan).toBe("starter");
 		expect(u.remaining).toBe(9876);
 	});
@@ -51,6 +52,7 @@ describe("utilities namespace", () => {
 		});
 		const client = new MarketDataClient({ skipStartupValidation: true });
 		const s = await client.utilities.status();
+		if (!s) throw new Error("expected non-null status response");
 		expect(s.online[0]).toBe(true);
 	});
 
@@ -63,6 +65,7 @@ describe("utilities namespace", () => {
 		});
 		const client = new MarketDataClient({ skipStartupValidation: true });
 		const h = await client.utilities.headers();
+		if (!h) throw new Error("expected non-null headers response");
 		expect(h["user-agent"]).toContain("marketdata-sdk-javascript/");
 	});
 });

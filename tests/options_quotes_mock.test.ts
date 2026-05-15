@@ -84,4 +84,37 @@ describe("OptionsResource (Mock Quotes)", () => {
 		const blob = await pending.blob();
 		expect(blob).toBeInstanceOf(Blob);
 	});
+
+	it("quotes fan-out: all symbols 404 → [] + no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const pending = client.options.quotes([
+			"AAPL271217C00255000",
+			"MSFT271217C00255000",
+		]);
+		const data = await pending;
+		expect(data).toEqual([]);
+		expect(pending.no_data).toBe(true);
+	});
+
+	it("quotes fan-out: mixed 404+200 → partial result, no_data:false", async () => {
+		fetchMock.mockImplementation(async (url: string) => {
+			// Match the path segment, not query-string symbols (the
+			// per-leg URLs both carry symbols=A,B as a query param).
+			if (url.includes("/options/quotes/AAPL271217C00255000/")) {
+				return createMockResponse({ json: mockData });
+			}
+			return createMockResponse({ ok: false, status: 404, text: "Not Found" });
+		});
+		const pending = client.options.quotes([
+			"AAPL271217C00255000",
+			"MSFT271217C00255000",
+		]);
+		const data = await pending;
+		expect(Array.isArray(data)).toBe(true);
+		expect(data.length).toBe(1);
+		expect(data[0]).toHaveProperty("optionSymbol");
+		expect(pending.no_data).toBe(false);
+	});
 });

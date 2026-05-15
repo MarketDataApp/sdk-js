@@ -1,5 +1,6 @@
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type ApiStatusResponse,
 	ApiStatusSchema,
@@ -9,9 +10,9 @@ import type { UtilitiesResource } from "./index";
 
 export function status(
 	this: UtilitiesResource,
-): MarketDataPromise<ApiStatusResponse> {
+): MarketDataPromise<ApiStatusResponse | null> {
 	this.logger.debug("Fetching /status/...");
-	const result = this._makeRequest<ApiStatusResponse>(
+	const result = this._makeRequest<ApiStatusResponse | null>(
 		Endpoints.API_STATUS,
 		undefined,
 		{
@@ -21,5 +22,8 @@ export function status(
 			skipRateLimitCheck: true,
 		},
 	);
-	return MarketDataPromise.fromResult(result, saveBlobToFile);
+	return MarketDataPromise.fromResult(result, saveBlobToFile, {
+		isNoData,
+		emptyValue: null,
+	});
 }

@@ -10,7 +10,6 @@ import {
 	ForbiddenError,
 	MarketDataClientError,
 	NetworkError,
-	NotFoundError,
 	ParseError,
 	PaymentRequiredError,
 	RateLimitError,
@@ -312,7 +311,6 @@ export class MarketDataClient implements IMarketDataClient {
 		if (status === 401) return new AuthenticationError(prefix, context);
 		if (status === 402) return new PaymentRequiredError(prefix, context);
 		if (status === 403) return new ForbiddenError(prefix, context);
-		if (status === 404) return new NotFoundError(prefix, context);
 		if (status === 413) return new BadRequestError(prefix, context);
 		if (status === 429)
 			return new RateLimitError(`Rate limit exceeded: ${errmsg}`, context);

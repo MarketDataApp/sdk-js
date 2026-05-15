@@ -1,5 +1,6 @@
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type HeadersResponse,
 	HeadersSchema,
@@ -9,9 +10,9 @@ import type { UtilitiesResource } from "./index";
 
 export function headers(
 	this: UtilitiesResource,
-): MarketDataPromise<HeadersResponse> {
+): MarketDataPromise<HeadersResponse | null> {
 	this.logger.debug("Fetching /headers/...");
-	const result = this._makeRequest<HeadersResponse>(
+	const result = this._makeRequest<HeadersResponse | null>(
 		Endpoints.HEADERS,
 		undefined,
 		{
@@ -20,5 +21,8 @@ export function headers(
 			skipRateLimitCheck: true,
 		},
 	);
-	return MarketDataPromise.fromResult(result, saveBlobToFile);
+	return MarketDataPromise.fromResult(result, saveBlobToFile, {
+		isNoData,
+		emptyValue: null,
+	});
 }

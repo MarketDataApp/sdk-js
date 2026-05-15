@@ -20,6 +20,7 @@ describe("OptionsResource (Mock Strikes)", () => {
 		const data = await client.options.strikes({ symbol: "AAPL" });
 
 		expect(data).toBeDefined();
+		if (!data) throw new Error("expected non-null data");
 		expect(data.s).toBe("ok");
 		expect(data.updated).toBeDefined();
 		const keys = Object.keys(data).filter((k) => k !== "s" && k !== "updated");
@@ -41,6 +42,7 @@ describe("OptionsResource (Mock Strikes)", () => {
 		});
 
 		expect(data).toBeDefined();
+		if (!data) throw new Error("expected non-null data");
 		expect(data.Date).toBeDefined();
 		const keys = Object.keys(data).filter((k) => k !== "Date");
 		expect(keys.length).toBeGreaterThan(0);

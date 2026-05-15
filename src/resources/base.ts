@@ -20,7 +20,7 @@ import {
 	type UnpackedObject,
 } from "@/utils";
 
-function isNoData(raw: unknown): boolean {
+export function isNoData(raw: unknown): boolean {
 	if (raw === NO_DATA_SENTINEL) return true;
 	if (raw instanceof Blob) return raw.size === 0;
 	return (

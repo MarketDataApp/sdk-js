@@ -1,5 +1,6 @@
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type OptionsExpirationsHumanResponse,
 	OptionsExpirationsHumanSchema,
@@ -18,8 +19,8 @@ export function expirations<
 	symbol: string,
 	params?: P,
 ): TypedPromise<
-	OptionsExpirationsResponse,
-	OptionsExpirationsHumanResponse,
+	OptionsExpirationsResponse | null,
+	OptionsExpirationsHumanResponse | null,
 	P & { symbol: string }
 >;
 
@@ -28,15 +29,19 @@ export function expirations<
 >(
 	this: OptionsResource,
 	params: P,
-): TypedPromise<OptionsExpirationsResponse, OptionsExpirationsHumanResponse, P>;
+): TypedPromise<
+	OptionsExpirationsResponse | null,
+	OptionsExpirationsHumanResponse | null,
+	P
+>;
 
 export function expirations(
 	this: OptionsResource,
 	arg1: string | (OptionsExpirationsParams & MarketDataParams),
 	arg2: MarketDataParams = {},
 ): TypedPromise<
-	OptionsExpirationsResponse,
-	OptionsExpirationsHumanResponse,
+	OptionsExpirationsResponse | null,
+	OptionsExpirationsHumanResponse | null,
 	OptionsExpirationsParams & MarketDataParams
 > {
 	const params = normalizeArgs(
@@ -49,7 +54,7 @@ export function expirations(
 
 	return MarketDataPromise.fromResult(
 		this._makeRequest<
-			OptionsExpirationsResponse | OptionsExpirationsHumanResponse
+			OptionsExpirationsResponse | OptionsExpirationsHumanResponse | null
 		>(`${Endpoints.OPTIONS_EXPIRATIONS}${params.symbol}/`, params, {
 			schema: this._getSchema(
 				params,
@@ -59,9 +64,10 @@ export function expirations(
 			service: Service.OPTIONS_EXPIRATIONS,
 		}),
 		saveBlobToFile,
+		{ isNoData, emptyValue: null },
 	) as TypedPromise<
-		OptionsExpirationsResponse,
-		OptionsExpirationsHumanResponse,
+		OptionsExpirationsResponse | null,
+		OptionsExpirationsHumanResponse | null,
 		OptionsExpirationsParams & MarketDataParams
 	>;
 }

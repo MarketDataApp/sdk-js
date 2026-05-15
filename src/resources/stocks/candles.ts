@@ -1,7 +1,8 @@
-import { errAsync, ResultAsync } from "neverthrow";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { MarketDataClientError, NetworkError } from "@/error";
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type StockCandleHumanRawResponse,
 	type StockCandleHumanResponse,
@@ -81,11 +82,19 @@ export function candles(
 
 	this.logger.debug("Fetching stock candles...");
 
+	const useHuman =
+		validated.human ||
+		validated.useHumanReadable ||
+		this.client.settings.marketdataUseHumanReadable;
+	const isHuman = useHuman === true || useHuman === "true" || useHuman === "1";
+
 	const schema = this._getSchema(
 		validated,
 		StockCandleSchema,
 		StockCandleHumanSchema,
 	);
+
+	let sentinelCount = 0;
 	const requests = ranges.map(([start, end]) => {
 		const rangeParams = { ...validated, from: start, to: end };
 		const { symbol, resolution, ...queryParams } = rangeParams;
@@ -104,7 +113,15 @@ export function candles(
 			),
 			(e) =>
 				e instanceof MarketDataClientError ? e : new NetworkError(String(e)),
-		).andThen((res) => res);
+		)
+			.andThen((res) => res)
+			.andThen((res) => {
+				if (isNoData(res)) {
+					sentinelCount++;
+					return okAsync(emptyCandleResponse(isHuman));
+				}
+				return okAsync(res);
+			});
 	});
 
 	return MarketDataPromise.fromResult(
@@ -113,11 +130,41 @@ export function candles(
 			return getDataRecords(merged, ["s"]);
 		}),
 		saveBlobToFile,
+		{
+			isNoData: () => ranges.length > 0 && sentinelCount === ranges.length,
+			emptyValue: [] as unknown as StockCandleResponse &
+				StockCandleHumanResponse,
+		},
 	) as TypedPromise<
 		StockCandleResponse,
 		StockCandleHumanResponse,
 		StocksCandlesParams & MarketDataParams
 	>;
+}
+
+function emptyCandleResponse(
+	isHuman: boolean,
+): StockCandleRawResponse | StockCandleHumanRawResponse {
+	if (isHuman) {
+		return {
+			s: "no_data",
+			Date: [],
+			Open: [],
+			High: [],
+			Low: [],
+			Close: [],
+			Volume: [],
+		} as StockCandleHumanRawResponse;
+	}
+	return {
+		s: "no_data",
+		t: [],
+		o: [],
+		h: [],
+		l: [],
+		c: [],
+		v: [],
+	} as StockCandleRawResponse;
 }
 
 function isIntraday(resolution: string): boolean {
