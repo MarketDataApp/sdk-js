@@ -55,14 +55,8 @@ export function lookup(
 
 	this.logger.debug("Fetching options lookup...");
 
-	const useHuman =
-		(params.useHumanReadable as boolean | string | undefined) ??
-		(params.human as boolean | string | undefined) ??
-		this.client.settings.marketdataUseHumanReadable;
-	const isHuman = useHuman === true || useHuman === "true" || useHuman === "1";
-	const emptyValue: OptionsLookupResponse | OptionsLookupHumanResponse = isHuman
-		? EMPTY_LOOKUP_HUMAN
-		: EMPTY_LOOKUP;
+	const emptyValue: OptionsLookupResponse | OptionsLookupHumanResponse =
+		this._isHumanFormat(params) ? EMPTY_LOOKUP_HUMAN : EMPTY_LOOKUP;
 
 	return MarketDataPromise.fromResult(
 		this._makeRequest<OptionsLookupResponse | OptionsLookupHumanResponse>(

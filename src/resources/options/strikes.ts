@@ -54,13 +54,8 @@ export function strikes(
 
 	this.logger.debug("Fetching options strikes...");
 
-	const useHuman =
-		(params.useHumanReadable as boolean | string | undefined) ??
-		(params.human as boolean | string | undefined) ??
-		this.client.settings.marketdataUseHumanReadable;
-	const isHuman = useHuman === true || useHuman === "true" || useHuman === "1";
 	const emptyValue: OptionsStrikesResponse | OptionsStrikesHumanResponse =
-		isHuman ? EMPTY_STRIKES_HUMAN : EMPTY_STRIKES;
+		this._isHumanFormat(params) ? EMPTY_STRIKES_HUMAN : EMPTY_STRIKES;
 
 	return MarketDataPromise.fromResult(
 		this._makeRequest<OptionsStrikesResponse | OptionsStrikesHumanResponse>(

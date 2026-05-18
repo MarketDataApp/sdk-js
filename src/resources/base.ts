@@ -83,13 +83,7 @@ export abstract class BaseResource {
 			>;
 		}
 
-		const useHuman =
-			(validated.useHumanReadable as boolean | string | undefined) ??
-			(validated.human as boolean | string | undefined) ??
-			this.client.settings.marketdataUseHumanReadable;
-
-		const isHuman =
-			useHuman === true || useHuman === "true" || useHuman === "1";
+		const isHuman = this._isHumanFormat(validated as MarketDataParams);
 
 		const schema = this._getSchema(
 			validated as MarketDataParams,
@@ -144,15 +138,7 @@ export abstract class BaseResource {
 		regularSchema?: z.ZodType<T>,
 		humanSchema?: z.ZodType<H>,
 	): z.ZodType<T | H> | undefined {
-		const useHuman =
-			(params.useHumanReadable as boolean | string | undefined) ??
-			(params.human as boolean | string | undefined) ??
-			this.client.settings.marketdataUseHumanReadable;
-
-		const isHuman =
-			useHuman === true || useHuman === "true" || useHuman === "1";
-
-		if (isHuman && humanSchema) {
+		if (this._isHumanFormat(params) && humanSchema) {
 			return humanSchema;
 		}
 
@@ -165,6 +151,17 @@ export abstract class BaseResource {
 			(params.outputFormat as string) ||
 			this.client.settings.marketdataOutputFormat;
 		return format === "internal";
+	}
+
+	// Resolves the human-readable flag per the config cascade
+	// (method param `useHumanReadable` → method param `human` → env default).
+	// `??` not `||` so an explicit `false` from the caller wins over env.
+	protected _isHumanFormat(params: MarketDataParams): boolean {
+		const useHuman =
+			(params.useHumanReadable as boolean | string | undefined) ??
+			(params.human as boolean | string | undefined) ??
+			this.client.settings.marketdataUseHumanReadable;
+		return useHuman === true || useHuman === "true" || useHuman === "1";
 	}
 
 	protected _makeRequest<T>(

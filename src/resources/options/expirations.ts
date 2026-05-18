@@ -60,14 +60,9 @@ export function expirations(
 
 	this.logger.debug("Fetching options expirations...");
 
-	const useHuman =
-		(params.useHumanReadable as boolean | string | undefined) ??
-		(params.human as boolean | string | undefined) ??
-		this.client.settings.marketdataUseHumanReadable;
-	const isHuman = useHuman === true || useHuman === "true" || useHuman === "1";
 	const emptyValue:
 		| OptionsExpirationsResponse
-		| OptionsExpirationsHumanResponse = isHuman
+		| OptionsExpirationsHumanResponse = this._isHumanFormat(params)
 		? EMPTY_EXPIRATIONS_HUMAN
 		: EMPTY_EXPIRATIONS;
 
