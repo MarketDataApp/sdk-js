@@ -16,7 +16,6 @@ describe("Options Expirations Mocks", () => {
 		const client = new MarketDataClient({ token: "test" });
 
 		const result = await client.options.expirations("AAPL");
-		if (!result) throw new Error("expected non-null result");
 		expect(result.s).toBe("ok");
 		expect(result.expirations).toHaveLength(22);
 		expect(result.expirations[0]).toBe("2025-12-05");
@@ -36,21 +35,33 @@ describe("Options Expirations Mocks", () => {
 		const result = await client.options.expirations("AAPL", {
 			useHumanReadable: true,
 		});
-		if (!result) throw new Error("expected non-null result");
 		expect(result.Expirations).toHaveLength(22);
 		expect(result.Expirations[0]).toBe("2025-12-12");
 	});
 
-	test("expirations 404 resolves to null with no_data:true", async () => {
-		// Spec §9.1: 404 surfaces as an empty result with no_data:true,
-		// not an exception. Single-object endpoints resolve to null.
+	test("expirations 404 resolves to empty-shape with no_data:true", async () => {
+		// Spec §9.1: 404 surfaces as an empty result object with no_data:true,
+		// not an exception and not null.
 		fetchMock.mockImplementation(async () =>
 			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
 		);
 		const client = new MarketDataClient({ token: "test" });
 		const pending = client.options.expirations("AAPL");
 		const result = await pending;
-		expect(result).toBeNull();
+		expect(result).toEqual({ s: "no_data", expirations: [], updated: 0 });
+		expect(pending.no_data).toBe(true);
+	});
+
+	test("expirations human 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const client = new MarketDataClient({ token: "test" });
+		const pending = client.options.expirations("AAPL", {
+			useHumanReadable: true,
+		});
+		const result = await pending;
+		expect(result).toEqual({ s: "no_data", Expirations: [], Date: 0 });
 		expect(pending.no_data).toBe(true);
 	});
 });

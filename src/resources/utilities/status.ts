@@ -8,11 +8,18 @@ import {
 import { MarketDataPromise } from "@/utils";
 import type { UtilitiesResource } from "./index";
 
+const EMPTY_STATUS: ApiStatusResponse = {
+	service: [],
+	status: [],
+	online: [],
+	updated: [],
+};
+
 export function status(
 	this: UtilitiesResource,
-): MarketDataPromise<ApiStatusResponse | null> {
+): MarketDataPromise<ApiStatusResponse> {
 	this.logger.debug("Fetching /status/...");
-	const result = this._makeRequest<ApiStatusResponse | null>(
+	const result = this._makeRequest<ApiStatusResponse>(
 		Endpoints.API_STATUS,
 		undefined,
 		{
@@ -24,6 +31,6 @@ export function status(
 	);
 	return MarketDataPromise.fromResult(result, saveBlobToFile, {
 		isNoData,
-		emptyValue: null,
+		emptyValue: EMPTY_STATUS,
 	});
 }

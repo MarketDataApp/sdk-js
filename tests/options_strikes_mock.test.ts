@@ -60,4 +60,24 @@ describe("OptionsResource (Mock Strikes)", () => {
 		const data = await client.options.strikes("AAPL");
 		expect(data).toBeDefined();
 	});
+
+	it("strikes 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const pending = client.options.strikes("AAPL");
+		const result = await pending;
+		expect(result).toEqual({ s: "no_data", updated: 0 });
+		expect(pending.no_data).toBe(true);
+	});
+
+	it("strikes human 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const pending = client.options.strikes("AAPL", { useHumanReadable: true });
+		const result = await pending;
+		expect(result).toEqual({ Date: 0 });
+		expect(pending.no_data).toBe(true);
+	});
 });

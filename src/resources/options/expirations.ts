@@ -12,6 +12,18 @@ import type { MarketDataParams, TypedPromise } from "@/types";
 import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
+const EMPTY_EXPIRATIONS: OptionsExpirationsResponse = {
+	s: "no_data",
+	expirations: [],
+	updated: 0,
+};
+
+const EMPTY_EXPIRATIONS_HUMAN: OptionsExpirationsHumanResponse = {
+	s: "no_data",
+	Expirations: [],
+	Date: 0,
+};
+
 export function expirations<
 	P extends Omit<OptionsExpirationsParams, "symbol"> & MarketDataParams,
 >(
@@ -19,8 +31,8 @@ export function expirations<
 	symbol: string,
 	params?: P,
 ): TypedPromise<
-	OptionsExpirationsResponse | null,
-	OptionsExpirationsHumanResponse | null,
+	OptionsExpirationsResponse,
+	OptionsExpirationsHumanResponse,
 	P & { symbol: string }
 >;
 
@@ -29,19 +41,15 @@ export function expirations<
 >(
 	this: OptionsResource,
 	params: P,
-): TypedPromise<
-	OptionsExpirationsResponse | null,
-	OptionsExpirationsHumanResponse | null,
-	P
->;
+): TypedPromise<OptionsExpirationsResponse, OptionsExpirationsHumanResponse, P>;
 
 export function expirations(
 	this: OptionsResource,
 	arg1: string | (OptionsExpirationsParams & MarketDataParams),
 	arg2: MarketDataParams = {},
 ): TypedPromise<
-	OptionsExpirationsResponse | null,
-	OptionsExpirationsHumanResponse | null,
+	OptionsExpirationsResponse,
+	OptionsExpirationsHumanResponse,
 	OptionsExpirationsParams & MarketDataParams
 > {
 	const params = normalizeArgs(
@@ -52,9 +60,20 @@ export function expirations(
 
 	this.logger.debug("Fetching options expirations...");
 
+	const useHuman =
+		(params.useHumanReadable as boolean | string | undefined) ??
+		(params.human as boolean | string | undefined) ??
+		this.client.settings.marketdataUseHumanReadable;
+	const isHuman = useHuman === true || useHuman === "true" || useHuman === "1";
+	const emptyValue:
+		| OptionsExpirationsResponse
+		| OptionsExpirationsHumanResponse = isHuman
+		? EMPTY_EXPIRATIONS_HUMAN
+		: EMPTY_EXPIRATIONS;
+
 	return MarketDataPromise.fromResult(
 		this._makeRequest<
-			OptionsExpirationsResponse | OptionsExpirationsHumanResponse | null
+			OptionsExpirationsResponse | OptionsExpirationsHumanResponse
 		>(`${Endpoints.OPTIONS_EXPIRATIONS}${params.symbol}/`, params, {
 			schema: this._getSchema(
 				params,
@@ -64,10 +83,10 @@ export function expirations(
 			service: Service.OPTIONS_EXPIRATIONS,
 		}),
 		saveBlobToFile,
-		{ isNoData, emptyValue: null },
+		{ isNoData, emptyValue },
 	) as TypedPromise<
-		OptionsExpirationsResponse | null,
-		OptionsExpirationsHumanResponse | null,
+		OptionsExpirationsResponse,
+		OptionsExpirationsHumanResponse,
 		OptionsExpirationsParams & MarketDataParams
 	>;
 }

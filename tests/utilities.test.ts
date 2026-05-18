@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
+import { NotFoundError } from "@/error";
 import { fetchMock } from "./setup";
 import { createMockResponse } from "./test-utils";
 
@@ -31,9 +32,22 @@ describe("utilities namespace", () => {
 			skipStartupValidation: true,
 		});
 		const u = await client.utilities.user();
-		if (!u) throw new Error("expected non-null user response");
 		expect(u.plan).toBe("starter");
 		expect(u.remaining).toBe(9876);
+	});
+
+	it("user() 404 throws NotFoundError instead of resolving empty", async () => {
+		// /user/ identifies the bearer; a 404 means the account record is gone,
+		// which is an integrity error rather than "no data". It must propagate
+		// as NotFoundError, opting out of the spec §9 swallow-to-empty path.
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const client = new MarketDataClient({
+			token: "t",
+			skipStartupValidation: true,
+		});
+		await expect(client.utilities.user()).rejects.toBeInstanceOf(NotFoundError);
 	});
 
 	it("status() hits /status/ with no auth gating", async () => {
@@ -52,8 +66,23 @@ describe("utilities namespace", () => {
 		});
 		const client = new MarketDataClient({ skipStartupValidation: true });
 		const s = await client.utilities.status();
-		if (!s) throw new Error("expected non-null status response");
 		expect(s.online[0]).toBe(true);
+	});
+
+	it("status() 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const client = new MarketDataClient({ skipStartupValidation: true });
+		const pending = client.utilities.status();
+		const result = await pending;
+		expect(result).toEqual({
+			service: [],
+			status: [],
+			online: [],
+			updated: [],
+		});
+		expect(pending.no_data).toBe(true);
 	});
 
 	it("headers() hits /headers/ and returns the echo", async () => {
@@ -65,7 +94,17 @@ describe("utilities namespace", () => {
 		});
 		const client = new MarketDataClient({ skipStartupValidation: true });
 		const h = await client.utilities.headers();
-		if (!h) throw new Error("expected non-null headers response");
 		expect(h["user-agent"]).toContain("marketdata-sdk-javascript/");
+	});
+
+	it("headers() 404 resolves to empty {} with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const client = new MarketDataClient({ skipStartupValidation: true });
+		const pending = client.utilities.headers();
+		const result = await pending;
+		expect(result).toEqual({});
+		expect(pending.no_data).toBe(true);
 	});
 });

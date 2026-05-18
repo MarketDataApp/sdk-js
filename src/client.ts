@@ -10,6 +10,7 @@ import {
 	ForbiddenError,
 	MarketDataClientError,
 	NetworkError,
+	NotFoundError,
 	ParseError,
 	PaymentRequiredError,
 	RateLimitError,
@@ -151,6 +152,7 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRetry?: boolean;
 			signal?: AbortSignal;
 			responseLogLevel?: LogLevel;
+			throwOn404?: boolean;
 		} = {},
 	): MarketDataResult<T> {
 		const includeApiVersion = options.includeApiVersion ?? true;
@@ -168,6 +170,7 @@ export class MarketDataClient implements IMarketDataClient {
 				skipRetry: options.skipRetry,
 				signal: options.signal,
 				responseLogLevel: options.responseLogLevel,
+				throwOn404: options.throwOn404,
 			},
 		);
 	}
@@ -244,6 +247,7 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRetry?: boolean;
 			signal?: AbortSignal;
 			responseLogLevel?: LogLevel;
+			throwOn404?: boolean;
 		} = {},
 	): MarketDataResult<T> {
 		return ResultAsync.fromPromise(
@@ -311,6 +315,7 @@ export class MarketDataClient implements IMarketDataClient {
 		if (status === 401) return new AuthenticationError(prefix, context);
 		if (status === 402) return new PaymentRequiredError(prefix, context);
 		if (status === 403) return new ForbiddenError(prefix, context);
+		if (status === 404) return new NotFoundError(prefix, context);
 		if (status === 413) return new BadRequestError(prefix, context);
 		if (status === 429)
 			return new RateLimitError(`Rate limit exceeded: ${errmsg}`, context);
@@ -354,6 +359,7 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRateLimitCheck?: boolean;
 			signal?: AbortSignal;
 			responseLogLevel?: LogLevel;
+			throwOn404?: boolean;
 		} = {},
 	): Promise<T> {
 		let reserved = false;
@@ -399,8 +405,10 @@ export class MarketDataClient implements IMarketDataClient {
 
 			// Spec §5: 404 is "no data" — return an empty sentinel rather
 			// than throw. Resource pipelines downstream detect `s: "no_data"`
-			// and flag the returned MarketDataPromise as empty.
-			if (response.status === 404) {
+			// and flag the returned MarketDataPromise as empty. Endpoints
+			// where 404 indicates a real error (e.g. /user/) opt in via
+			// `throwOn404` and fall through to _handleResponseError.
+			if (response.status === 404 && !options.throwOn404) {
 				if (this._isCsvRequest(params, schema)) {
 					return new Blob([], { type: "text/csv" }) as unknown as T;
 				}

@@ -8,11 +8,13 @@ import {
 import { MarketDataPromise } from "@/utils";
 import type { UtilitiesResource } from "./index";
 
+const EMPTY_HEADERS: HeadersResponse = {};
+
 export function headers(
 	this: UtilitiesResource,
-): MarketDataPromise<HeadersResponse | null> {
+): MarketDataPromise<HeadersResponse> {
 	this.logger.debug("Fetching /headers/...");
-	const result = this._makeRequest<HeadersResponse | null>(
+	const result = this._makeRequest<HeadersResponse>(
 		Endpoints.HEADERS,
 		undefined,
 		{
@@ -23,6 +25,6 @@ export function headers(
 	);
 	return MarketDataPromise.fromResult(result, saveBlobToFile, {
 		isNoData,
-		emptyValue: null,
+		emptyValue: EMPTY_HEADERS,
 	});
 }

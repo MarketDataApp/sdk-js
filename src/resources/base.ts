@@ -177,6 +177,7 @@ export abstract class BaseResource {
 			includeApiVersion?: boolean;
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
+			throwOn404?: boolean;
 		} = {},
 	): MarketDataResult<T> {
 		const finalParams = processParams(params, this.client.settings);
