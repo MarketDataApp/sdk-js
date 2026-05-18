@@ -2,6 +2,7 @@ import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { ValidationError } from "@/error";
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type OptionsQuotesHumanResponse,
 	OptionsQuotesHumanSchema,
@@ -59,6 +60,7 @@ export function quotes(
 
 	this.logger.debug("Fetching options quotes...");
 
+	let sentinelCount = 0;
 	const requests = symbols.map((symbol) => {
 		return this._makeRequest<Record<string, unknown>>(
 			`${Endpoints.OPTIONS_QUOTES}${symbol}/`,
@@ -67,6 +69,10 @@ export function quotes(
 				service: Service.OPTIONS_QUOTES,
 			},
 		).andThen((data) => {
+			if (isNoData(data)) {
+				sentinelCount++;
+				return okAsync([] as unknown as ReturnType<typeof getDataRecords>);
+			}
 			const finalData = useHuman ? transformHumanKeys(data) : data;
 			const schema = useHuman ? OptionsQuotesHumanSchema : OptionsQuotesSchema;
 			const result = schema.safeParse(finalData);
@@ -87,6 +93,11 @@ export function quotes(
 				OptionsQuotesHumanResponse;
 		}),
 		saveBlobToFile,
+		{
+			isNoData: () => symbols.length > 0 && sentinelCount === symbols.length,
+			emptyValue: [] as unknown as OptionsQuotesResponse &
+				OptionsQuotesHumanResponse,
+		},
 	) as unknown as TypedPromise<
 		OptionsQuotesResponse,
 		OptionsQuotesHumanResponse,

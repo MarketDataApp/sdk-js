@@ -1,6 +1,7 @@
 import { err, errAsync, ok, okAsync, type Result } from "neverthrow";
 
 import type { z } from "zod";
+import { NO_DATA_SENTINEL } from "@/client";
 import { ValidationError } from "@/error";
 import { saveBlobToFile } from "@/fileUtils";
 import { DEFAULT_EXCLUDE_KEYS } from "@/internalSettings";
@@ -14,9 +15,20 @@ import type {
 import {
 	getDataRecords,
 	MarketDataPromise,
+	type ResponseFormat,
 	transformHumanKeys,
 	type UnpackedObject,
 } from "@/utils";
+
+export function isNoData(raw: unknown): boolean {
+	if (raw === NO_DATA_SENTINEL) return true;
+	if (raw instanceof Blob) return raw.size === 0;
+	return (
+		typeof raw === "object" &&
+		raw !== null &&
+		(raw as { s?: unknown }).s === "no_data"
+	);
+}
 
 export abstract class BaseResource {
 	constructor(client: IMarketDataClient) {
@@ -56,21 +68,22 @@ export abstract class BaseResource {
 			validated.outputFormat || this.client.settings.marketdataOutputFormat;
 
 		if (outputFormat === "csv") {
-			return MarketDataPromise.fromResult(
-				this._makeRequest<Blob>(path, validated as MarketDataParams, {
-					service: options.service,
-				}),
-				saveBlobToFile,
-			) as unknown as TypedPromise<UnpackedObject<T>[], UnpackedObject<H>[], P>;
+			const csvResult = this._makeRequest<Blob>(
+				path,
+				validated as MarketDataParams,
+				{ service: options.service },
+			);
+			return MarketDataPromise.fromResult(csvResult, saveBlobToFile, {
+				format: "csv",
+				isNoData: (v) => v instanceof Blob && v.size === 0,
+			}) as unknown as TypedPromise<
+				UnpackedObject<T>[],
+				UnpackedObject<H>[],
+				P
+			>;
 		}
 
-		const useHuman =
-			(validated.useHumanReadable as boolean | string | undefined) ??
-			(validated.human as boolean | string | undefined) ??
-			this.client.settings.marketdataUseHumanReadable;
-
-		const isHuman =
-			useHuman === true || useHuman === "true" || useHuman === "1";
+		const isHuman = this._isHumanFormat(validated as MarketDataParams);
 
 		const schema = this._getSchema(
 			validated as MarketDataParams,
@@ -78,6 +91,7 @@ export abstract class BaseResource {
 			options.humanSchema,
 		);
 
+		let noData = false;
 		const result = this._makeRequest<Record<string, unknown>>(
 			path,
 			validated as MarketDataParams,
@@ -87,6 +101,10 @@ export abstract class BaseResource {
 				service: options.service,
 			},
 		).andThen((response) => {
+			if (isNoData(response)) {
+				noData = true;
+				return okAsync([]);
+			}
 			let data = response;
 			if (isHuman) {
 				const transformed = transformHumanKeys(data as Record<string, unknown>);
@@ -108,11 +126,11 @@ export abstract class BaseResource {
 			);
 		});
 
-		return MarketDataPromise.fromResult(result, saveBlobToFile) as TypedPromise<
-			UnpackedObject<T>[],
-			UnpackedObject<H>[],
-			P
-		>;
+		const format: ResponseFormat = "json";
+		return MarketDataPromise.fromResult(result, saveBlobToFile, {
+			format,
+			isNoData: () => noData,
+		}) as TypedPromise<UnpackedObject<T>[], UnpackedObject<H>[], P>;
 	}
 
 	protected _getSchema<T, H>(
@@ -120,15 +138,7 @@ export abstract class BaseResource {
 		regularSchema?: z.ZodType<T>,
 		humanSchema?: z.ZodType<H>,
 	): z.ZodType<T | H> | undefined {
-		const useHuman =
-			(params.useHumanReadable as boolean | string | undefined) ??
-			(params.human as boolean | string | undefined) ??
-			this.client.settings.marketdataUseHumanReadable;
-
-		const isHuman =
-			useHuman === true || useHuman === "true" || useHuman === "1";
-
-		if (isHuman && humanSchema) {
+		if (this._isHumanFormat(params) && humanSchema) {
 			return humanSchema;
 		}
 
@@ -143,6 +153,17 @@ export abstract class BaseResource {
 		return format === "internal";
 	}
 
+	// Resolves the human-readable flag per the config cascade
+	// (method param `useHumanReadable` → method param `human` → env default).
+	// `??` not `||` so an explicit `false` from the caller wins over env.
+	protected _isHumanFormat(params: MarketDataParams): boolean {
+		const useHuman =
+			(params.useHumanReadable as boolean | string | undefined) ??
+			(params.human as boolean | string | undefined) ??
+			this.client.settings.marketdataUseHumanReadable;
+		return useHuman === true || useHuman === "true" || useHuman === "1";
+	}
+
 	protected _makeRequest<T>(
 		path: string,
 		params: MarketDataParams = {},
@@ -153,6 +174,7 @@ export abstract class BaseResource {
 			includeApiVersion?: boolean;
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
+			throwOn404?: boolean;
 		} = {},
 	): MarketDataResult<T> {
 		const finalParams = processParams(params, this.client.settings);

@@ -1,5 +1,6 @@
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type OptionsExpirationsHumanResponse,
 	OptionsExpirationsHumanSchema,
@@ -10,6 +11,18 @@ import type { OptionsExpirationsParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
+
+const EMPTY_EXPIRATIONS: OptionsExpirationsResponse = {
+	s: "no_data",
+	expirations: [],
+	updated: 0,
+};
+
+const EMPTY_EXPIRATIONS_HUMAN: OptionsExpirationsHumanResponse = {
+	s: "no_data",
+	Expirations: [],
+	Date: 0,
+};
 
 export function expirations<
 	P extends Omit<OptionsExpirationsParams, "symbol"> & MarketDataParams,
@@ -47,6 +60,12 @@ export function expirations(
 
 	this.logger.debug("Fetching options expirations...");
 
+	const emptyValue:
+		| OptionsExpirationsResponse
+		| OptionsExpirationsHumanResponse = this._isHumanFormat(params)
+		? EMPTY_EXPIRATIONS_HUMAN
+		: EMPTY_EXPIRATIONS;
+
 	return MarketDataPromise.fromResult(
 		this._makeRequest<
 			OptionsExpirationsResponse | OptionsExpirationsHumanResponse
@@ -59,6 +78,7 @@ export function expirations(
 			service: Service.OPTIONS_EXPIRATIONS,
 		}),
 		saveBlobToFile,
+		{ isNoData, emptyValue },
 	) as TypedPromise<
 		OptionsExpirationsResponse,
 		OptionsExpirationsHumanResponse,

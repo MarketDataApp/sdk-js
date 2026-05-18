@@ -40,4 +40,26 @@ describe("Options Lookup Mocks", () => {
 
 		expect(result.Symbol).toBe("AAPL230728C00200000");
 	});
+
+	test("lookup 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const client = new MarketDataClient({ token: "test" });
+		const pending = client.options.lookup("AAPL");
+		const result = await pending;
+		expect(result).toEqual({ s: "no_data", optionSymbol: "" });
+		expect(pending.no_data).toBe(true);
+	});
+
+	test("lookup human 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const client = new MarketDataClient({ token: "test" });
+		const pending = client.options.lookup("AAPL", { useHumanReadable: true });
+		const result = await pending;
+		expect(result).toEqual({ s: "no_data", Symbol: "" });
+		expect(pending.no_data).toBe(true);
+	});
 });

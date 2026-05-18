@@ -20,6 +20,7 @@ describe("OptionsResource (Mock Strikes)", () => {
 		const data = await client.options.strikes({ symbol: "AAPL" });
 
 		expect(data).toBeDefined();
+		if (!data) throw new Error("expected non-null data");
 		expect(data.s).toBe("ok");
 		expect(data.updated).toBeDefined();
 		const keys = Object.keys(data).filter((k) => k !== "s" && k !== "updated");
@@ -41,6 +42,7 @@ describe("OptionsResource (Mock Strikes)", () => {
 		});
 
 		expect(data).toBeDefined();
+		if (!data) throw new Error("expected non-null data");
 		expect(data.Date).toBeDefined();
 		const keys = Object.keys(data).filter((k) => k !== "Date");
 		expect(keys.length).toBeGreaterThan(0);
@@ -57,5 +59,25 @@ describe("OptionsResource (Mock Strikes)", () => {
 
 		const data = await client.options.strikes("AAPL");
 		expect(data).toBeDefined();
+	});
+
+	it("strikes 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const pending = client.options.strikes("AAPL");
+		const result = await pending;
+		expect(result).toEqual({ s: "no_data", updated: 0 });
+		expect(pending.no_data).toBe(true);
+	});
+
+	it("strikes human 404 resolves to empty-shape with no_data:true", async () => {
+		fetchMock.mockImplementation(async () =>
+			createMockResponse({ ok: false, status: 404, text: "Not Found" }),
+		);
+		const pending = client.options.strikes("AAPL", { useHumanReadable: true });
+		const result = await pending;
+		expect(result).toEqual({ Date: 0 });
+		expect(pending.no_data).toBe(true);
 	});
 });

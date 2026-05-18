@@ -1,5 +1,6 @@
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type OptionsLookupHumanResponse,
 	OptionsLookupHumanSchema,
@@ -10,6 +11,16 @@ import type { OptionsLookupParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
+
+const EMPTY_LOOKUP: OptionsLookupResponse = {
+	s: "no_data",
+	optionSymbol: "",
+};
+
+const EMPTY_LOOKUP_HUMAN: OptionsLookupHumanResponse = {
+	s: "no_data",
+	Symbol: "",
+};
 
 export function lookup<
 	P extends Omit<OptionsLookupParams, "lookup"> & MarketDataParams,
@@ -44,6 +55,9 @@ export function lookup(
 
 	this.logger.debug("Fetching options lookup...");
 
+	const emptyValue: OptionsLookupResponse | OptionsLookupHumanResponse =
+		this._isHumanFormat(params) ? EMPTY_LOOKUP_HUMAN : EMPTY_LOOKUP;
+
 	return MarketDataPromise.fromResult(
 		this._makeRequest<OptionsLookupResponse | OptionsLookupHumanResponse>(
 			`${Endpoints.OPTIONS_LOOKUP}${encodedLookup}/`,
@@ -58,6 +72,7 @@ export function lookup(
 			},
 		),
 		saveBlobToFile,
+		{ isNoData, emptyValue },
 	) as TypedPromise<
 		OptionsLookupResponse,
 		OptionsLookupHumanResponse,

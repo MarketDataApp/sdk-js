@@ -1,5 +1,6 @@
 import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
+import { isNoData } from "@/resources/base";
 import {
 	type OptionsStrikesHumanResponse,
 	OptionsStrikesHumanSchema,
@@ -10,6 +11,19 @@ import type { OptionsStrikesParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
+
+// Cast through unknown: zod's catchall + statically-known keys synthesizes an
+// intersection (`{s:string;updated:number} & {[x:string]:number[]}`) that no
+// literal can satisfy; runtime shape is correct.
+const EMPTY_STRIKES = {
+	s: "no_data",
+	updated: 0,
+} as unknown as OptionsStrikesResponse;
+
+// Human schema has no `s` field; just the Date scalar.
+const EMPTY_STRIKES_HUMAN = {
+	Date: 0,
+} as unknown as OptionsStrikesHumanResponse;
 
 export function strikes<
 	P extends Omit<OptionsStrikesParams, "symbol"> & MarketDataParams,
@@ -40,6 +54,9 @@ export function strikes(
 
 	this.logger.debug("Fetching options strikes...");
 
+	const emptyValue: OptionsStrikesResponse | OptionsStrikesHumanResponse =
+		this._isHumanFormat(params) ? EMPTY_STRIKES_HUMAN : EMPTY_STRIKES;
+
 	return MarketDataPromise.fromResult(
 		this._makeRequest<OptionsStrikesResponse | OptionsStrikesHumanResponse>(
 			`${Endpoints.OPTIONS_STRIKES}${params.symbol}/`,
@@ -54,6 +71,7 @@ export function strikes(
 			},
 		),
 		saveBlobToFile,
+		{ isNoData, emptyValue },
 	) as TypedPromise<
 		OptionsStrikesResponse,
 		OptionsStrikesHumanResponse,

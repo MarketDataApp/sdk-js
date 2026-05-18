@@ -41,6 +41,15 @@ import pkg from "../package.json";
 
 export const FETCH_TIMEOUT_MS = 99_000;
 
+/**
+ * Sentinel payload returned by `_performFetch` when the server responds
+ * with 404. Base resource `_fetch` detects this by identity and flags the
+ * returned `MarketDataPromise` as `no_data: true`.
+ */
+export const NO_DATA_SENTINEL = Object.freeze({
+	s: "no_data" as const,
+});
+
 export class MarketDataClient implements IMarketDataClient {
 	public readonly funds: FundsResource;
 	public readonly headers: Record<string, string>;
@@ -143,6 +152,7 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRetry?: boolean;
 			signal?: AbortSignal;
 			responseLogLevel?: LogLevel;
+			throwOn404?: boolean;
 		} = {},
 	): MarketDataResult<T> {
 		const includeApiVersion = options.includeApiVersion ?? true;
@@ -160,6 +170,7 @@ export class MarketDataClient implements IMarketDataClient {
 				skipRetry: options.skipRetry,
 				signal: options.signal,
 				responseLogLevel: options.responseLogLevel,
+				throwOn404: options.throwOn404,
 			},
 		);
 	}
@@ -236,6 +247,7 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRetry?: boolean;
 			signal?: AbortSignal;
 			responseLogLevel?: LogLevel;
+			throwOn404?: boolean;
 		} = {},
 	): MarketDataResult<T> {
 		return ResultAsync.fromPromise(
@@ -347,6 +359,7 @@ export class MarketDataClient implements IMarketDataClient {
 			skipRateLimitCheck?: boolean;
 			signal?: AbortSignal;
 			responseLogLevel?: LogLevel;
+			throwOn404?: boolean;
 		} = {},
 	): Promise<T> {
 		let reserved = false;
@@ -389,6 +402,18 @@ export class MarketDataClient implements IMarketDataClient {
 			);
 
 			this._updateRateLimits(response.headers);
+
+			// Spec §5: 404 is "no data" — return an empty sentinel rather
+			// than throw. Resource pipelines downstream detect `s: "no_data"`
+			// and flag the returned MarketDataPromise as empty. Endpoints
+			// where 404 indicates a real error (e.g. /user/) opt in via
+			// `throwOn404` and fall through to _handleResponseError.
+			if (response.status === 404 && !options.throwOn404) {
+				if (this._isCsvRequest(params, schema)) {
+					return new Blob([], { type: "text/csv" }) as unknown as T;
+				}
+				return NO_DATA_SENTINEL as unknown as T;
+			}
 
 			if (!response.ok) {
 				await this._handleResponseError(response, service);
