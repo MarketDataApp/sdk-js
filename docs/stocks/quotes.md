@@ -1,0 +1,182 @@
+# Quotes
+
+Retrieve stock quotes (bid, ask, mid, last, volume, etc.) for one or more supported stock symbols.
+
+## Making Requests
+
+Use the `quotes()` method on the `stocks` resource to fetch stock quotes. The method returns a [`MarketDataResult`](../client.md#MarketDataResult) which resolves to decoded records by default.
+
+| Output Format          | Result Payload                        | Description                                     |
+|------------------------|---------------------------------------|-------------------------------------------------|
+| **internal** (default) | `StockQuote[]` or `StockQuoteHuman[]` | Array of decoded quote records, one per symbol. |
+| **json**               | Raw JSON object                       | The compressed, array-keyed response object.    |
+| **csv**                | `Blob`                                | CSV payload. Use `.save(filename)` to write it. |
+
+<a name="quotes"></a>
+## quotes
+
+```typescript
+// Positional form
+quotes<P>(
+  symbols: string | string[],
+  params?: P,
+): MarketDataResult<StockQuote[] | StockQuoteHuman[]>
+
+// Object form
+quotes<P>(
+  params: P & { symbols: string | string[] },
+): MarketDataResult<StockQuote[] | StockQuoteHuman[]>
+```
+
+Fetches stock quotes for one or more symbols.
+
+#### Parameters
+
+- `symbols` (string | string[])
+
+  A single symbol string or an array of symbol strings for which to fetch quotes.
+
+- `52week` (boolean, optional)
+
+  Include the 52-week high and low in the response.
+
+- `extended` (boolean, optional)
+
+  Include extended-hours quote data.
+
+- [`outputFormat`](../settings.md#output-format) (optional): The format of the returned data. Alias: `format`.
+- [`dateFormat`](../settings.md#date-format) (optional): The date format to use. Alias: `dateformat`.
+- [`columns`](../settings.md#columns) (optional): Columns to include.
+- [`addHeaders`](../settings.md#headers) (optional): Whether to include headers in CSV output. Alias: `headers`.
+- [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
+- [`mode`](../settings.md#data-mode) (optional): The data mode to use.
+
+#### Returns
+
+- [`MarketDataResult<StockQuote[] | StockQuoteHuman[] | Blob>`](../client.md#MarketDataResult)
+
+### Single Symbol
+
+```typescript
+import { MarketDataClient } from "marketdata-sdk-js";
+
+const client = new MarketDataClient();
+
+const result = await client.stocks.quotes("AAPL");
+
+result.match(
+  (quotes) => console.log(quotes[0]),
+  (error) => console.error(error.message),
+);
+```
+
+### Multiple Symbols
+
+```typescript
+import { MarketDataClient } from "marketdata-sdk-js";
+
+const client = new MarketDataClient();
+
+const result = await client.stocks.quotes(["AAPL", "MSFT", "GOOGL"]);
+
+result.match(
+  (quotes) => {
+    for (const q of quotes) {
+      console.log(`${q.symbol}: bid=${q.bid}, ask=${q.ask}, last=${q.last}`);
+    }
+  },
+  (error) => console.error(error.message),
+);
+```
+
+### 52-Week High/Low
+
+```typescript
+import { MarketDataClient } from "marketdata-sdk-js";
+
+const client = new MarketDataClient();
+
+const result = await client.stocks.quotes("AAPL", { "52week": true });
+
+result.match(
+  (quotes) => console.log(quotes[0]),
+  (error) => console.error(error.message),
+);
+```
+
+### Human Readable
+
+```typescript
+import { MarketDataClient } from "marketdata-sdk-js";
+
+const client = new MarketDataClient();
+
+const result = await client.stocks.quotes("AAPL", { human: true });
+
+result.match(
+  (quotes) => {
+    const q = quotes[0];
+    console.log(`${q.Symbol}: Bid=${q.Bid} / Ask=${q.Ask}, Volume=${q.Volume}`);
+  },
+  (error) => console.error(error.message),
+);
+```
+
+<a name="StockQuote"></a>
+## StockQuote
+
+```typescript
+interface StockQuote {
+  s?: string;
+  symbol: string;
+  ask: number;
+  askSize: number;
+  bid: number;
+  bidSize: number;
+  mid: number;
+  last: number;
+  change: number;
+  changepct: number;
+  volume: number;
+  updated: number;
+}
+```
+
+`StockQuote` represents a single stock quote with short, machine-readable field names.
+
+#### Properties
+
+- `s` (string, optional): Status indicator (`"ok"` for successful responses).
+- `symbol` (string): The stock symbol.
+- `ask` (number): The ask price.
+- `askSize` (number): The ask size.
+- `bid` (number): The bid price.
+- `bidSize` (number): The bid size.
+- `mid` (number): The mid price.
+- `last` (number): The last traded price.
+- `change` (number): The price change.
+- `changepct` (number): The fractional price change.
+- `volume` (number): The trading volume.
+- `updated` (number): Unix timestamp when the quote was last updated.
+
+<a name="StockQuoteHuman"></a>
+## StockQuoteHuman
+
+```typescript
+interface StockQuoteHuman {
+  s?: string;
+  Symbol: string;
+  Ask: number;
+  Ask_Size: number;
+  Bid: number;
+  Bid_Size: number;
+  Mid: number;
+  Last: number;
+  Change_Price: number;
+  Change_Percent: number;
+  Volume: number;
+  Date: number;
+}
+```
+
+`StockQuoteHuman` is returned when `human: true` is set. Field names are in `Title_Case` rather than `camelCase`.
