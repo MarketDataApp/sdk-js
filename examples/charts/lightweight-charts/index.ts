@@ -23,41 +23,42 @@ function renderHtml(symbol: string, bars: Bar[]): string {
   <style>
     html, body { margin: 0; padding: 0; background: #111; color: #eee; font: 14px -apple-system, system-ui, sans-serif; }
     header { padding: 12px 16px; border-bottom: 1px solid #222; }
-    #price { height: 65vh; }
-    #volume { height: 25vh; }
+    #chart { height: 90vh; }
   </style>
 </head>
 <body>
   <header><strong>${symbol}</strong> · ${bars.length} daily bars · Lightweight Charts 4.x</header>
-  <div id="price"></div>
-  <div id="volume"></div>
+  <div id="chart"></div>
   <script>
     const bars = ${JSON.stringify(bars)};
-    const baseOpts = {
+
+    const chart = LightweightCharts.createChart(document.getElementById("chart"), {
       layout: { background: { color: "#111" }, textColor: "#eee" },
       grid: { vertLines: { color: "#222" }, horzLines: { color: "#222" } },
       timeScale: { timeVisible: true, secondsVisible: false },
-    };
+    });
 
-    const priceChart = LightweightCharts.createChart(document.getElementById("price"), baseOpts);
-    const candles = priceChart.addCandlestickSeries({
+    const candles = chart.addCandlestickSeries({
       upColor: "#26a69a", downColor: "#ef5350",
       borderUpColor: "#26a69a", borderDownColor: "#ef5350",
       wickUpColor: "#26a69a", wickDownColor: "#ef5350",
     });
     candles.setData(bars.map(b => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close })));
 
-    const volumeChart = LightweightCharts.createChart(document.getElementById("volume"), baseOpts);
-    const volume = volumeChart.addHistogramSeries({ priceFormat: { type: "volume" } });
+    // Leave room at the bottom for the volume overlay.
+    chart.priceScale("right").applyOptions({ scaleMargins: { top: 0.05, bottom: 0.25 } });
+
+    // priceScaleId: "" → overlay scale, independent of the candle scale.
+    const volume = chart.addHistogramSeries({
+      priceFormat: { type: "volume" },
+      priceScaleId: "",
+    });
+    volume.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     volume.setData(bars.map(b => ({
       time: b.time,
       value: b.volume,
       color: b.close >= b.open ? "rgba(38,166,154,0.6)" : "rgba(239,83,80,0.6)",
     })));
-
-    // Keep the time scales in sync between the two charts.
-    priceChart.timeScale().subscribeVisibleLogicalRangeChange(r => r && volumeChart.timeScale().setVisibleLogicalRange(r));
-    volumeChart.timeScale().subscribeVisibleLogicalRangeChange(r => r && priceChart.timeScale().setVisibleLogicalRange(r));
   </script>
 </body>
 </html>`;
