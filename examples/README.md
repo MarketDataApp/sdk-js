@@ -27,4 +27,4 @@ The shared candle-fetch + browser-open helpers live in [`charts/_shared/candles.
 
 | Script | Command | What it does |
 |---|---|---|
-| [`options_chain_monitor`](./options_chain_monitor) | `pnpm monitor AAPL 2026-06-19` | Polls the options chain on an interval and renders a live `cli-table3` dashboard with colour-coded bid/ask/last deltas. |
+| [`options_chain_monitor`](./options_chain_monitor) | `pnpm monitor` (or `pnpm monitor TSLA 10`) | Polls the next monthly options chain on an interval and renders a live `cli-table3` dashboard — calls on the left, puts on the right, strike in the middle — with colour-coded bid/ask/mid/last deltas. |

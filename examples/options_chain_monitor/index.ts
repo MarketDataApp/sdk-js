@@ -1,11 +1,16 @@
 /**
- * Options chain monitor — polls an underlying + expiration on an
- * interval and renders a colourful terminal table that highlights
- * row-level changes (bid/ask/last delta) between snapshots.
+ * Options chain monitor — polls an underlying on an interval and renders
+ * a colourful terminal table that highlights row-level changes (bid/ask/
+ * last/mid delta) between snapshots.
+ *
+ * Calls are laid out on the left, puts on the right, strike in the middle.
+ * No expiration is passed, so the API returns the next monthly expiration;
+ * the expiration date and underlying price are surfaced in the title bar.
  *
  * Usage:
- *   pnpm monitor <UNDERLYING> <EXPIRATION> [INTERVAL_SECONDS]
- *   pnpm monitor AAPL 2026-06-19 15
+ *   pnpm monitor [UNDERLYING] [INTERVAL_SECONDS]
+ *   pnpm monitor                  # AAPL, 15s interval
+ *   pnpm monitor TSLA 10
  *
  * AAPL options are in the free tier, so a token is not required for the
  * default example. Other underlyings need MARKETDATA_TOKEN set.
@@ -27,69 +32,172 @@ interface Row {
 	openInterest: number;
 }
 
-function colourDelta(current: number, previous?: number): string {
-	const fmt = current.toFixed(2);
-	if (previous === undefined || Number.isNaN(current)) return fmt;
+interface Snapshot {
+	rows: Row[];
+	expiration: number;
+	underlyingPrice: number;
+}
+
+function fmtNum(n: number | undefined | null, digits = 2): string {
+	if (n == null || Number.isNaN(n)) return "-";
+	return n.toFixed(digits);
+}
+
+function fmtInt(n: number | undefined | null): string {
+	if (n == null) return "-";
+	return String(n);
+}
+
+function fmtIv(iv: number | undefined): string {
+	if (iv == null || Number.isNaN(iv)) return "-";
+	return `${(iv * 100).toFixed(1)}%`;
+}
+
+function colourDelta(
+	current: number,
+	previous: number | undefined,
+	digits = 2,
+): string {
+	const fmt = fmtNum(current, digits);
+	if (previous === undefined || Number.isNaN(current) || fmt === "-")
+		return fmt;
 	if (current > previous) return chalk.green(`▲ ${fmt}`);
 	if (current < previous) return chalk.red(`▼ ${fmt}`);
 	return chalk.dim(fmt);
 }
 
+// Per-column inner widths (matches cli-table3 colWidths minus 2 for padding).
+const COL_WIDTHS = [6, 5, 6, 7, 7, 7, 7, 8, 7, 7, 7, 7, 6, 5, 6] as const;
+const STRIKE_COL_INDEX = 7;
+
+function tableColWidths(): number[] {
+	return COL_WIDTHS.map((w) => w + 2);
+}
+
+function supergroupHeader(totalWidth: number): string {
+	// The "strike" column owns the centre, so the divider sits under its
+	// vertical border. Compute that position from the cumulative colWidths.
+	const widths = tableColWidths();
+	let pos = 1; // leftmost outer border
+	for (let i = 0; i < STRIKE_COL_INDEX; i++) {
+		pos += widths[i] + 1; // content + right border
+	}
+	// `pos` now points to the column index where the strike column begins.
+	// We want a divider at strike-column centre: pos + floor(widths[strike] / 2).
+	const dividerCol = pos + Math.floor(widths[STRIKE_COL_INDEX] / 2);
+
+	const leftLabel = "CALL";
+	const rightLabel = "PUT";
+	const leftCentre = Math.floor(dividerCol / 2);
+	const rightCentre = dividerCol + Math.floor((totalWidth - dividerCol) / 2);
+
+	const buf = " ".repeat(totalWidth).split("");
+	for (let i = 0; i < leftLabel.length; i++) {
+		buf[leftCentre - Math.floor(leftLabel.length / 2) + i] = leftLabel[i];
+	}
+	buf[dividerCol] = "│";
+	for (let i = 0; i < rightLabel.length; i++) {
+		buf[rightCentre - Math.floor(rightLabel.length / 2) + i] = rightLabel[i];
+	}
+	return chalk.bold(buf.join(""));
+}
+
 function renderTable(
 	underlying: string,
-	expiration: string,
-	current: Row[],
+	snap: Snapshot,
 	previous: Map<string, Row>,
 	updatedAt: Date,
 ): string {
+	const head = [
+		"OI",
+		"Vol",
+		"IV",
+		"last",
+		"mid",
+		"bid",
+		"ask",
+		"strike",
+		"bid",
+		"ask",
+		"mid",
+		"last",
+		"IV",
+		"Vol",
+		"OI",
+	].map((h) => chalk.bold(h));
+
+	const aligns: Array<"left" | "right" | "center"> = [
+		"right",
+		"right",
+		"right",
+		"right",
+		"right",
+		"right",
+		"right",
+		"center",
+		"right",
+		"right",
+		"right",
+		"right",
+		"right",
+		"right",
+		"right",
+	];
+
 	const table = new Table({
-		head: [
-			chalk.bold("Strike"),
-			chalk.bold("Side"),
-			chalk.bold("Bid"),
-			chalk.bold("Ask"),
-			chalk.bold("Mid"),
-			chalk.bold("Last"),
-			chalk.bold("IV"),
-			chalk.bold("Vol"),
-			chalk.bold("OI"),
-		],
-		colAligns: [
-			"right",
-			"center",
-			"right",
-			"right",
-			"right",
-			"right",
-			"right",
-			"right",
-			"right",
-		],
+		head,
+		colAligns: aligns,
+		colWidths: tableColWidths(),
 		style: { head: [], border: ["grey"] },
 	});
 
-	const sorted = [...current].sort((a, b) => a.strike - b.strike);
-	for (const r of sorted) {
-		const prev = previous.get(r.optionSymbol);
+	// Group by strike.
+	const byStrike = new Map<number, { call?: Row; put?: Row }>();
+	for (const r of snap.rows) {
+		const bucket = byStrike.get(r.strike) ?? {};
+		if (r.side === "call") bucket.call = r;
+		else if (r.side === "put") bucket.put = r;
+		byStrike.set(r.strike, bucket);
+	}
+	const strikes = [...byStrike.keys()].sort((a, b) => a - b);
+
+	for (const strike of strikes) {
+		const { call, put } = byStrike.get(strike) ?? {};
+		const c = call;
+		const p = put;
+		const cp = c ? previous.get(c.optionSymbol) : undefined;
+		const pp = p ? previous.get(p.optionSymbol) : undefined;
 		table.push([
-			r.strike.toFixed(2),
-			r.side === "call" ? chalk.cyan("C") : chalk.magenta("P"),
-			colourDelta(r.bid, prev?.bid),
-			colourDelta(r.ask, prev?.ask),
-			colourDelta(r.mid, prev?.mid),
-			colourDelta(r.last, prev?.last),
-			r.iv != null ? (r.iv * 100).toFixed(1) : "-",
-			String(r.volume ?? 0),
-			String(r.openInterest ?? 0),
+			c ? fmtInt(c.openInterest) : "",
+			c ? fmtInt(c.volume) : "",
+			c ? fmtIv(c.iv) : "",
+			c ? colourDelta(c.last, cp?.last) : "",
+			c ? colourDelta(c.mid, cp?.mid) : "",
+			c ? colourDelta(c.bid, cp?.bid) : "",
+			c ? colourDelta(c.ask, cp?.ask) : "",
+			chalk.bold(fmtNum(strike)),
+			p ? colourDelta(p.bid, pp?.bid) : "",
+			p ? colourDelta(p.ask, pp?.ask) : "",
+			p ? colourDelta(p.mid, pp?.mid) : "",
+			p ? colourDelta(p.last, pp?.last) : "",
+			p ? fmtIv(p.iv) : "",
+			p ? fmtInt(p.volume) : "",
+			p ? fmtInt(p.openInterest) : "",
 		]);
 	}
 
-	const header =
-		chalk.bold(`${underlying}  exp ${expiration}`) +
-		chalk.dim(
-			`  —  ${current.length} contracts  —  ${updatedAt.toLocaleTimeString()}`,
-		);
-	return `${header}\n${table.toString()}`;
+	const tableStr = table.toString();
+	const tableWidth = tableStr.split("\n")[0].length;
+
+	const expDate = new Date(snap.expiration * 1000).toISOString().slice(0, 10);
+	const left = `${underlying}  exp ${expDate}  —  ${snap.rows.length} contracts`;
+	const right = `$${snap.underlyingPrice.toFixed(2)}`;
+	const gap = Math.max(2, tableWidth - left.length - right.length);
+	const title = chalk.bold(left) + " ".repeat(gap) + chalk.bold(right);
+	const subtitle = chalk.dim(`updated ${updatedAt.toLocaleTimeString()}`);
+	const supergroup = supergroupHeader(tableWidth);
+
+	return `${title}\n${subtitle}\n${supergroup}\n${tableStr}`;
 }
 
 function clearScreen(): void {
@@ -99,10 +207,13 @@ function clearScreen(): void {
 async function snapshot(
 	client: MarketDataClient,
 	underlying: string,
-	expiration: string,
-): Promise<Row[]> {
-	const rows = await client.options.chain(underlying, { expiration });
-	return (rows as unknown as Row[]).map((r) => ({
+): Promise<Snapshot> {
+	const rows = await client.options.chain(underlying);
+	const mapped = (
+		rows as unknown as Array<
+			Row & { expiration: number; underlyingPrice: number }
+		>
+	).map((r) => ({
 		optionSymbol: r.optionSymbol,
 		side: r.side,
 		strike: Number(r.strike),
@@ -113,18 +224,20 @@ async function snapshot(
 		iv: r.iv != null ? Number(r.iv) : undefined,
 		volume: Number(r.volume ?? 0),
 		openInterest: Number(r.openInterest ?? 0),
+		expiration: Number(r.expiration),
+		underlyingPrice: Number(r.underlyingPrice),
 	}));
+	const first = mapped[0];
+	return {
+		rows: mapped,
+		expiration: first?.expiration ?? 0,
+		underlyingPrice: first?.underlyingPrice ?? 0,
+	};
 }
 
 async function main(): Promise<void> {
-	const [, , underlying, expiration, intervalArg] = process.argv;
-	if (!underlying || !expiration) {
-		console.error(
-			"Usage: pnpm monitor <UNDERLYING> <EXPIRATION> [INTERVAL_SECONDS]",
-		);
-		console.error("Example: pnpm monitor AAPL 2026-06-19 15");
-		process.exit(1);
-	}
+	const [, , underlyingArg, intervalArg] = process.argv;
+	const underlying = (underlyingArg ?? "AAPL").toUpperCase();
 	const interval = Math.max(5, Number(intervalArg ?? 15));
 
 	const client = new MarketDataClient();
@@ -139,12 +252,10 @@ async function main(): Promise<void> {
 
 	while (!stopped) {
 		try {
-			const rows = await snapshot(client, underlying, expiration);
+			const snap = await snapshot(client, underlying);
 			clearScreen();
-			console.log(
-				renderTable(underlying, expiration, rows, previous, new Date()),
-			);
-			previous = new Map(rows.map((r) => [r.optionSymbol, r]));
+			console.log(renderTable(underlying, snap, previous, new Date()));
+			previous = new Map(snap.rows.map((r) => [r.optionSymbol, r]));
 		} catch (err) {
 			if (err instanceof RateLimitError) {
 				console.error(chalk.yellow("Rate limit — sleeping one interval"));
