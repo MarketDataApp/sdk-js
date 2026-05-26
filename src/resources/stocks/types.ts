@@ -61,6 +61,11 @@ export const StocksEarningsParamsSchema = z.intersection(
 	UserUniversalAPIParamsInputSchema,
 );
 
+export const StocksEarningsInternalParamsSchema = z.intersection(
+	z.object({}).passthrough(),
+	UserUniversalAPIParamsInputSchema,
+);
+
 export type StocksEarningsParams = z.input<typeof StocksEarningsParamsSchema>;
 
 export const StocksNewsBaseInputSchema = z

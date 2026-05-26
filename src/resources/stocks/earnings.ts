@@ -6,8 +6,8 @@ import {
 	StockEarningsSchema,
 } from "@/resources/stocks/outputs";
 import {
+	StocksEarningsInternalParamsSchema,
 	type StocksEarningsParams,
-	StocksEarningsParamsSchema,
 } from "@/resources/stocks/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 import { normalizeArgs } from "@/utils";
@@ -42,14 +42,20 @@ export function earnings(
 	const params = normalizeArgs(arg1, arg2, "symbol") as StocksEarningsParams &
 		MarketDataParams;
 
+	const { symbol, ...queryParams } = params;
+
 	this.logger.debug("Fetching stock earnings...");
 
-	return this._fetch(`${Endpoints.STOCKS_EARNINGS}${params.symbol}/`, params, {
-		inputSchema: StocksEarningsParamsSchema,
-		regularSchema: StockEarningsSchema,
-		humanSchema: StockEarningsHumanSchema,
-		service: Service.EARNINGS,
-	}) as TypedPromise<
+	return this._fetch(
+		`${Endpoints.STOCKS_EARNINGS}${symbol}/`,
+		queryParams as MarketDataParams,
+		{
+			inputSchema: StocksEarningsInternalParamsSchema,
+			regularSchema: StockEarningsSchema,
+			humanSchema: StockEarningsHumanSchema,
+			service: Service.EARNINGS,
+		},
+	) as TypedPromise<
 		StockEarningsResponse,
 		StockEarningsHumanResponse,
 		StocksEarningsParams & MarketDataParams

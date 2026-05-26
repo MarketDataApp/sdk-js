@@ -100,8 +100,6 @@ describe("OptionsResource (Mock Quotes)", () => {
 
 	it("quotes fan-out: mixed 404+200 → partial result, no_data:false", async () => {
 		fetchMock.mockImplementation(async (url: string) => {
-			// Match the path segment, not query-string symbols (the
-			// per-leg URLs both carry symbols=A,B as a query param).
 			if (url.includes("/options/quotes/AAPL271217C00255000/")) {
 				return createMockResponse({ json: mockData });
 			}

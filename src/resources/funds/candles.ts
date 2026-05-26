@@ -6,8 +6,8 @@ import {
 	FundsCandleSchema,
 } from "@/resources/funds/outputs";
 import {
+	FundsCandlesInternalParamsSchema,
 	type FundsCandlesParams,
-	FundsCandlesParamsSchema,
 } from "@/resources/funds/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 import { normalizeArgs } from "@/utils";
@@ -40,13 +40,15 @@ export function candles(
 	const params = normalizeArgs(arg1, arg2, "symbol") as FundsCandlesParams &
 		MarketDataParams;
 
+	const { symbol, resolution, ...queryParams } = params;
+
 	this.logger.debug("Fetching fund candles...");
 
 	return this._fetch(
-		`${Endpoints.FUNDS_CANDLES}${params.resolution || "D"}/${params.symbol}/`,
-		params,
+		`${Endpoints.FUNDS_CANDLES}${resolution || "D"}/${symbol}/`,
+		queryParams as MarketDataParams,
 		{
-			inputSchema: FundsCandlesParamsSchema,
+			inputSchema: FundsCandlesInternalParamsSchema,
 			regularSchema: FundsCandleSchema,
 			humanSchema: FundsCandleHumanSchema,
 			service: Service.FUNDS_CANDLES,

@@ -19,4 +19,15 @@ export const FundsCandlesParamsSchema = z.intersection(
 	UserUniversalAPIParamsInputSchema,
 );
 
+export const FundsCandlesInternalParamsSchema = z.intersection(
+	z
+		.object({
+			from: z.union([z.string(), z.date()]).optional(),
+			to: z.union([z.string(), z.date()]).optional(),
+			countback: z.number().optional(),
+		})
+		.passthrough(),
+	UserUniversalAPIParamsInputSchema,
+);
+
 export type FundsCandlesParams = z.input<typeof FundsCandlesParamsSchema>;
