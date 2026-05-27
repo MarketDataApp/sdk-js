@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
+import { ValidationError } from "@/error";
 import { fetchMock } from "./setup";
 import { createMockResponse, loadMock } from "./test-utils";
 
@@ -146,5 +147,26 @@ describe("Path-bound params are not duplicated in the query string (#17)", () =>
 		expect(url.searchParams.has("symbol")).toBe(false);
 		expect(url.searchParams.has("resolution")).toBe(false);
 		expect(url.pathname).toContain("/funds/candles/D/SPY/");
+	});
+});
+
+// Stripping the path-bound key out of `params` must not also strip the
+// runtime validation the resource's full *ParamsSchema enforces. Earlier the
+// fix routed `_fetch` through a relaxed Internal*ParamsSchema, which silently
+// dropped the required-`symbol` check and the `resolution` regex. These guard
+// against that regression.
+describe("Path-bound handlers still enforce their full param schema", () => {
+	const client = new MarketDataClient({ token: "test-token" });
+
+	it("stocks.earnings rejects when symbol is missing", async () => {
+		await expect(client.stocks.earnings({} as never)).rejects.toBeInstanceOf(
+			ValidationError,
+		);
+	});
+
+	it("funds.candles rejects an invalid resolution", async () => {
+		await expect(
+			client.funds.candles("SPY", { resolution: "nope!" }),
+		).rejects.toBeInstanceOf(ValidationError);
 	});
 });

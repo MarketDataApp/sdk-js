@@ -1,3 +1,5 @@
+import { errAsync } from "neverthrow";
+import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
 import {
 	type StockEarningsHumanResponse,
@@ -6,11 +8,15 @@ import {
 	StockEarningsSchema,
 } from "@/resources/stocks/outputs";
 import {
-	StocksEarningsInternalParamsSchema,
 	type StocksEarningsParams,
+	StocksEarningsParamsSchema,
 } from "@/resources/stocks/types";
-import type { MarketDataParams, TypedPromise } from "@/types";
-import { normalizeArgs } from "@/utils";
+import {
+	AlreadyValidatedSchema,
+	type MarketDataParams,
+	type TypedPromise,
+} from "@/types";
+import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { StocksResource } from "./index";
 
 export function earnings<
@@ -42,7 +48,22 @@ export function earnings(
 	const params = normalizeArgs(arg1, arg2, "symbol") as StocksEarningsParams &
 		MarketDataParams;
 
-	const { symbol, ...queryParams } = params;
+	const validation = this._validateAndNormalize(
+		params,
+		StocksEarningsParamsSchema,
+	);
+	if (validation.isErr()) {
+		return MarketDataPromise.fromResult(
+			errAsync(validation.error),
+			saveBlobToFile,
+		) as TypedPromise<
+			StockEarningsResponse,
+			StockEarningsHumanResponse,
+			StocksEarningsParams & MarketDataParams
+		>;
+	}
+
+	const { symbol, ...queryParams } = validation.value;
 
 	this.logger.debug("Fetching stock earnings...");
 
@@ -50,7 +71,7 @@ export function earnings(
 		`${Endpoints.STOCKS_EARNINGS}${symbol}/`,
 		queryParams as MarketDataParams,
 		{
-			inputSchema: StocksEarningsInternalParamsSchema,
+			inputSchema: AlreadyValidatedSchema,
 			regularSchema: StockEarningsSchema,
 			humanSchema: StockEarningsHumanSchema,
 			service: Service.EARNINGS,
