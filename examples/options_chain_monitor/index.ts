@@ -7,6 +7,11 @@
  * No expiration is passed, so the API returns the next monthly expiration;
  * the expiration date and underlying price are surfaced in the title bar.
  *
+ * Before the polling loop a one-shot `?date=last session` chain request
+ * captures each contract's previous-session close. The `last %` column then
+ * shows ((last − prevClose) / prevClose) × 100, coloured green/red, while the
+ * ▲/▼ arrows on bid/ask/mid/last track movement between successive polls.
+ *
  * Usage:
  *   pnpm monitor [UNDERLYING] [INTERVAL_SECONDS]
  *   pnpm monitor                  # AAPL, 15s interval
@@ -66,9 +71,25 @@ function colourDelta(
 	return chalk.dim(fmt);
 }
 
+// Percent change of `last` vs the previous-session close, green/red coloured.
+function colourPct(current: number, baseline: number | undefined): string {
+	if (
+		baseline === undefined ||
+		baseline === 0 ||
+		Number.isNaN(current) ||
+		Number.isNaN(baseline)
+	)
+		return "-";
+	const pct = ((current - baseline) / baseline) * 100;
+	const s = `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`;
+	if (pct > 0) return chalk.green(s);
+	if (pct < 0) return chalk.red(s);
+	return chalk.dim(s);
+}
+
 // Per-column inner widths (matches cli-table3 colWidths minus 2 for padding).
-const COL_WIDTHS = [6, 5, 6, 7, 7, 7, 7, 8, 7, 7, 7, 7, 6, 5, 6] as const;
-const STRIKE_COL_INDEX = 7;
+const COL_WIDTHS = [6, 5, 6, 7, 8, 7, 7, 7, 8, 7, 7, 7, 8, 7, 6, 5, 6] as const;
+const STRIKE_COL_INDEX = 8;
 
 function tableColWidths(): number[] {
 	return COL_WIDTHS.map((w) => w + 2);
@@ -106,6 +127,7 @@ function renderTable(
 	underlying: string,
 	snap: Snapshot,
 	previous: Map<string, Row>,
+	baseline: Map<string, number>,
 	updatedAt: Date,
 ): string {
 	const head = [
@@ -113,6 +135,7 @@ function renderTable(
 		"Vol",
 		"IV",
 		"last",
+		"last %",
 		"mid",
 		"bid",
 		"ask",
@@ -120,6 +143,7 @@ function renderTable(
 		"bid",
 		"ask",
 		"mid",
+		"last %",
 		"last",
 		"IV",
 		"Vol",
@@ -134,7 +158,9 @@ function renderTable(
 		"right",
 		"right",
 		"right",
+		"right",
 		"center",
+		"right",
 		"right",
 		"right",
 		"right",
@@ -172,6 +198,7 @@ function renderTable(
 			c ? fmtInt(c.volume) : "",
 			c ? fmtIv(c.iv) : "",
 			c ? colourDelta(c.last, cp?.last) : "",
+			c ? colourPct(c.last, baseline.get(c.optionSymbol)) : "",
 			c ? colourDelta(c.mid, cp?.mid) : "",
 			c ? colourDelta(c.bid, cp?.bid) : "",
 			c ? colourDelta(c.ask, cp?.ask) : "",
@@ -179,6 +206,7 @@ function renderTable(
 			p ? colourDelta(p.bid, pp?.bid) : "",
 			p ? colourDelta(p.ask, pp?.ask) : "",
 			p ? colourDelta(p.mid, pp?.mid) : "",
+			p ? colourPct(p.last, baseline.get(p.optionSymbol)) : "",
 			p ? colourDelta(p.last, pp?.last) : "",
 			p ? fmtIv(p.iv) : "",
 			p ? fmtInt(p.volume) : "",
@@ -235,6 +263,35 @@ async function snapshot(
 	};
 }
 
+// One-shot previous-session close, keyed by option symbol. Seeds the `last %`
+// column so deltas-vs-close show from the very first render. Best-effort: on
+// failure the column simply renders "-".
+async function fetchBaseline(
+	client: MarketDataClient,
+	underlying: string,
+): Promise<Map<string, number>> {
+	const map = new Map<string, number>();
+	try {
+		const rows = await client.options.chain(underlying, {
+			date: "last session",
+		});
+		for (const r of rows as unknown as Array<{
+			optionSymbol: string;
+			last: number;
+		}>) {
+			const last = Number(r.last);
+			if (r.optionSymbol && !Number.isNaN(last)) map.set(r.optionSymbol, last);
+		}
+	} catch {
+		console.error(
+			chalk.yellow(
+				"Could not fetch previous-session close — last % will be blank",
+			),
+		);
+	}
+	return map;
+}
+
 async function main(): Promise<void> {
 	const [, , underlyingArg, intervalArg] = process.argv;
 	const underlying = (underlyingArg ?? "AAPL").toUpperCase();
@@ -243,6 +300,7 @@ async function main(): Promise<void> {
 	const client = new MarketDataClient();
 	await client.ready;
 
+	const baseline = await fetchBaseline(client, underlying);
 	let previous = new Map<string, Row>();
 	let stopped = false;
 	process.on("SIGINT", () => {
@@ -254,7 +312,9 @@ async function main(): Promise<void> {
 		try {
 			const snap = await snapshot(client, underlying);
 			clearScreen();
-			console.log(renderTable(underlying, snap, previous, new Date()));
+			console.log(
+				renderTable(underlying, snap, previous, baseline, new Date()),
+			);
 			previous = new Map(snap.rows.map((r) => [r.optionSymbol, r]));
 		} catch (err) {
 			if (err instanceof RateLimitError) {
