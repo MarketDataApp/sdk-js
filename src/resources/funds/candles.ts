@@ -1,3 +1,5 @@
+import { errAsync } from "neverthrow";
+import { saveBlobToFile } from "@/fileUtils";
 import { Endpoints, Service } from "@/internalSettings";
 import {
 	type FundsCandleHumanResponse,
@@ -9,8 +11,12 @@ import {
 	type FundsCandlesParams,
 	FundsCandlesParamsSchema,
 } from "@/resources/funds/types";
-import type { MarketDataParams, TypedPromise } from "@/types";
-import { normalizeArgs } from "@/utils";
+import {
+	AlreadyValidatedSchema,
+	type MarketDataParams,
+	type TypedPromise,
+} from "@/types";
+import { MarketDataPromise, normalizeArgs } from "@/utils";
 import type { FundsResource } from "./index";
 
 export function candles<
@@ -40,13 +46,32 @@ export function candles(
 	const params = normalizeArgs(arg1, arg2, "symbol") as FundsCandlesParams &
 		MarketDataParams;
 
+	const validation = this._validateAndNormalize(
+		params,
+		FundsCandlesParamsSchema,
+	);
+	if (validation.isErr()) {
+		return MarketDataPromise.fromResult(
+			errAsync(validation.error),
+			saveBlobToFile,
+		) as TypedPromise<
+			FundsCandleResponse,
+			FundsCandleHumanResponse,
+			FundsCandlesParams & MarketDataParams
+		>;
+	}
+
+	// `resolution` is guaranteed defined here — the schema's .default("D")
+	// runs during validation and the regex check has already passed.
+	const { symbol, resolution, ...queryParams } = validation.value;
+
 	this.logger.debug("Fetching fund candles...");
 
 	return this._fetch(
-		`${Endpoints.FUNDS_CANDLES}${params.resolution || "D"}/${params.symbol}/`,
-		params,
+		`${Endpoints.FUNDS_CANDLES}${resolution as string}/${symbol}/`,
+		queryParams as MarketDataParams,
 		{
-			inputSchema: FundsCandlesParamsSchema,
+			inputSchema: AlreadyValidatedSchema,
 			regularSchema: FundsCandleSchema,
 			humanSchema: FundsCandleHumanSchema,
 			service: Service.FUNDS_CANDLES,

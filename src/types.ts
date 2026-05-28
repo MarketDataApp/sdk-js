@@ -109,6 +109,15 @@ export const UserUniversalAPIParamsInputSchema = z.preprocess(
 	UserUniversalAPIParamsSchema,
 );
 
+// No-op input schema for handlers that fully validate their params upstream
+// (with the resource's own *ParamsSchema) and use `_fetch` only for output
+// dispatch. Passes through any remaining keys; still enforces the universal
+// envelope. The upstream validation is the single source of truth.
+export const AlreadyValidatedSchema = z.intersection(
+	z.object({}).passthrough(),
+	UserUniversalAPIParamsInputSchema,
+);
+
 export type UserUniversalAPIParams = z.infer<
 	typeof UserUniversalAPIParamsSchema
 >;

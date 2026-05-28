@@ -58,13 +58,15 @@ export function quotes(
 			? params.symbols.split(",")
 			: [];
 
+	const { symbols: _symbols, ...queryParams } = params;
+
 	this.logger.debug("Fetching options quotes...");
 
 	let sentinelCount = 0;
 	const requests = symbols.map((symbol) => {
 		return this._makeRequest<Record<string, unknown>>(
 			`${Endpoints.OPTIONS_QUOTES}${symbol}/`,
-			params,
+			queryParams as MarketDataParams,
 			{
 				service: Service.OPTIONS_QUOTES,
 			},

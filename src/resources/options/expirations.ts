@@ -58,6 +58,8 @@ export function expirations(
 		"symbol",
 	) as OptionsExpirationsParams & MarketDataParams;
 
+	const { symbol, ...queryParams } = params;
+
 	this.logger.debug("Fetching options expirations...");
 
 	const emptyValue:
@@ -69,14 +71,18 @@ export function expirations(
 	return MarketDataPromise.fromResult(
 		this._makeRequest<
 			OptionsExpirationsResponse | OptionsExpirationsHumanResponse
-		>(`${Endpoints.OPTIONS_EXPIRATIONS}${params.symbol}/`, params, {
-			schema: this._getSchema(
-				params,
-				OptionsExpirationsSchema,
-				OptionsExpirationsHumanSchema,
-			),
-			service: Service.OPTIONS_EXPIRATIONS,
-		}),
+		>(
+			`${Endpoints.OPTIONS_EXPIRATIONS}${symbol}/`,
+			queryParams as MarketDataParams,
+			{
+				schema: this._getSchema(
+					params,
+					OptionsExpirationsSchema,
+					OptionsExpirationsHumanSchema,
+				),
+				service: Service.OPTIONS_EXPIRATIONS,
+			},
+		),
 		saveBlobToFile,
 		{ isNoData, emptyValue },
 	) as TypedPromise<

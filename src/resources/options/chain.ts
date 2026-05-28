@@ -41,15 +41,21 @@ export function chain(
 	const params = normalizeArgs(arg1, arg2, "symbol") as OptionsChainParams &
 		MarketDataParams;
 
+	const { symbol, ...queryParams } = params;
+
 	this.logger.debug("Fetching options chain...");
 
-	return this._fetch(`${Endpoints.OPTIONS_CHAIN}${params.symbol}/`, params, {
-		inputSchema: OptionsChainParamsSchema,
-		regularSchema: OptionsChainSchema,
-		humanSchema: OptionsChainHumanSchema,
-		service: Service.OPTIONS_CHAIN,
-		excludeKeys: ["s"],
-	}) as TypedPromise<
+	return this._fetch(
+		`${Endpoints.OPTIONS_CHAIN}${symbol}/`,
+		queryParams as MarketDataParams,
+		{
+			inputSchema: OptionsChainParamsSchema,
+			regularSchema: OptionsChainSchema,
+			humanSchema: OptionsChainHumanSchema,
+			service: Service.OPTIONS_CHAIN,
+			excludeKeys: ["s"],
+		},
+	) as TypedPromise<
 		OptionsChainResponse,
 		OptionsChainHumanResponse,
 		OptionsChainParams & MarketDataParams

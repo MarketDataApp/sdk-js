@@ -51,7 +51,8 @@ export function lookup(
 	const params = normalizeArgs(arg1, arg2, "lookup") as OptionsLookupParams &
 		MarketDataParams;
 
-	const encodedLookup = encodeURIComponent(params.lookup);
+	const { lookup, ...queryParams } = params;
+	const encodedLookup = encodeURIComponent(lookup);
 
 	this.logger.debug("Fetching options lookup...");
 
@@ -61,7 +62,7 @@ export function lookup(
 	return MarketDataPromise.fromResult(
 		this._makeRequest<OptionsLookupResponse | OptionsLookupHumanResponse>(
 			`${Endpoints.OPTIONS_LOOKUP}${encodedLookup}/`,
-			params,
+			queryParams as MarketDataParams,
 			{
 				schema: this._getSchema(
 					params,

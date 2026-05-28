@@ -52,6 +52,8 @@ export function strikes(
 	const params = normalizeArgs(arg1, arg2, "symbol") as OptionsStrikesParams &
 		MarketDataParams;
 
+	const { symbol, ...queryParams } = params;
+
 	this.logger.debug("Fetching options strikes...");
 
 	const emptyValue: OptionsStrikesResponse | OptionsStrikesHumanResponse =
@@ -59,8 +61,8 @@ export function strikes(
 
 	return MarketDataPromise.fromResult(
 		this._makeRequest<OptionsStrikesResponse | OptionsStrikesHumanResponse>(
-			`${Endpoints.OPTIONS_STRIKES}${params.symbol}/`,
-			params,
+			`${Endpoints.OPTIONS_STRIKES}${symbol}/`,
+			queryParams as MarketDataParams,
 			{
 				schema: this._getSchema(
 					params,
