@@ -14,12 +14,12 @@ Use the `lookup()` method on the `options` resource to resolve an OCC symbol fro
 lookup<P>(
   lookupStr: string,
   params?: P,
-): MarketDataResult<OptionsLookupResponse | OptionsLookupHumanResponse>
+): MarketDataPromise<OptionsLookupResponse | OptionsLookupHumanResponse>
 
 // Object form
 lookup<P>(
   params: P & { lookup: string },
-): MarketDataResult<OptionsLookupResponse | OptionsLookupHumanResponse>
+): MarketDataPromise<OptionsLookupResponse | OptionsLookupHumanResponse>
 ```
 
 Resolves a human-readable option description to its OCC symbol.
@@ -35,38 +35,38 @@ Resolves a human-readable option description to its OCC symbol.
 
 #### Returns
 
-- [`MarketDataResult<OptionsLookupResponse | OptionsLookupHumanResponse>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<OptionsLookupResponse | OptionsLookupHumanResponse>`](../client.md#MarketDataPromise)
 
 ### Default
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.lookup("AAPL 7/28/2023 200 Call");
-
-result.match(
-  (data) => console.log(data.optionSymbol),  // "AAPL230728C00200000"
-  (error) => console.error(error.message),
-);
+try {
+  const data = await client.options.lookup("AAPL 7/28/2023 200 Call");
+  console.log(data.optionSymbol);  // "AAPL230728C00200000"
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.lookup("AAPL 7/28/2023 200 Call", {
-  human: true,
-});
-
-result.match(
-  (data) => console.log(data.Symbol),
-  (error) => console.error(error.message),
-);
+try {
+  const data = await client.options.lookup("AAPL 7/28/2023 200 Call", {
+    human: true,
+  });
+  console.log(data.Symbol);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="OptionsLookupResponse"></a>

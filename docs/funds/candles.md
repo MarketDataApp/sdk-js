@@ -23,12 +23,12 @@ Use the `candles()` method on the `funds` resource to fetch fund candles.
 candles<P>(
   symbol: string,
   params?: P,
-): MarketDataResult<FundsCandle[] | FundsCandleHuman[]>
+): MarketDataPromise<FundsCandle[] | FundsCandleHuman[]>
 
 // Object form
 candles<P>(
   params: P & { symbol: string },
-): MarketDataResult<FundsCandle[] | FundsCandleHuman[]>
+): MarketDataPromise<FundsCandle[] | FundsCandleHuman[]>
 ```
 
 Fetches historical daily candles for a single fund symbol.
@@ -64,67 +64,63 @@ Fetches historical daily candles for a single fund symbol.
 
 #### Returns
 
-- [`MarketDataResult<FundsCandle[] | FundsCandleHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<FundsCandle[] | FundsCandleHuman[] | Blob>`](../client.md#MarketDataPromise)
 
 ### Default
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-// VFINX is available without authentication (free test symbol).
-const result = await client.funds.candles("VFINX", { countback: 30 });
-
-result.match(
-  (candles) => {
-    for (const c of candles) {
-      console.log(`t=${c.t} o=${c.o} h=${c.h} l=${c.l} c=${c.c}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  // VFINX is available without authentication (free test symbol).
+  const candles = await client.funds.candles("VFINX", { countback: 30 });
+  for (const c of candles) {
+    console.log(`t=${c.t} o=${c.o} h=${c.h} l=${c.l} c=${c.c}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Date Range
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.funds.candles("VFINX", {
-  resolution: "M",
-  from: "2020-01-01",
-  to: "2024-12-31",
-});
-
-result.match(
-  (candles) => console.log(`${candles.length} monthly bars`),
-  (error) => console.error(error.message),
-);
+try {
+  const candles = await client.funds.candles("VFINX", {
+    resolution: "M",
+    from: "2020-01-01",
+    to: "2024-12-31",
+  });
+  console.log(`${candles.length} monthly bars`);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.funds.candles("VFINX", {
-  countback: 10,
-  human: true,
-});
-
-result.match(
-  (candles) => {
-    for (const c of candles) {
-      console.log(`Date=${c.Date} Open=${c.Open} Close=${c.Close}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const candles = await client.funds.candles("VFINX", {
+    countback: 10,
+    human: true,
+  });
+  for (const c of candles) {
+    console.log(`Date=${c.Date} Open=${c.Open} Close=${c.Close}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="FundsCandle"></a>

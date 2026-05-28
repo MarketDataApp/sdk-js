@@ -20,12 +20,12 @@ Use the `earnings()` method on the `stocks` resource to fetch earnings data.
 earnings<P>(
   symbol: string,
   params?: P,
-): MarketDataResult<StockEarnings[] | StockEarningsHuman[]>
+): MarketDataPromise<StockEarnings[] | StockEarningsHuman[]>
 
 // Object form
 earnings<P>(
   params: P & { symbol: string },
-): MarketDataResult<StockEarnings[] | StockEarningsHuman[]>
+): MarketDataPromise<StockEarnings[] | StockEarningsHuman[]>
 ```
 
 Fetches earnings data for a single symbol.
@@ -47,7 +47,7 @@ Additional endpoint-specific parameters (e.g. `from`, `to`, `date`) are passed t
 
 #### Returns
 
-- [`MarketDataResult<StockEarnings[] | StockEarningsHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<StockEarnings[] | StockEarningsHuman[] | Blob>`](../client.md#MarketDataPromise)
 
 > [!NOTE]
 > Earnings data is a premium endpoint on the Market Data API. Your plan must include earnings access for this method to return data.
@@ -55,42 +55,38 @@ Additional endpoint-specific parameters (e.g. `from`, `to`, `date`) are passed t
 ### Default
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.earnings("AAPL");
-
-result.match(
-  (earnings) => {
-    for (const e of earnings) {
-      console.log(
-        `FY${e.fiscalYear} Q${e.fiscalQuarter}: ` +
-        `reported=${e.reportedEPS} estimated=${e.estimatedEPS}`
-      );
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const earnings = await client.stocks.earnings("AAPL");
+  for (const e of earnings) {
+    console.log(
+      `FY${e.fiscalYear} Q${e.fiscalQuarter}: ` +
+      `reported=${e.reportedEPS} estimated=${e.estimatedEPS}`
+    );
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.earnings("AAPL", { human: true });
-
-result.match(
-  (earnings) => {
-    for (const e of earnings) {
-      console.log(`${e.Symbol} FY${e.Fiscal_Year} Q${e.Fiscal_Quarter}: ${e.Reported_EPS}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const earnings = await client.stocks.earnings("AAPL", { human: true });
+  for (const e of earnings) {
+    console.log(`${e.Symbol} FY${e.Fiscal_Year} Q${e.Fiscal_Quarter}: ${e.Reported_EPS}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="StockEarnings"></a>

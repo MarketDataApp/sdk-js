@@ -20,12 +20,12 @@ Use the `chain()` method on the `options` resource to fetch an option chain. The
 chain<P>(
   symbol: string,
   params?: P,
-): MarketDataResult<OptionsChain[] | OptionsChainHuman[]>
+): MarketDataPromise<OptionsChain[] | OptionsChainHuman[]>
 
 // Object form
 chain<P>(
   params: P & { symbol: string },
-): MarketDataResult<OptionsChain[] | OptionsChainHuman[]>
+): MarketDataPromise<OptionsChain[] | OptionsChainHuman[]>
 ```
 
 Fetches the option chain for a single underlying symbol.
@@ -44,7 +44,7 @@ Fetches the option chain for a single underlying symbol.
 
   Filter by specific expiration date.
 
-- `days_to_expiration` (number, optional)
+- `dte` (number, optional)
 
   Filter by number of days to expiration.
 
@@ -68,7 +68,7 @@ Fetches the option chain for a single underlying symbol.
 
   Filter by target delta value.
 
-- `strike_limit` (number, optional)
+- `strikeLimit` (number, optional)
 
   Limit the response to the N strikes nearest the underlying price.
 
@@ -76,15 +76,15 @@ Fetches the option chain for a single underlying symbol.
 
   Filter by in-the-money / out-of-the-money range (e.g. `"itm"`, `"otm"`).
 
-- `min_bid` / `max_bid` / `min_ask` / `max_ask` (number, optional)
+- `minBid` / `maxBid` / `minAsk` / `maxAsk` (number, optional)
 
   Filter by quote price thresholds.
 
-- `max_bid_ask_spread` (number, optional), `max_bid_ask_spread_pct` (number, optional)
+- `maxBidAskSpread` (number, optional), `maxBidAskSpreadPct` (number, optional)
 
   Filter by spread thresholds.
 
-- `min_open_interest` (number, optional), `min_volume` (number, optional)
+- `minOpenInterest` (number, optional), `minVolume` (number, optional)
 
   Filter by liquidity thresholds.
 
@@ -109,90 +109,86 @@ Fetches the option chain for a single underlying symbol.
 
 #### Returns
 
-- [`MarketDataResult<OptionsChain[] | OptionsChainHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<OptionsChain[] | OptionsChainHuman[] | Blob>`](../client.md#MarketDataPromise)
 
 ### Full Chain
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.chain("AAPL");
-
-result.match(
-  (contracts) => console.log(`Got ${contracts.length} contracts`),
-  (error) => console.error(error.message),
-);
+try {
+  const contracts = await client.options.chain("AAPL");
+  console.log(`Got ${contracts.length} contracts`);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Filtered
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-// Calls only, narrow strike window, high open interest
-const result = await client.options.chain("AAPL", {
-  side: "call",
-  strike_limit: 10,
-  min_open_interest: 100,
-});
-
-result.match(
-  (contracts) => {
-    for (const c of contracts) {
-      console.log(
-        `${c.optionSymbol} strike=${c.strike} mid=${c.mid} delta=${c.delta} oi=${c.openInterest}`
-      );
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  // Calls only, narrow strike window, high open interest
+  const contracts = await client.options.chain("AAPL", {
+    side: "call",
+    strikeLimit: 10,
+    minOpenInterest: 100,
+  });
+  for (const c of contracts) {
+    console.log(
+      `${c.optionSymbol} strike=${c.strike} mid=${c.mid} delta=${c.delta} oi=${c.openInterest}`
+    );
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Historical
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.chain("AAPL", {
-  date: "2024-01-15",
-  expiration: "2024-02-16",
-  side: "call",
-});
-
-result.match(
-  (contracts) => console.log(contracts),
-  (error) => console.error(error.message),
-);
+try {
+  const contracts = await client.options.chain("AAPL", {
+    date: "2024-01-15",
+    expiration: "2024-02-16",
+    side: "call",
+  });
+  console.log(contracts);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.chain("AAPL", {
-  side: "put",
-  human: true,
-});
-
-result.match(
-  (contracts) => {
-    for (const c of contracts) {
-      console.log(
-        `${c.Symbol} Strike=${c.Strike} Mid=${c.Mid} Delta=${c.Delta}`
-      );
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const contracts = await client.options.chain("AAPL", {
+    side: "put",
+    human: true,
+  });
+  for (const c of contracts) {
+    console.log(
+      `${c.Symbol} Strike=${c.Strike} Mid=${c.Mid} Delta=${c.Delta}`
+    );
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="OptionsChain"></a>

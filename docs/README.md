@@ -5,6 +5,31 @@ Welcome to the Market Data JavaScript SDK documentation. This SDK allows you to 
 > [!NOTE]
 > The JavaScript SDK is in early development (version `0.0.1`). The API surface and return types may change before 1.0.
 
+## Quick Start
+
+```typescript
+import { MarketDataClient } from "marketdata-sdk";
+
+// Initialize client
+const client = new MarketDataClient({
+  token: "YOUR_API_TOKEN", // Optional - runs in demo mode without token
+});
+
+// Get stock prices
+const prices = await client.stocks.prices("AAPL");
+console.log(prices[0].mid); // 150.25
+
+// Get historical candles
+const candles = await client.stocks.candles("AAPL", {
+  resolution: "1H",
+  from: new Date("2024-01-01"),
+  to: new Date("2024-01-31"),
+});
+
+// Get market status
+const status = await client.markets.status();
+```
+
 ## Open Source
 
 The SDK is open source and available on GitHub. Feel free to contribute to the project, report bugs, or request new features.
@@ -25,7 +50,7 @@ This SDK is designed to help you get up and running with Market Data's APIs as q
 2. Set up your [authentication token](./authentication.md) to access the API.
 3. Learn about the [client](./client.md) and how to make your first API requests.
 4. Configure [Settings](./settings.md) to customize output format, date format, and other universal parameters.
-5. Explore the available endpoints for [stocks](./stocks/README.md), [options](./options/README.md), [funds](./funds/README.md), and [markets](./markets/README.md).
+5. Explore the available endpoints for [stocks](./stocks/README.md), [options](./options/README.md), [funds](./funds/README.md), [markets](./markets/README.md), and [utilities](./utilities/README.md).
 
 ### Support
 

@@ -20,12 +20,12 @@ Use the `quotes()` method on the `options` resource to fetch quotes for individu
 quotes<P>(
   symbols: string | string[],
   params?: P,
-): MarketDataResult<OptionsQuotes[] | OptionsQuotesHuman[]>
+): MarketDataPromise<OptionsQuotes[] | OptionsQuotesHuman[]>
 
 // Object form
 quotes<P>(
   params: P & { symbols: string | string[] },
-): MarketDataResult<OptionsQuotes[] | OptionsQuotesHuman[]>
+): MarketDataPromise<OptionsQuotes[] | OptionsQuotesHuman[]>
 ```
 
 Fetches quotes for one or more option contracts.
@@ -47,66 +47,62 @@ Additional endpoint-specific parameters like `from`, `to`, and `date` are passed
 
 #### Returns
 
-- [`MarketDataResult<OptionsQuotes[] | OptionsQuotesHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<OptionsQuotes[] | OptionsQuotesHuman[] | Blob>`](../client.md#MarketDataPromise)
 
 ### Single Contract
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.quotes("AAPL271217C00250000");
-
-result.match(
-  (quotes) => {
-    const q = quotes[0];
-    console.log(
-      `${q.optionSymbol}: bid=${q.bid} ask=${q.ask} delta=${q.delta}`
-    );
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const quotes = await client.options.quotes("AAPL271217C00250000");
+  const q = quotes[0];
+  console.log(
+    `${q.optionSymbol}: bid=${q.bid} ask=${q.ask} delta=${q.delta}`
+  );
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Multiple Contracts
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.quotes([
-  "AAPL271217C00250000",
-  "AAPL271217P00250000",
-  "AAPL271217C00300000",
-]);
-
-result.match(
-  (quotes) => {
-    for (const q of quotes) {
-      console.log(`${q.optionSymbol}: mid=${q.mid}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const quotes = await client.options.quotes([
+    "AAPL271217C00250000",
+    "AAPL271217P00250000",
+    "AAPL271217C00300000",
+  ]);
+  for (const q of quotes) {
+    console.log(`${q.optionSymbol}: mid=${q.mid}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.quotes("AAPL271217C00250000", {
-  human: true,
-});
-
-result.match(
-  (quotes) => console.log(quotes[0]),
-  (error) => console.error(error.message),
-);
+try {
+  const quotes = await client.options.quotes("AAPL271217C00250000", {
+    human: true,
+  });
+  console.log(quotes[0]);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="OptionsQuotes"></a>

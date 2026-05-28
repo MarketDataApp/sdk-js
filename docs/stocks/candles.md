@@ -20,12 +20,12 @@ Use the `candles()` method on the `stocks` resource to fetch candles. The method
 candles<P>(
   symbol: string,
   params?: P,
-): MarketDataResult<StockCandle[] | StockCandleHuman[]>
+): MarketDataPromise<StockCandle[] | StockCandleHuman[]>
 
 // Object form
 candles<P>(
   params: P & { symbol: string },
-): MarketDataResult<StockCandle[] | StockCandleHuman[]>
+): MarketDataPromise<StockCandle[] | StockCandleHuman[]>
 ```
 
 Fetches historical candles for a single symbol.
@@ -72,7 +72,7 @@ Fetches historical candles for a single symbol.
 
 #### Returns
 
-- [`MarketDataResult<StockCandle[] | StockCandleHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<StockCandle[] | StockCandleHuman[] | Blob>`](../client.md#MarketDataPromise)
 
 #### Notes
 
@@ -82,82 +82,78 @@ Fetches historical candles for a single symbol.
 ### Daily Candles
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-// Default resolution is "D" (daily)
-const result = await client.stocks.candles("AAPL", { countback: 30 });
-
-result.match(
-  (candles) => {
-    for (const c of candles) {
-      console.log(`t=${c.t} o=${c.o} h=${c.h} l=${c.l} c=${c.c} v=${c.v}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  // Default resolution is "D" (daily)
+  const candles = await client.stocks.candles("AAPL", { countback: 30 });
+  for (const c of candles) {
+    console.log(`t=${c.t} o=${c.o} h=${c.h} l=${c.l} c=${c.c} v=${c.v}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Intraday Range
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-// Hourly candles over a multi-year range.
-// The SDK automatically splits into year-sized chunks
-// and fetches them concurrently.
-const result = await client.stocks.candles("AAPL", {
-  resolution: "1H",
-  from: new Date("2023-01-01"),
-  to: new Date("2024-12-31"),
-});
-
-result.match(
-  (candles) => console.log(`Got ${candles.length} bars`),
-  (error) => console.error(error.message),
-);
+try {
+  // Hourly candles over a multi-year range.
+  // The SDK automatically splits into year-sized chunks
+  // and fetches them concurrently.
+  const candles = await client.stocks.candles("AAPL", {
+    resolution: "1H",
+    from: new Date("2023-01-01"),
+    to: new Date("2024-12-31"),
+  });
+  console.log(`Got ${candles.length} bars`);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.candles("AAPL", {
-  resolution: "D",
-  countback: 10,
-  human: true,
-});
-
-result.match(
-  (candles) => {
-    for (const c of candles) {
-      console.log(`Date=${c.Date} Open=${c.Open} Close=${c.Close}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const candles = await client.stocks.candles("AAPL", {
+    resolution: "D",
+    countback: 10,
+    human: true,
+  });
+  for (const c of candles) {
+    console.log(`Date=${c.Date} Open=${c.Open} Close=${c.Close}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### CSV
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk-js";
+import { MarketDataClient, OutputFormat } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.candles("AAPL", {
+const csv = await client.stocks.candles("AAPL", {
   resolution: "D",
   countback: 100,
   outputFormat: OutputFormat.CSV,
 });
 
-const filename = await result.save("aapl_daily.csv");
+const filename = await csv.save("aapl_daily.csv");
 console.log(`CSV saved to: ${filename}`);
 ```
 

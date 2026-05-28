@@ -20,12 +20,12 @@ Use the `news()` method on the `stocks` resource to fetch news.
 news<P>(
   symbol: string,
   params?: P,
-): MarketDataResult<StockNews[] | StockNewsHuman[]>
+): MarketDataPromise<StockNews[] | StockNewsHuman[]>
 
 // Object form
 news<P>(
   params: P & { symbol: string },
-): MarketDataResult<StockNews[] | StockNewsHuman[]>
+): MarketDataPromise<StockNews[] | StockNewsHuman[]>
 ```
 
 Fetches news articles for a single symbol.
@@ -61,43 +61,41 @@ Fetches news articles for a single symbol.
 
 #### Returns
 
-- [`MarketDataResult<StockNews[] | StockNewsHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<StockNews[] | StockNewsHuman[] | Blob>`](../client.md#MarketDataPromise)
 
 ### Default
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.news("AAPL");
-
-result.match(
-  (articles) => {
-    for (const a of articles) {
-      console.log(`${a.source}: ${a.headline}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const articles = await client.stocks.news("AAPL");
+  for (const a of articles) {
+    console.log(`${a.source}: ${a.headline}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Date Range
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.news("AAPL", {
-  from: "2024-01-01",
-  to: "2024-01-31",
-});
-
-result.match(
-  (articles) => console.log(`Got ${articles.length} articles`),
-  (error) => console.error(error.message),
-);
+try {
+  const articles = await client.stocks.news("AAPL", {
+    from: "2024-01-01",
+    to: "2024-01-31",
+  });
+  console.log(`Got ${articles.length} articles`);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="StockNews"></a>

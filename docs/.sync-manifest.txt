@@ -22,3 +22,6 @@ stocks/earnings.md
 stocks/news.md
 stocks/prices.md
 stocks/quotes.md
+utilities/README.md
+utilities/headers.md
+utilities/status.md

@@ -4,7 +4,7 @@ Retrieve stock prices for any supported stock symbol.
 
 ## Making Requests
 
-Use the `prices()` method on the `stocks` resource to fetch stock prices. The method returns a [`MarketDataResult`](../client.md#MarketDataResult) which resolves to decoded records by default. The output format is controlled by the `outputFormat` parameter (or `MARKETDATA_OUTPUT_FORMAT` env var):
+Use the `prices()` method on the `stocks` resource to fetch stock prices. The method returns a [`MarketDataPromise`](../client.md#MarketDataPromise) that resolves to decoded records by default, or rejects with a `MarketDataClientError` subclass on failure. The output format is controlled by the `outputFormat` parameter (or `MARKETDATA_OUTPUT_FORMAT` env var):
 
 | Output Format          | Result Payload                        | Description                                                           |
 |------------------------|---------------------------------------|-----------------------------------------------------------------------|
@@ -20,12 +20,12 @@ Use the `prices()` method on the `stocks` resource to fetch stock prices. The me
 prices<P>(
   symbols: string | string[],
   params?: P,
-): MarketDataResult<StockPrice[] | StockPriceHuman[]>
+): MarketDataPromise<StockPrice[] | StockPriceHuman[]>
 
 // Object form
 prices<P>(
   params: P & { symbols: string | string[] },
-): MarketDataResult<StockPrice[] | StockPriceHuman[]>
+): MarketDataPromise<StockPrice[] | StockPriceHuman[]>
 ```
 
 Fetches stock prices for one or more symbols. The return type is narrowed automatically:
@@ -66,93 +66,89 @@ Fetches stock prices for one or more symbols. The return type is narrowed automa
 
 #### Returns
 
-- [`MarketDataResult<StockPrice[] | StockPriceHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<StockPrice[] | StockPriceHuman[] | Blob>`](../client.md#MarketDataPromise)
 
-  A Result wrapping the prices data in the requested format. Handle success and failure with `.match()`, `.isOk()` / `.isErr()`, or any other neverthrow method.
+  A Promise that resolves to the prices data in the requested format, or rejects with a `MarketDataClientError` subclass on failure. Handle with `await` + `try/catch`.
 
 ### Single Symbol
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.prices("AAPL");
-
-result.match(
-  (prices) => console.log(prices[0].mid),
-  (error) => console.error(error.message),
-);
+try {
+  const prices = await client.stocks.prices("AAPL");
+  console.log(prices[0].mid);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Multiple Symbols
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.prices(["AAPL", "MSFT", "GOOGL"]);
-
-result.match(
-  (prices) => {
-    for (const p of prices) {
-      console.log(`${p.symbol}: ${p.mid}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const prices = await client.stocks.prices(["AAPL", "MSFT", "GOOGL"]);
+  for (const p of prices) {
+    console.log(`${p.symbol}: ${p.mid}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.prices("AAPL", { human: true });
-
-result.match(
-  (prices) => {
-    for (const p of prices) {
-      console.log(`${p.Symbol}: mid=${p.Mid}, change=${p.Change_Percent}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const prices = await client.stocks.prices("AAPL", { human: true });
+  for (const p of prices) {
+    console.log(`${p.Symbol}: mid=${p.Mid}, change=${p.Change_Percent}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Raw JSON
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk-js";
+import { MarketDataClient, OutputFormat } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.prices(["AAPL", "MSFT"], {
-  outputFormat: OutputFormat.JSON,
-});
-
-result.match(
-  (json) => console.log(json),
-  (error) => console.error(error.message),
-);
+try {
+  const json = await client.stocks.prices(["AAPL", "MSFT"], {
+    outputFormat: OutputFormat.JSON,
+  });
+  console.log(json);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### CSV
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk-js";
+import { MarketDataClient, OutputFormat } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.prices(["AAPL", "MSFT"], {
+const csv = await client.stocks.prices(["AAPL", "MSFT"], {
   outputFormat: OutputFormat.CSV,
 });
 
 // Save the Blob to disk (Node.js)
-const filename = await result.save("prices.csv");
+const filename = await csv.save("prices.csv");
 console.log(`CSV saved to: ${filename}`);
 ```
 

@@ -4,7 +4,7 @@ Retrieve stock quotes (bid, ask, mid, last, volume, etc.) for one or more suppor
 
 ## Making Requests
 
-Use the `quotes()` method on the `stocks` resource to fetch stock quotes. The method returns a [`MarketDataResult`](../client.md#MarketDataResult) which resolves to decoded records by default.
+Use the `quotes()` method on the `stocks` resource to fetch stock quotes. The method returns a [`MarketDataPromise`](../client.md#MarketDataPromise) that resolves to decoded records by default, or rejects with a `MarketDataClientError` subclass on failure.
 
 | Output Format          | Result Payload                        | Description                                     |
 |------------------------|---------------------------------------|-------------------------------------------------|
@@ -20,12 +20,12 @@ Use the `quotes()` method on the `stocks` resource to fetch stock quotes. The me
 quotes<P>(
   symbols: string | string[],
   params?: P,
-): MarketDataResult<StockQuote[] | StockQuoteHuman[]>
+): MarketDataPromise<StockQuote[] | StockQuoteHuman[]>
 
 // Object form
 quotes<P>(
   params: P & { symbols: string | string[] },
-): MarketDataResult<StockQuote[] | StockQuoteHuman[]>
+): MarketDataPromise<StockQuote[] | StockQuoteHuman[]>
 ```
 
 Fetches stock quotes for one or more symbols.
@@ -53,73 +53,69 @@ Fetches stock quotes for one or more symbols.
 
 #### Returns
 
-- [`MarketDataResult<StockQuote[] | StockQuoteHuman[] | Blob>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<StockQuote[] | StockQuoteHuman[] | Blob>`](../client.md#MarketDataPromise)
 
 ### Single Symbol
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.quotes("AAPL");
-
-result.match(
-  (quotes) => console.log(quotes[0]),
-  (error) => console.error(error.message),
-);
+try {
+  const quotes = await client.stocks.quotes("AAPL");
+  console.log(quotes[0]);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Multiple Symbols
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.quotes(["AAPL", "MSFT", "GOOGL"]);
-
-result.match(
-  (quotes) => {
-    for (const q of quotes) {
-      console.log(`${q.symbol}: bid=${q.bid}, ask=${q.ask}, last=${q.last}`);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const quotes = await client.stocks.quotes(["AAPL", "MSFT", "GOOGL"]);
+  for (const q of quotes) {
+    console.log(`${q.symbol}: bid=${q.bid}, ask=${q.ask}, last=${q.last}`);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### 52-Week High/Low
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.quotes("AAPL", { "52week": true });
-
-result.match(
-  (quotes) => console.log(quotes[0]),
-  (error) => console.error(error.message),
-);
+try {
+  const quotes = await client.stocks.quotes("AAPL", { "52week": true });
+  console.log(quotes[0]);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.stocks.quotes("AAPL", { human: true });
-
-result.match(
-  (quotes) => {
-    const q = quotes[0];
-    console.log(`${q.Symbol}: Bid=${q.Bid} / Ask=${q.Ask}, Volume=${q.Volume}`);
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const quotes = await client.stocks.quotes("AAPL", { human: true });
+  const q = quotes[0];
+  console.log(`${q.Symbol}: Bid=${q.Bid} / Ask=${q.Ask}, Volume=${q.Volume}`);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="StockQuote"></a>
