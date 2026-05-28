@@ -52,7 +52,7 @@ interface MarketDataConfig {
 - `options` ([OptionsResource](./options/README.md)): Access to options endpoints (chain, expirations, quotes, lookup)
 - `funds` ([FundsResource](./funds/README.md)): Access to funds endpoints (candles)
 - `markets` ([MarketsResource](./markets/README.md)): Access to markets endpoints (status)
-- `utilities` ([UtilitiesResource](./utilities/README.md)): Access to utility endpoints (`status`, `headers`, `user`)
+- `utilities` ([UtilitiesResource](./utilities/README.md)): Access to utility endpoints (`status`, `headers`)
 
 <a name="MarketDataClient.constructor"></a>
 ### constructor
