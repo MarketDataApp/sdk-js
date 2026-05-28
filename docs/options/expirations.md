@@ -19,12 +19,12 @@ Use the `expirations()` method on the `options` resource to fetch available expi
 expirations<P>(
   symbol: string,
   params?: P,
-): MarketDataResult<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>
+): MarketDataPromise<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>
 
 // Object form
 expirations<P>(
   params: P & { symbol: string },
-): MarketDataResult<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>
+): MarketDataPromise<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>
 ```
 
 Fetches the list of expirations for a single underlying symbol.
@@ -50,57 +50,55 @@ Fetches the list of expirations for a single underlying symbol.
 
 #### Returns
 
-- [`MarketDataResult<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>`](../client.md#MarketDataResult)
+- [`MarketDataPromise<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>`](../client.md#MarketDataPromise)
 
 ### Default
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.expirations("AAPL");
-
-result.match(
-  (data) => {
-    console.log(`Updated: ${data.updated}`);
-    for (const exp of data.expirations) {
-      console.log(exp);
-    }
-  },
-  (error) => console.error(error.message),
-);
+try {
+  const data = await client.options.expirations("AAPL");
+  console.log(`Updated: ${data.updated}`);
+  for (const exp of data.expirations) {
+    console.log(exp);
+  }
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Filter By Strike
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-// Only expirations that trade the $250 strike
-const result = await client.options.expirations("AAPL", { strike: 250 });
-
-result.match(
-  (data) => console.log(data.expirations),
-  (error) => console.error(error.message),
-);
+try {
+  // Only expirations that trade the $250 strike
+  const data = await client.options.expirations("AAPL", { strike: 250 });
+  console.log(data.expirations);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk-js";
+import { MarketDataClient } from "marketdata-sdk";
 
 const client = new MarketDataClient();
 
-const result = await client.options.expirations("AAPL", { human: true });
-
-result.match(
-  (data) => console.log(data.Expirations),
-  (error) => console.error(error.message),
-);
+try {
+  const data = await client.options.expirations("AAPL", { human: true });
+  console.log(data.Expirations);
+} catch (error) {
+  console.error(error);
+}
 ```
 
 <a name="OptionsExpirationsResponse"></a>

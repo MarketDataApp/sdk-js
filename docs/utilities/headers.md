@@ -1,0 +1,55 @@
+# Headers
+
+Echo back the request headers your client actually sent to Market Data. Useful for debugging proxies, custom header plumbing, or verifying the User-Agent the SDK is presenting.
+
+The `Authorization` header is redacted server-side before the response is returned.
+
+## Making Requests
+
+Use the `headers()` method on the `utilities` resource.
+
+| Output Format          | Result Payload     | Description                                  |
+|------------------------|--------------------|----------------------------------------------|
+| **internal** (default) | `HeadersResponse`  | Map of header name to value as the API saw it.|
+| **json**               | Raw JSON object    | The raw response as returned by the API.     |
+
+<a name="headers"></a>
+## headers
+
+```typescript
+headers(): MarketDataPromise<HeadersResponse>
+```
+
+Fetches the request-header echo. Takes no parameters.
+
+#### Returns
+
+- [`MarketDataPromise<HeadersResponse>`](../client.md#MarketDataPromise)
+
+### Default
+
+```typescript
+import { MarketDataClient } from "marketdata-sdk";
+
+const client = new MarketDataClient();
+
+try {
+  const h = await client.utilities.headers();
+  console.log(h["user-agent"]);   // "marketdata-sdk-javascript/0.0.1"
+  console.log(h["accept-encoding"]);
+} catch (error) {
+  console.error(error);
+}
+```
+
+<a name="HeadersResponse"></a>
+## HeadersResponse
+
+```typescript
+type HeadersResponse = Record<string, unknown>;
+```
+
+A bag of header name → value pairs. Header names are lowercased; values may be strings or arrays of strings depending on whether the header was sent multiple times.
+
+> [!TIP]
+> Use this to confirm what gets through when you wire the SDK behind a corporate proxy or add custom headers via your runtime's `fetch` interception.

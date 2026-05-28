@@ -12,19 +12,19 @@ This guide will help you install the Market Data JavaScript SDK and configure it
 ### pnpm
 
 ```bash
-pnpm add marketdata-sdk-js
+pnpm add marketdata-sdk
 ```
 
 ### npm
 
 ```bash
-npm install marketdata-sdk-js
+npm install marketdata-sdk
 ```
 
 ### yarn
 
 ```bash
-yarn add marketdata-sdk-js
+yarn add marketdata-sdk
 ```
 
 > [!NOTE]
@@ -38,8 +38,8 @@ yarn add marketdata-sdk-js
 
 The SDK is written in TypeScript and ships first-class type definitions. No `@types/*` package is needed. The SDK builds to both ESM and CommonJS, so it works with either module system.
 
-- **ESM**: `import { MarketDataClient } from "marketdata-sdk-js";`
-- **CommonJS**: `const { MarketDataClient } = require("marketdata-sdk-js");`
+- **ESM**: `import { MarketDataClient } from "marketdata-sdk";`
+- **CommonJS**: `const { MarketDataClient } = require("marketdata-sdk");`
 
 ## Local Development Installation
 
@@ -71,7 +71,7 @@ corepack enable
 The SDK includes the following core dependencies (installed automatically):
 
 - `dotenv`: Loads environment variables from a `.env` file
-- `neverthrow`: Functional `Result` type for error handling
+- `neverthrow`: Functional `Result` type used internally for error composition. The public API surfaces standard Promises — see [client error handling](./client.md#ErrorHandling).
 - `p-limit`: Concurrency pool for fan-out requests
 - `p-retry`: Retry logic with exponential backoff
 - `zod`: Runtime schema validation and type inference
