@@ -15,13 +15,13 @@ Additionally, the lazy implementation had a concurrent-flood failure mode: if `_
 
 Validation runs **eagerly from the constructor**. The client exposes a public `ready: Promise<void>` field:
 
-- On construction, if a token is present and `skipStartupValidation !== true`, the constructor kicks off `utilities.user()`.
+- On construction, if a token is present and `skipStartupValidation !== true`, the constructor kicks off the eager `/user/` probe.
 - `AuthenticationError` (401) propagates: `client.ready` rejects and all subsequent requests reject when they `await this.ready`.
 - Transient errors (`NetworkError`, `ServerError`) are logged and swallowed; `ready` resolves so normal requests can retry the underlying operation.
 - `skipStartupValidation: true` bypasses the call entirely — the `ready` Promise resolves immediately.
 - Callers with no token skip the call as well; demo-mode flows don't need `/user/`.
 
-`_performFetch` now `await this.ready` at the top of every request (unless `skipRateLimitCheck: true`, the existing flag for bootstrap calls — `utilities.user()` / `utilities.status()` use it to avoid recursing).
+`_performFetch` now `await this.ready` at the top of every request (unless `skipRateLimitCheck: true`, the existing flag for bootstrap calls — the eager `/user/` probe and `utilities.status()` use it to avoid recursing).
 
 The lazy `_setupRateLimits` method and the `_rateLimitSetup` promise cache are removed.
 
