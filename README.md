@@ -86,6 +86,27 @@ const client = new MarketDataClient({
 });
 ```
 
+## Runnable examples
+
+End-to-end scripts live under [`examples/`](./examples/) as a sibling pnpm workspace package. Install once, then run any of:
+
+| Script | Command | What it does |
+|---|---|---|
+| [Lightweight Charts](./examples/charts/lightweight-charts) | `pnpm chart:lightweight` | TradingView Lightweight Charts 4 — OHLC + volume, synced time scales. |
+| [Apache ECharts](./examples/charts/echarts) | `pnpm chart:echarts` | ECharts 5 — candlestick + volume in linked grids with dataZoom. |
+| [Plotly.js](./examples/charts/plotly) | `pnpm chart:plotly` | Plotly candlestick trace + volume bars with a rangeslider. |
+| [Highcharts Stock](./examples/charts/highcharts-stock) | `pnpm chart:highcharts` | Highcharts Stock with range selector. **Commercial license required for production.** |
+| [Chart.js options greeks](./examples/charts/chartjs) | `pnpm chart:chartjs` | Chart.js 4 — calls vs puts across strikes with an in-page dropdown to switch IV/Delta/Gamma/Theta/Vega. |
+| [Options chain monitor](./examples/options_chain_monitor) | `pnpm monitor` | Live terminal table that highlights bid/ask/last deltas between polls. |
+
+The four candle scripts fetch one year of daily candles for AAPL through the SDK and write a self-contained HTML file next to the script that loads the chart library from a public CDN — no bundler, no install per library. Run from the `examples/` directory:
+
+```bash
+cd examples
+pnpm install
+pnpm chart:lightweight   # or any other script above
+```
+
 ## Examples
 
 ### Stock Prices
