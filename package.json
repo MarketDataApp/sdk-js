@@ -1,7 +1,7 @@
 {
 	"name": "marketdata-sdk",
-	"version": "0.0.1",
-	"description": "Official TypeScript/JavaScript SDK for the MarketData API.",
+	"version": "1.0.0",
+	"description": "Official JavaScript/TypeScript SDK for the MarketData API.",
 	"type": "module",
 	"engines": {
 		"node": ">=20.0.0"

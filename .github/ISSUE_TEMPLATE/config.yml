@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/MarketDataApp/sdk-js/issues
+    about: Open an issue with the "question" label
+  - name: Community chat
+    url: https://discord.com/invite/GmdeAVRtnT
+    about: Join the Market Data Discord
+  - name: Report a security issue
+    url: https://github.com/MarketDataApp/sdk-js/security/policy
+    about: Learn how to notify us for sensitive bugs

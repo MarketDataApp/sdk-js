@@ -1,6 +1,25 @@
-# MarketData TypeScript SDK
+<div align="center">
 
-TypeScript/JavaScript SDK for the MarketData API - Real-time and historical market data for stocks, options, and more.
+# Market Data JavaScript SDK v1.0
+### Access Financial Data with Ease
+
+> This is the official JavaScript/TypeScript SDK for [Market Data](https://www.marketdata.app/). It provides developers with a powerful, easy-to-use interface to obtain real-time and historical financial data. Ideal for building financial applications, trading bots, and investment strategies.
+
+[![Tests](https://github.com/MarketDataApp/sdk-js/actions/workflows/test.yml/badge.svg)](https://github.com/MarketDataApp/sdk-js/actions/workflows/test.yml)
+[![Coverage](https://codecov.io/gh/MarketDataApp/sdk-js/graph/badge.svg)](https://codecov.io/gh/MarketDataApp/sdk-js)
+[![License](https://img.shields.io/github/license/MarketDataApp/sdk-js.svg)](https://github.com/MarketDataApp/sdk-js/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/marketdata-sdk)](https://www.npmjs.com/package/marketdata-sdk)
+[![npm downloads](https://img.shields.io/npm/dm/marketdata-sdk)](https://www.npmjs.com/package/marketdata-sdk)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20-blue)](https://nodejs.org/)
+
+#### Connect With The Market Data Community
+
+[![Website](https://img.shields.io/badge/Website-marketdata.app-blue)](https://www.marketdata.app/)
+[![Discord](https://img.shields.io/badge/Discord-join%20chat-7389D8.svg?logo=discord&logoColor=ffffff)](https://discord.com/invite/GmdeAVRtnT)
+[![Twitter](https://img.shields.io/twitter/follow/MarketDataApp?style=social)](https://twitter.com/MarketDataApp)
+[![Helpdesk](https://img.shields.io/badge/Support-Ticketing-ff69b4.svg?logo=TicketTailor&logoColor=white)](https://www.marketdata.app/dashboard/)
+
+</div>
 
 ## Installation
 
