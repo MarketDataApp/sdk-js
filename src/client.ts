@@ -18,8 +18,10 @@ import {
 } from "@/error";
 import {
 	CHECK_RATE_LIMITS,
+	Endpoints,
 	isRetriableStatusCode,
 	MAX_CONCURRENT_REQUESTS,
+	Service,
 } from "@/internalSettings";
 import { DefaultLogger, type Logger, LogLevel } from "@/logger";
 import { FundsResource } from "@/resources/funds/index";
@@ -128,14 +130,20 @@ export class MarketDataClient implements IMarketDataClient {
 
 	private async _runStartupValidation(skip: boolean): Promise<void> {
 		if (skip || !this.token) return;
-		try {
-			await this.utilities.user();
-		} catch (e) {
-			if (e instanceof AuthenticationError) throw e;
+		// Probe /user/ directly. The body is discarded — the side effect is
+		// _updateRateLimits running on the response headers, populating
+		// client.rateLimits. Going through _makeRequest (not BaseResource)
+		// keeps the URL clean and matches the globalApiStatus.refresh pattern.
+		const res = await this._makeRequest(Endpoints.USER, undefined, {
+			includeApiVersion: false,
+			service: Service.USER,
+			skipRateLimitCheck: true,
+			throwOn404: true,
+		});
+		if (res.isErr()) {
+			if (res.error instanceof AuthenticationError) throw res.error;
 			this.logger.warn(
-				`Startup /user/ validation failed: ${
-					e instanceof Error ? e.message : String(e)
-				}. Proceeding without rate-limit snapshot.`,
+				`Startup /user/ validation failed: ${res.error.message}. Proceeding without rate-limit snapshot.`,
 			);
 		}
 	}
