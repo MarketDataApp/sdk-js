@@ -14,7 +14,9 @@ export function headers(
 	this: UtilitiesResource,
 ): MarketDataPromise<HeadersResponse> {
 	this.logger.debug("Fetching /headers/...");
-	const result = this._makeRequest<HeadersResponse>(
+	// Bypass BaseResource._makeRequest — its processParams step injects
+	// `format=json` etc., and /headers/ rejects any query string with 404.
+	const result = this.client._makeRequest<HeadersResponse>(
 		Endpoints.HEADERS,
 		undefined,
 		{
