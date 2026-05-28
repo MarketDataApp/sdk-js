@@ -236,7 +236,7 @@ async function snapshot(
 	client: MarketDataClient,
 	underlying: string,
 ): Promise<Snapshot> {
-	const rows = await client.options.chain(underlying);
+	const rows = await client.options.chain(underlying, { strikeLimit: 10 });
 	const mapped = (
 		rows as unknown as Array<
 			Row & { expiration: number; underlyingPrice: number }
@@ -274,6 +274,7 @@ async function fetchBaseline(
 	try {
 		const rows = await client.options.chain(underlying, {
 			date: "last session",
+			strikeLimit: 10,
 		});
 		for (const r of rows as unknown as Array<{
 			optionSymbol: string;
