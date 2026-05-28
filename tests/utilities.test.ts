@@ -53,6 +53,9 @@ describe("utilities namespace", () => {
 	it("status() hits /status/ with no auth gating", async () => {
 		fetchMock.mockImplementation(async (url: string) => {
 			if (url.includes("/status/")) {
+				// Path-only endpoint — any query string returns 404 from the
+				// live API. Regression guard for #21.
+				expect(new URL(url).search).toBe("");
 				return createMockResponse({
 					json: {
 						service: ["/v1/stocks/prices/"],
@@ -88,6 +91,9 @@ describe("utilities namespace", () => {
 	it("headers() hits /headers/ and returns the echo", async () => {
 		fetchMock.mockImplementation(async (url: string) => {
 			expect(url).toContain("/headers/");
+			// Path-only endpoint — any query string returns 404 from the
+			// live API. Regression guard for #21.
+			expect(new URL(url).search).toBe("");
 			return createMockResponse({
 				json: { "user-agent": "marketdata-sdk-javascript/0.0.1" },
 			});

@@ -19,7 +19,9 @@ export function status(
 	this: UtilitiesResource,
 ): MarketDataPromise<ApiStatusResponse> {
 	this.logger.debug("Fetching /status/...");
-	const result = this._makeRequest<ApiStatusResponse>(
+	// Bypass BaseResource._makeRequest — its processParams step injects
+	// `format=json` etc., and /status/ rejects any query string with 404.
+	const result = this.client._makeRequest<ApiStatusResponse>(
 		Endpoints.API_STATUS,
 		undefined,
 		{
