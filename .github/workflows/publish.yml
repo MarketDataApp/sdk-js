@@ -55,4 +55,4 @@ jobs:
       - name: Publish to npm (via Trusted Publishing OIDC)
         env:
           DIST_TAG: ${{ steps.disttag.outputs.tag }}
-        run: pnpm publish --no-git-checks --provenance --access public --tag "$DIST_TAG"
+        run: npm publish --provenance --access public --tag "$DIST_TAG"
