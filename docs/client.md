@@ -88,7 +88,7 @@ Creates and configures a new `MarketDataClient` instance. This initializes the c
 
 #### Notes
 
-- The client sets a `User-Agent` header of the form `marketdata-sdk-javascript/{version}` (e.g. `marketdata-sdk-javascript/0.0.1`).
+- The client sets a `User-Agent` header of the form `marketdata-sdk-javascript/{version}` (e.g. `marketdata-sdk-javascript/1.0.0`).
 - All authenticated requests include an `Authorization: Bearer {token}` header.
 - The client reuses a single underlying `fetch` client, which benefits from Node's global connection pooling, and enforces a global 50-request concurrency pool across every endpoint.
 - Every request has a 99-second timeout; a timed-out fetch rejects with `NetworkError`.
@@ -97,7 +97,7 @@ Creates and configures a new `MarketDataClient` instance. This initializes the c
 #### Example
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 // Token will be read from MARKETDATA_TOKEN environment variable
 const client = new MarketDataClient();
@@ -118,7 +118,7 @@ const fast = new MarketDataClient({
 const debugClient = new MarketDataClient({ debug: true });
 
 // Provide a custom logger
-import { DefaultLogger, LogLevel } from "marketdata-sdk";
+import { DefaultLogger, LogLevel } from "@marketdata/sdk";
 const logger = new DefaultLogger(LogLevel.WARN);
 const quietClient = new MarketDataClient({ logger });
 ```
@@ -138,7 +138,7 @@ import {
   AuthenticationError,
   RateLimitError,
   NotFoundError,
-} from "marketdata-sdk";
+} from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -172,7 +172,7 @@ const prices = await client.stocks
 ### Asserting rejections in tests
 
 ```typescript
-import { AuthenticationError } from "marketdata-sdk";
+import { AuthenticationError } from "@marketdata/sdk";
 
 await expect(client.stocks.prices("AAPL"))
   .rejects.toBeInstanceOf(AuthenticationError);
@@ -299,7 +299,7 @@ If rate limits have been fetched and `requestsRemaining` is `0`, the next resour
 The SDK includes a built-in logger that outputs diagnostic information. You can pass a custom logger or use the default.
 
 ```typescript
-import { MarketDataClient, DefaultLogger, LogLevel } from "marketdata-sdk";
+import { MarketDataClient, DefaultLogger, LogLevel } from "@marketdata/sdk";
 
 // Default logger (INFO level)
 const client1 = new MarketDataClient();

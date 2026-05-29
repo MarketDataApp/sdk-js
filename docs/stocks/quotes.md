@@ -58,7 +58,7 @@ Fetches stock quotes for one or more symbols.
 ### Single Symbol
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -73,7 +73,7 @@ try {
 ### Multiple Symbols
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -90,7 +90,7 @@ try {
 ### 52-Week High/Low
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -105,7 +105,7 @@ try {
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 

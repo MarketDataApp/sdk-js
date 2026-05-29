@@ -69,7 +69,7 @@ Fetches historical daily candles for a single fund symbol.
 ### Default
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -87,7 +87,7 @@ try {
 ### Date Range
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -106,7 +106,7 @@ try {
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 

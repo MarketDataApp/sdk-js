@@ -52,7 +52,7 @@ Additional endpoint-specific parameters like `from`, `to`, and `date` are passed
 ### Single Contract
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -70,7 +70,7 @@ try {
 ### Multiple Contracts
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -91,7 +91,7 @@ try {
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 

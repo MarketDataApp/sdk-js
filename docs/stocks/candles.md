@@ -82,7 +82,7 @@ Fetches historical candles for a single symbol.
 ### Daily Candles
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -100,7 +100,7 @@ try {
 ### Intraday Range
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -122,7 +122,7 @@ try {
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -143,7 +143,7 @@ try {
 ### CSV
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk";
+import { MarketDataClient, OutputFormat } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
