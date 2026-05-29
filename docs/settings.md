@@ -48,7 +48,7 @@ export MARKETDATA_USE_HUMAN_READABLE=true
 ```
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -61,7 +61,7 @@ const result = await client.stocks.prices("AAPL");
 Set client-level configuration via the constructor:
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient({
   token: "your_token_here",
@@ -82,7 +82,7 @@ Constructor arguments override environment variables for the settings they cover
 Pass parameters directly to resource methods:
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -110,7 +110,7 @@ Controls the format of the API response data.
 The SDK also exposes an `OutputFormat` enum you can import for type safety:
 
 ```typescript
-import { OutputFormat } from "marketdata-sdk";
+import { OutputFormat } from "@marketdata/sdk";
 // OutputFormat.INTERNAL, OutputFormat.JSON, OutputFormat.CSV
 ```
 
@@ -122,7 +122,7 @@ import { OutputFormat } from "marketdata-sdk";
 **Example:**
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk";
+import { MarketDataClient, OutputFormat } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -148,7 +148,7 @@ Specifies the format for date and time information in responses.
 The SDK also exposes a `DateFormat` enum:
 
 ```typescript
-import { DateFormat } from "marketdata-sdk";
+import { DateFormat } from "@marketdata/sdk";
 // DateFormat.TIMESTAMP, DateFormat.UNIX, DateFormat.SPREADSHEET
 ```
 
@@ -160,7 +160,7 @@ import { DateFormat } from "marketdata-sdk";
 **Example:**
 
 ```typescript
-import { MarketDataClient, DateFormat } from "marketdata-sdk";
+import { MarketDataClient, DateFormat } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -183,7 +183,7 @@ Limits the response to only the columns you need, reducing data transfer and pro
 **Example:**
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -208,7 +208,7 @@ Controls whether headers are included in CSV output.
 **Example:**
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk";
+import { MarketDataClient, OutputFormat } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -236,7 +236,7 @@ Uses human-readable field names in responses instead of short, machine-friendly 
 **Example:**
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -262,7 +262,7 @@ Controls whether the API returns live, cached, or delayed data.
 The SDK also exposes a `Mode` enum:
 
 ```typescript
-import { Mode } from "marketdata-sdk";
+import { Mode } from "@marketdata/sdk";
 // Mode.LIVE, Mode.CACHED, Mode.DELAYED
 ```
 
@@ -274,7 +274,7 @@ import { Mode } from "marketdata-sdk";
 **Example:**
 
 ```typescript
-import { MarketDataClient, Mode } from "marketdata-sdk";
+import { MarketDataClient, Mode } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 

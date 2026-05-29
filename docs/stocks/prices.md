@@ -73,7 +73,7 @@ Fetches stock prices for one or more symbols. The return type is narrowed automa
 ### Single Symbol
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -88,7 +88,7 @@ try {
 ### Multiple Symbols
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -105,7 +105,7 @@ try {
 ### Human Readable
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -122,7 +122,7 @@ try {
 ### Raw JSON
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk";
+import { MarketDataClient, OutputFormat } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -139,7 +139,7 @@ try {
 ### CSV
 
 ```typescript
-import { MarketDataClient, OutputFormat } from "marketdata-sdk";
+import { MarketDataClient, OutputFormat } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
