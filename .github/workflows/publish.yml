@@ -21,6 +21,9 @@ jobs:
           cache: pnpm
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Upgrade npm to 11+ (required for Trusted Publishing OIDC)
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -52,23 +55,7 @@ jobs:
             echo "Publishing as stable under dist-tag 'latest'"
           fi
 
-      - name: Diagnostics — versions and .npmrc state
-        run: |
-          echo "Node:  $(node --version)"
-          echo "npm:   $(npm --version)"
-          echo "pnpm:  $(pnpm --version)"
-          echo "---"
-          echo "Project .npmrc (if any):"
-          [ -f .npmrc ] && cat .npmrc || echo "(no project .npmrc)"
-          echo "---"
-          echo "User .npmrc:"
-          [ -f ~/.npmrc ] && sed 's/_authToken=.*/_authToken=<REDACTED>/' ~/.npmrc || echo "(no ~/.npmrc)"
-          echo "---"
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: $([ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ] && echo yes || echo no)"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: $([ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ] && echo yes || echo no)"
-          echo "NODE_AUTH_TOKEN set: $([ -n "$NODE_AUTH_TOKEN" ] && echo yes || echo no)"
-
       - name: Publish to npm (via Trusted Publishing OIDC)
         env:
           DIST_TAG: ${{ steps.disttag.outputs.tag }}
-        run: npm publish --provenance --access public --tag "$DIST_TAG" --loglevel verbose
+        run: npm publish --provenance --access public --tag "$DIST_TAG"
