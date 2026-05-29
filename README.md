@@ -254,12 +254,24 @@ result.match(
 For architectural background on the public API contract, see [ADR-007: Result Inside, Promise Outside](docs/adr/ADR-007-result-inside-promise-outside.md).
 
 
+## Supply chain
+
+Published from CI via [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers) with cryptographic [provenance attestation](https://docs.npmjs.com/generating-provenance-statements) on every release — the tarball is linked to the exact commit and workflow run that built it. No long-lived publish tokens exist for this package.
+
+Verify any installation:
+
+```bash
+npm audit signatures @marketdata/sdk
+```
+
+
 ## License
 
 MIT
 
 ## Links
 
+- [SDK Documentation](https://www.marketdata.app/docs/sdk/js/)
 - [MarketData API Documentation](https://www.marketdata.app/docs)
 - [npm Package](https://www.npmjs.com/package/@marketdata/sdk)
 - [GitHub Repository](https://github.com/MarketDataApp/sdk-js)
