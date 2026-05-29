@@ -27,7 +27,7 @@ Fetches the current service-status payload. Takes no parameters.
 ### Default
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 
@@ -44,7 +44,7 @@ try {
 ### With Uptime
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const client = new MarketDataClient();
 

@@ -63,7 +63,7 @@ MARKETDATA_TOKEN=your_api_token
 Use the following code to verify that your authentication is working by making a test request to `SPY` or any other symbol that requires authentication. Do not use `AAPL` to test your authentication because `AAPL` is a free test symbol and will return data even if you are not authenticated properly.
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 // No need to pass a token here — the SDK reads it from
 // the MARKETDATA_TOKEN environment variable automatically.
@@ -86,7 +86,7 @@ If you decide to pass the token directly when creating the client, you can do so
 ### Example Code
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 const token = "your_token_here";
 

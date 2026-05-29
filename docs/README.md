@@ -2,13 +2,10 @@
 
 Welcome to the Market Data JavaScript SDK documentation. This SDK allows you to integrate Market Data services into your Node.js and TypeScript applications. It ships typed responses, runtime schema validation, and a functional error-handling pattern.
 
-> [!NOTE]
-> The JavaScript SDK is in early development (version `0.0.1`). The API surface and return types may change before 1.0.
-
 ## Quick Start
 
 ```typescript
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 // Initialize client
 const client = new MarketDataClient({
