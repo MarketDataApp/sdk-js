@@ -1,5 +1,5 @@
 {
-	"name": "marketdata-sdk",
+	"name": "@marketdata/sdk",
 	"version": "1.0.0",
 	"description": "Official JavaScript/TypeScript SDK for the MarketData API.",
 	"type": "module",
@@ -22,6 +22,11 @@
 		"README.md",
 		"LICENSE"
 	],
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/",
+		"provenance": true
+	},
 	"scripts": {
 		"build": "tsup",
 		"dev": "tsup --watch",

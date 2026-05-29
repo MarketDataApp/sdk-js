@@ -5,7 +5,7 @@ The `markets` resource provides access to market status information and availabi
 ## Accessing the Markets Resource
 
 ```typescript
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 
 const client = new MarketDataClient();
 ```
@@ -54,7 +54,7 @@ The response contains information about:
 **Get market status:**
 
 ```typescript
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 
 const client = new MarketDataClient();
 const status = await client.markets.status();

@@ -63,7 +63,7 @@ Run through this checklist for every new bug report. All "Required" items must p
 ## Step 2: Reproduce the Bug
 
 1. Create a new TS/JS file with the reproduction code.
-2. Pin the reported SDK version: `pnpm add marketdata-sdk@X.Y.Z`
+2. Pin the reported SDK version: `pnpm add @marketdata/sdk@X.Y.Z`
 3. Use the reported Node version (`nvm use 20.x` etc.).
 4. Run the code.
 5. Compare output to reported "Actual Behavior".
@@ -123,7 +123,7 @@ I wasn't able to reproduce this issue with the information provided.
 Could you provide:
 - [ ] Any additional configuration (custom settings, environment variables)
 - [ ] The complete error output including stack trace
-- [ ] Confirmation of your exact SDK and Node versions (`pnpm list marketdata-sdk` and `node -v`)
+- [ ] Confirmation of your exact SDK and Node versions (`pnpm list @marketdata/sdk` and `node -v`)
 - [ ] Package manager and lockfile in use (pnpm/npm/yarn)
 
 I'll keep this open for 7 days for additional information.
@@ -217,7 +217,7 @@ Thanks for the report. To investigate this issue, I need some additional informa
 
 - [ ] **API documentation verification**: Please confirm you've checked the [API documentation](https://www.marketdata.app/docs/api) and that the behavior you're seeing differs from what's documented
 - [ ] **Complete reproduction code**: A full, runnable TypeScript or JavaScript snippet including the import and client initialization
-- [ ] **SDK version**: `pnpm list marketdata-sdk` (or `npm ls marketdata-sdk`)
+- [ ] **SDK version**: `pnpm list @marketdata/sdk` (or `npm ls @marketdata/sdk`)
 - [ ] **Node version**: `node -v`
 - [ ] **Package manager**: pnpm / npm / yarn (and the lockfile in use)
 - [ ] **Expected behavior**: What did you expect to happen?

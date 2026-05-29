@@ -8,8 +8,8 @@
 [![Tests](https://github.com/MarketDataApp/sdk-js/actions/workflows/test.yml/badge.svg)](https://github.com/MarketDataApp/sdk-js/actions/workflows/test.yml)
 [![Coverage](https://codecov.io/gh/MarketDataApp/sdk-js/graph/badge.svg)](https://codecov.io/gh/MarketDataApp/sdk-js)
 [![License](https://img.shields.io/github/license/MarketDataApp/sdk-js.svg)](https://github.com/MarketDataApp/sdk-js/blob/main/LICENSE)
-[![npm version](https://img.shields.io/npm/v/marketdata-sdk)](https://www.npmjs.com/package/marketdata-sdk)
-[![npm downloads](https://img.shields.io/npm/dm/marketdata-sdk)](https://www.npmjs.com/package/marketdata-sdk)
+[![npm version](https://img.shields.io/npm/v/@marketdata/sdk)](https://www.npmjs.com/package/@marketdata/sdk)
+[![npm downloads](https://img.shields.io/npm/dm/@marketdata/sdk)](https://www.npmjs.com/package/@marketdata/sdk)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-blue)](https://nodejs.org/)
 
 #### Connect With The Market Data Community
@@ -26,17 +26,17 @@
 **Prerequisites**: Node.js v20 or higher. The SDK targets ES2020.
 
 ```bash
-npm install marketdata-sdk
+npm install @marketdata/sdk
 # or
-yarn add marketdata-sdk
+yarn add @marketdata/sdk
 # or
-pnpm add marketdata-sdk
+pnpm add @marketdata/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 
 // Initialize client
 const client = new MarketDataClient({ 
@@ -191,7 +191,7 @@ import {
   RateLimitError,
   RequestError,
   ValidationError,
-} from 'marketdata-sdk';
+} from '@marketdata/sdk';
 
 try {
   const prices = await client.stocks.prices('AAPL');
@@ -261,5 +261,5 @@ MIT
 ## Links
 
 - [MarketData API Documentation](https://www.marketdata.app/docs)
-- [npm Package](https://www.npmjs.com/package/marketdata-sdk)
+- [npm Package](https://www.npmjs.com/package/@marketdata/sdk)
 - [GitHub Repository](https://github.com/MarketDataApp/sdk-js)

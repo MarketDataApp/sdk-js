@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Runnable examples for the marketdata-sdk JavaScript SDK.",
+	"description": "Runnable examples for the @marketdata/sdk JavaScript SDK.",
 	"scripts": {
 		"chart:lightweight": "tsx charts/lightweight-charts/index.ts",
 		"chart:echarts": "tsx charts/echarts/index.ts",
@@ -15,7 +15,7 @@
 	"dependencies": {
 		"chalk": "^5.3.0",
 		"cli-table3": "^0.6.5",
-		"marketdata-sdk": "workspace:*"
+		"@marketdata/sdk": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/node": "^25.9.1",

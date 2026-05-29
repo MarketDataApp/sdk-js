@@ -4,7 +4,7 @@
  * scripts are about chart wiring, not data loading.
  */
 import { spawn } from "node:child_process";
-import { MarketDataClient } from "marketdata-sdk";
+import { MarketDataClient } from "@marketdata/sdk";
 
 export interface Bar {
 	/** Epoch seconds, as returned by the API. */

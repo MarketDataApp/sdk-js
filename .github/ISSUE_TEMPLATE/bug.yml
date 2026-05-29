@@ -52,7 +52,7 @@ body:
       label: Reproduction Code
       description: Complete, runnable TypeScript or JavaScript that demonstrates the bug. Must be self-contained.
       placeholder: |
-        import { MarketDataClient } from 'marketdata-sdk';
+        import { MarketDataClient } from '@marketdata/sdk';
 
         const client = new MarketDataClient();
         const result = await client.stocks.candles('AAPL', {
@@ -88,7 +88,7 @@ body:
     id: sdk-version
     attributes:
       label: SDK Version
-      description: Run `pnpm list marketdata-sdk` (or `npm ls marketdata-sdk`) to find this
+      description: Run `pnpm list @marketdata/sdk` (or `npm ls @marketdata/sdk`) to find this
       placeholder: "1.0.0"
     validations:
       required: true

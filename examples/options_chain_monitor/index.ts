@@ -22,7 +22,7 @@
  */
 import chalk from "chalk";
 import Table from "cli-table3";
-import { MarketDataClient, RateLimitError } from "marketdata-sdk";
+import { MarketDataClient, RateLimitError } from "@marketdata/sdk";
 
 interface Row {
 	optionSymbol: string;

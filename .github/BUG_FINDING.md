@@ -94,7 +94,7 @@ Prioritized by historical bug likelihood:
 #### 1.1 Format Switching
 
 ```typescript
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 
 const client = new MarketDataClient();
 
@@ -375,7 +375,7 @@ When you find a bug, you MUST create a GitHub issue. Do not just note it.
 2. **Expected behavior**
 3. **Actual behavior** (include stack trace and full error)
 4. **Environment**:
-   - SDK version: `pnpm list marketdata-sdk` (or `npm ls`)
+   - SDK version: `pnpm list @marketdata/sdk` (or `npm ls`)
    - Node version: `node -v`
    - Package manager: pnpm / npm / yarn
    - OS: macOS/Windows/Linux
@@ -398,7 +398,7 @@ candles
 
 ## Reproduction Code
 ```ts
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 // minimal repro here
 ```
 

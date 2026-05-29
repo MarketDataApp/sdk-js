@@ -60,7 +60,7 @@ Required gate checks (record results in PR description or release notes):
 6. **Release / rollback gate**
    - No open issues labeled `release-blocker`
    - npm publish credentials available (NPM_TOKEN secret in repo settings, or local `npm login` for manual publish)
-   - Rollback plan: `npm deprecate marketdata-sdk@X.Y.Z "reason"` is documented and tested
+   - Rollback plan: `npm deprecate @marketdata/sdk@X.Y.Z "reason"` is documented and tested
 
 7. **Final decision** — `GO` / `NO-GO`. No tag is cut unless `GO` and all P0 blockers are empty.
 
@@ -127,14 +127,14 @@ gh release create v1.1.0 \
 1. Verify the GitHub Release was created with correct notes from CHANGELOG.
 2. Confirm the package is visible on npm:
    ```bash
-   npm view marketdata-sdk version
+   npm view @marketdata/sdk version
    ```
 3. Smoke-test install in a clean project:
    ```bash
    mkdir /tmp/smoke && cd /tmp/smoke
    pnpm init -y
-   pnpm add marketdata-sdk@1.1.0
-   node -e "const { MarketDataClient } = require('marketdata-sdk'); console.log(typeof MarketDataClient)"
+   pnpm add @marketdata/sdk@1.1.0
+   node -e "const { MarketDataClient } = require('@marketdata/sdk'); console.log(typeof MarketDataClient)"
    ```
 4. Verify both ESM and CJS entry points resolve in the smoke project.
 
@@ -145,10 +145,10 @@ If release issues are discovered:
 1. Stop promotion messaging.
 2. **Deprecate** the bad version on npm (do not unpublish — npm policy strongly discourages it, and consumers may already have locked it):
    ```bash
-   npm deprecate marketdata-sdk@X.Y.Z "Use vX.Y.(Z+1); this release contains <reason>"
+   npm deprecate @marketdata/sdk@X.Y.Z "Use vX.Y.(Z+1); this release contains <reason>"
    ```
 3. Publish a corrective note in the GitHub Release and `CHANGELOG.md`.
 4. Ship a patch release (`vX.Y.(Z+1)`) from `main` with the targeted fix.
 5. Document root cause and remediation in the next changelog entry.
 
-> Within 72 hours of publish you may `npm unpublish marketdata-sdk@X.Y.Z` as a last resort. After 72 hours, deprecate-and-replace is the only supported path.
+> Within 72 hours of publish you may `npm unpublish @marketdata/sdk@X.Y.Z` as a last resort. After 72 hours, deprecate-and-replace is the only supported path.

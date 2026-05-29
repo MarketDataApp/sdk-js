@@ -1,4 +1,4 @@
-# marketdata-sdk examples
+# @marketdata/sdk examples
 
 Runnable snippets showing typical integrations. These are not part of the published SDK; they live here so contributors have end-to-end working references.
 

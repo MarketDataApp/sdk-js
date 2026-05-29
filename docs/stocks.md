@@ -5,7 +5,7 @@ The `stocks` resource provides access to stock market data, including real-time 
 ## Accessing the Stocks Resource
 
 ```typescript
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 
 const client = new MarketDataClient();
 ```
@@ -72,7 +72,7 @@ The return type is automatically inferred based on the `format` and `human` para
 **Get prices for a single symbol:**
 
 ```typescript
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 
 const client = new MarketDataClient();
 const prices = await client.stocks.prices('AAPL');
@@ -183,7 +183,7 @@ The return type is automatically inferred based on the `format` and `human` para
 **Get daily candles:**
 
 ```typescript
-import { MarketDataClient } from 'marketdata-sdk';
+import { MarketDataClient } from '@marketdata/sdk';
 
 const client = new MarketDataClient();
 const candles = await client.stocks.candles('AAPL');
@@ -262,7 +262,7 @@ Methods return a `MarketDataPromise<T>` that rejects with a subclass of `MarketD
 - `ValidationError` — client-side input validation
 
 ```typescript
-import { MarketDataClient, AuthenticationError } from 'marketdata-sdk';
+import { MarketDataClient, AuthenticationError } from '@marketdata/sdk';
 
 const client = new MarketDataClient();
 try {
