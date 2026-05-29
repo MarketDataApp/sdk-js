@@ -49,12 +49,12 @@ describe("utilities namespace", () => {
 			// live API. Regression guard for #21.
 			expect(new URL(url).search).toBe("");
 			return createMockResponse({
-				json: { "user-agent": "marketdata-sdk-javascript/0.0.1" },
+				json: { "user-agent": "marketdata-sdk-js/0.0.1" },
 			});
 		});
 		const client = new MarketDataClient({ skipStartupValidation: true });
 		const h = await client.utilities.headers();
-		expect(h["user-agent"]).toContain("marketdata-sdk-javascript/");
+		expect(h["user-agent"]).toContain("marketdata-sdk-js/");
 	});
 
 	it("headers() 404 resolves to empty {} with no_data:true", async () => {

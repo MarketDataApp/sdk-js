@@ -108,7 +108,7 @@ export class MarketDataClient implements IMarketDataClient {
 
 		this.headers = {
 			Accept: "application/json",
-			"User-Agent": `marketdata-sdk-javascript/${pkg.version}`,
+			"User-Agent": `marketdata-sdk-js/${pkg.version}`,
 		};
 
 		this._initAuth();
