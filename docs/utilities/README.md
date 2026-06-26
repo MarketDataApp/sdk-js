@@ -7,3 +7,6 @@ Both utilities skip the per-token rate-limit gate and bypass the `/v1/` URL pref
 Rate-limit data is exposed on the client itself — see [`client.rateLimits`](../client.md#RateLimits), which the SDK populates automatically at startup from the same `/user/` response headers.
 
 ## Utilities Endpoints
+
+- [Status](./status.md)
+- [Headers](./headers.md)
