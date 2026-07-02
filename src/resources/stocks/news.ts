@@ -10,7 +10,7 @@ import type { StocksNewsParams } from "@/resources/stocks/types";
 import { StocksNewsInternalParamsSchema } from "@/resources/stocks/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 
-import { normalizeArgs } from "@/utils";
+import { encodePathSegment, normalizeArgs } from "@/utils";
 import type { StocksResource } from "./index";
 
 export function news<
@@ -47,7 +47,7 @@ export function news(
 	this.logger.debug("Fetching stock news...");
 
 	return this._fetch(
-		`${Endpoints.STOCKS_NEWS}${symbol}/`,
+		`${Endpoints.STOCKS_NEWS}${encodePathSegment(symbol)}/`,
 		queryParams as MarketDataParams,
 		{
 			inputSchema: StocksNewsInternalParamsSchema,
