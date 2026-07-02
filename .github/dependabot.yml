@@ -17,6 +17,17 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
+    # Wait before adopting new releases so compromised versions (npm
+    # supply-chain attacks) can be caught and yanked first. Known CVEs still
+    # arrive immediately via Dependabot security updates.
+    cooldown:
+      default-days: 7
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "npm"
     directory: "/examples"
@@ -24,3 +35,12 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
+    cooldown:
+      default-days: 7
+    groups:
+      examples-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
