@@ -9,7 +9,7 @@ import {
 } from "@/resources/options/outputs";
 import type { OptionsExpirationsParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
-import { MarketDataPromise, normalizeArgs } from "@/utils";
+import { encodePathSegment, MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
 const EMPTY_EXPIRATIONS: OptionsExpirationsResponse = {
@@ -72,7 +72,7 @@ export function expirations(
 		this._makeRequest<
 			OptionsExpirationsResponse | OptionsExpirationsHumanResponse
 		>(
-			`${Endpoints.OPTIONS_EXPIRATIONS}${symbol}/`,
+			`${Endpoints.OPTIONS_EXPIRATIONS}${encodePathSegment(symbol)}/`,
 			queryParams as MarketDataParams,
 			{
 				schema: this._getSchema(

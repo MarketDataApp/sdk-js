@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege: the CI job only reads the repo; it never needs a writable
+# GITHUB_TOKEN (default token permissions can include write access).
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
