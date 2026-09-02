@@ -15,12 +15,12 @@ jobs:
         node-version: [20.x, 22.x]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
 
       - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == '22.x'
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/cobertura-coverage.xml
