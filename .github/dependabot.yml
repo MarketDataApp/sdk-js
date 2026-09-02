@@ -8,6 +8,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Bundle all action bumps into a single PR.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     labels:
       - "dependencies"
 
@@ -22,9 +27,14 @@ updates:
     # arrive immediately via Dependabot security updates.
     cooldown:
       default-days: 7
+    # One PR for minor/patch bumps across both runtime and dev dependencies;
+    # majors stay separate PRs since they can break consumers and need
+    # individual review. Previously only development dependencies were
+    # grouped, so every runtime minor/patch opened its own PR.
     groups:
-      dev-dependencies:
-        dependency-type: "development"
+      npm-minor-patch:
+        patterns:
+          - "*"
         update-types:
           - "minor"
           - "patch"
