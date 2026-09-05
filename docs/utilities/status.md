@@ -1,4 +1,4 @@
-# Status
+# API Status (JavaScript SDK)
 
 Retrieve service-level health information for every Market Data endpoint. No authentication token is required — `status()` is reachable in demo mode and is the SDK's own probe before retrying a 5xx response.
 
@@ -20,9 +20,9 @@ status(): MarketDataPromise<ApiStatusResponse>
 
 Fetches the current service-status payload. Takes no parameters.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<ApiStatusResponse>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<ApiStatusResponse>`](../client.md#marketdatapromise)
 
 ### Default
 
@@ -74,7 +74,7 @@ interface ApiStatusResponse {
 }
 ```
 
-#### Properties
+### Properties
 
 - `service` (string[]): Service names (e.g. `"stocks/candles"`, `"options/chain"`).
 - `status` (string[]): Human-readable status for each service (e.g. `"OPERATIONAL"`, `"OFFLINE"`).

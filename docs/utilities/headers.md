@@ -1,4 +1,4 @@
-# Headers
+# Headers (JavaScript SDK)
 
 Echo back the request headers your client actually sent to Market Data. Useful for debugging proxies, custom header plumbing, or verifying the User-Agent the SDK is presenting.
 
@@ -22,9 +22,9 @@ headers(): MarketDataPromise<HeadersResponse>
 
 Fetches the request-header echo. Takes no parameters.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<HeadersResponse>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<HeadersResponse>`](../client.md#marketdatapromise)
 
 ### Default
 

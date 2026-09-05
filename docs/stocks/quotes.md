@@ -1,10 +1,10 @@
-# Quotes
+# Stock Quotes (JavaScript SDK)
 
 Retrieve stock quotes (bid, ask, mid, last, volume, etc.) for one or more supported stock symbols.
 
 ## Making Requests
 
-Use the `quotes()` method on the `stocks` resource to fetch stock quotes. The method returns a [`MarketDataPromise`](../client.md#MarketDataPromise) that resolves to decoded records by default, or rejects with a `MarketDataClientError` subclass on failure.
+Use the `quotes()` method on the `stocks` resource to fetch stock quotes. The method returns a [`MarketDataPromise`](../client.md#marketdatapromise) that resolves to decoded records by default, or rejects with a `MarketDataClientError` subclass on failure.
 
 | Output Format          | Result Payload                        | Description                                     |
 |------------------------|---------------------------------------|-------------------------------------------------|
@@ -30,7 +30,7 @@ quotes<P>(
 
 Fetches stock quotes for one or more symbols.
 
-#### Parameters
+### Parameters
 
 - `symbols` (string | string[])
 
@@ -51,9 +51,9 @@ Fetches stock quotes for one or more symbols.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 - [`mode`](../settings.md#data-mode) (optional): The data mode to use.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<StockQuote[] | StockQuoteHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<StockQuote[] | StockQuoteHuman[] | Blob>`](../client.md#marketdatapromise)
 
 ### Single Symbol
 
@@ -140,7 +140,7 @@ interface StockQuote {
 
 `StockQuote` represents a single stock quote with short, machine-readable field names.
 
-#### Properties
+### Properties
 
 - `s` (string, optional): Status indicator (`"ok"` for successful responses).
 - `symbol` (string): The stock symbol.

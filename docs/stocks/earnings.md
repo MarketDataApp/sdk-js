@@ -1,4 +1,4 @@
-# Earnings
+# Earnings (JavaScript SDK)
 
 Retrieve historical and upcoming earnings information for any supported stock symbol.
 
@@ -30,7 +30,7 @@ earnings<P>(
 
 Fetches earnings data for a single symbol.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -45,9 +45,9 @@ Fetches earnings data for a single symbol.
 
 Additional endpoint-specific parameters (e.g. `from`, `to`, `date`) are passed through to the REST API as-is. See the [REST API Earnings documentation](https://www.marketdata.app/docs/api/stocks/earnings) for the complete list.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<StockEarnings[] | StockEarningsHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<StockEarnings[] | StockEarningsHuman[] | Blob>`](../client.md#marketdatapromise)
 
 > [!NOTE]
 > Earnings data is a premium endpoint on the Market Data API. Your plan must include earnings access for this method to return data.
@@ -110,7 +110,7 @@ interface StockEarnings {
 }
 ```
 
-#### Properties
+### Properties
 
 - `symbol` (string): The stock symbol.
 - `fiscalYear` (number): The fiscal year of the earnings report.
