@@ -1,4 +1,4 @@
-# Candles
+# Stock Candles (JavaScript SDK)
 
 Retrieve historical OHLCV (open/high/low/close/volume) candles for any supported stock symbol.
 
@@ -30,7 +30,7 @@ candles<P>(
 
 Fetches historical candles for a single symbol.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -70,11 +70,11 @@ Fetches historical candles for a single symbol.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 - [`mode`](../settings.md#data-mode) (optional): The data mode to use.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<StockCandle[] | StockCandleHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<StockCandle[] | StockCandleHuman[] | Blob>`](../client.md#marketdatapromise)
 
-#### Notes
+### Notes
 
 - For intraday resolutions (minute- or hour-based), date ranges longer than 365 days are split into yearly chunks and fetched concurrently. The individual responses are merged back into a single chronologically ordered result.
 - Up to 50 chunks can be in flight simultaneously (sliding window, not batching).
@@ -174,7 +174,7 @@ interface StockCandle {
 
 `StockCandle` uses the API's short, machine-readable field names.
 
-#### Properties
+### Properties
 
 - `s` (string, optional): Status indicator.
 - `t` (number): Unix timestamp of the bar.
