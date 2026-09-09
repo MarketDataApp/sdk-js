@@ -1,10 +1,10 @@
-# Prices
+# Prices (JavaScript SDK)
 
 Retrieve stock prices for any supported stock symbol.
 
 ## Making Requests
 
-Use the `prices()` method on the `stocks` resource to fetch stock prices. The method returns a [`MarketDataPromise`](../client.md#MarketDataPromise) that resolves to decoded records by default, or rejects with a `MarketDataClientError` subclass on failure. The output format is controlled by the `outputFormat` parameter (or `MARKETDATA_OUTPUT_FORMAT` env var):
+Use the `prices()` method on the `stocks` resource to fetch stock prices. The method returns a [`MarketDataPromise`](../client.md#marketdatapromise) that resolves to decoded records by default, or rejects with a `MarketDataClientError` subclass on failure. The output format is controlled by the `outputFormat` parameter (or `MARKETDATA_OUTPUT_FORMAT` env var):
 
 | Output Format          | Result Payload                        | Description                                                           |
 |------------------------|---------------------------------------|-----------------------------------------------------------------------|
@@ -34,7 +34,7 @@ Fetches stock prices for one or more symbols. The return type is narrowed automa
 - If `outputFormat: "csv"` → payload is `Blob`
 - Otherwise → payload is `StockPrice[]`
 
-#### Parameters
+### Parameters
 
 - `symbols` (string | string[])
 
@@ -64,9 +64,9 @@ Fetches stock prices for one or more symbols. The return type is narrowed automa
 
   The data mode to use (`"live"`, `"cached"`, `"delayed"`). See [Settings](../settings.md#data-mode) for details.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<StockPrice[] | StockPriceHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<StockPrice[] | StockPriceHuman[] | Blob>`](../client.md#marketdatapromise)
 
   A Promise that resolves to the prices data in the requested format, or rejects with a `MarketDataClientError` subclass on failure. Handle with `await` + `try/catch`.
 
@@ -168,7 +168,7 @@ interface StockPrice {
 
 `StockPrice` represents a single stock price, with short machine-readable field names.
 
-#### Properties
+### Properties
 
 - `s` (string, optional): Status indicator (`"ok"` for successful responses).
 - `symbol` (string): The stock symbol.
@@ -193,7 +193,7 @@ interface StockPriceHuman {
 
 `StockPriceHuman` represents a stock price in human-readable format with capitalized, snake-case field names. Returned when `human: true` (or `useHumanReadable: true`) is set.
 
-#### Properties
+### Properties
 
 - `Symbol` (string): The stock symbol.
 - `Mid` (number): The mid price.

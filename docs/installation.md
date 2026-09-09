@@ -1,4 +1,4 @@
-# Installation
+# Installation (JavaScript SDK)
 
 This guide will help you install the Market Data JavaScript SDK and configure it for your needs.
 
@@ -64,7 +64,7 @@ corepack enable
 The SDK includes the following core dependencies (installed automatically):
 
 - `dotenv`: Loads environment variables from a `.env` file
-- `neverthrow`: Functional `Result` type used internally for error composition. The public API surfaces standard Promises — see [client error handling](./client.md#ErrorHandling).
+- `neverthrow`: Functional `Result` type used internally for error composition. The public API surfaces standard Promises — see [client error handling](./client.md#error-handling).
 - `p-limit`: Concurrency pool for fan-out requests
 - `p-retry`: Retry logic with exponential backoff
 - `zod`: Runtime schema validation and type inference
