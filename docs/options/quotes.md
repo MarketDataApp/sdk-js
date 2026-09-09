@@ -1,4 +1,4 @@
-# Quotes
+# Option Quotes (JavaScript SDK)
 
 Retrieve quotes for one or more specific option contracts, including full Greeks.
 
@@ -30,7 +30,7 @@ quotes<P>(
 
 Fetches quotes for one or more option contracts.
 
-#### Parameters
+### Parameters
 
 - `symbols` (string | string[])
 
@@ -45,9 +45,9 @@ Fetches quotes for one or more option contracts.
 
 Additional endpoint-specific parameters like `from`, `to`, and `date` are passed through to the REST API. See [REST API Options Quotes](https://www.marketdata.app/docs/api/options/quotes) for the full list.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<OptionsQuotes[] | OptionsQuotesHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<OptionsQuotes[] | OptionsQuotesHuman[] | Blob>`](../client.md#marketdatapromise)
 
 ### Single Contract
 
@@ -108,11 +108,11 @@ try {
 <a name="OptionsQuotes"></a>
 ## OptionsQuotes
 
-`OptionsQuotes` uses the same field shape as [`OptionsChain`](./chain.md#OptionsChain): `optionSymbol`, `underlying`, `expiration`, `side`, `strike`, `bid`, `ask`, `mid`, `last`, `openInterest`, `volume`, `inTheMoney`, `intrinsicValue`, `extrinsicValue`, `iv`, `delta`, `gamma`, `theta`, `vega`, and so on.
+`OptionsQuotes` uses the same field shape as [`OptionsChain`](./chain.md#optionschain): `optionSymbol`, `underlying`, `expiration`, `side`, `strike`, `bid`, `ask`, `mid`, `last`, `openInterest`, `volume`, `inTheMoney`, `intrinsicValue`, `extrinsicValue`, `iv`, `delta`, `gamma`, `theta`, `vega`, and so on.
 
-See [OptionsChain](./chain.md#OptionsChain) for the complete list of fields.
+See [OptionsChain](./chain.md#optionschain) for the complete list of fields.
 
 <a name="OptionsQuotesHuman"></a>
 ## OptionsQuotesHuman
 
-`OptionsQuotesHuman` is returned when `human: true` is set. Field shape mirrors [`OptionsChainHuman`](./chain.md#OptionsChainHuman) — same columns, `Title_Case` names.
+`OptionsQuotesHuman` is returned when `human: true` is set. Field shape mirrors [`OptionsChainHuman`](./chain.md#optionschainhuman) — same columns, `Title_Case` names.
