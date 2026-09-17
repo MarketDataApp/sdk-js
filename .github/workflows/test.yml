@@ -1,5 +1,4 @@
-name: CI
-
+name: Tests
 on:
   push:
     branches: [main]
@@ -7,7 +6,75 @@ on:
     branches: [main]
 
 jobs:
+  changes:
+    # A documentation-only pull request does not need the suite below. But a
+    # required status check can never be conditional -- the list is static -- and
+    # a matrix job that GitHub SKIPS does not expand its name, so it reports no
+    # per-combination context at all and the pull request waits forever for
+    # checks that never arrive. Measured on MarketDataApp/sdk-php#95.
+    #
+    # So `Tests passed` at the bottom is the single context branch protection
+    # requires, and this job decides whether the suite does any work.
+    name: Decide whether the suite applies
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect whether anything but documentation changed
+        id: filter
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Only a pull request can be documentation-only here. A push, a release
+          # and a workflow_call all run the suite.
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "Not a pull request, so running the suite."
+            exit 0
+          fi
+
+          # Every path out of here that is not a confident "documentation only"
+          # says true. A gate that cannot see both ends of the diff must never
+          # conclude that no code changed.
+          for sha in "$BASE" "$HEAD"; do
+            if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then
+              echo "code=true" >> "$GITHUB_OUTPUT"
+              echo "Cannot reach $sha, so running the suite rather than guessing."
+              exit 0
+            fi
+          done
+
+          # Three dots: the diff from the merge base, not from wherever the base
+          # branch has moved to since.
+          files=$(git diff --name-only "$BASE...$HEAD")
+          echo "changed files:"
+          printf '%s\n' "$files" | sed 's/^/  /'
+
+          # Inverted deliberately. This lists what DOCUMENTATION looks like and
+          # runs the suite for everything else. Enumerating code paths instead
+          # would skip the suite the first time somebody adds a source directory
+          # nobody remembered to list.
+          if [ -n "$files" ] && ! printf '%s\n' "$files" | grep -qvE '(^docs/|\.md$)'; then
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "Documentation only: the suite skips, and Tests passed says so."
+          else
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "Something other than documentation changed: running the suite."
+          fi
+
   check:
+    needs: changes
+    # `!= 'false'`, not `== 'true'`. A failed gate leaves this empty,
+    # and the safe reading of empty is RUN THE SUITE.
+    if: needs.changes.outputs.code != 'false'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -49,3 +116,42 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  tests-passed:
+    # The single context branch protection requires. It always reports, so it is
+    # always a decision rather than a silence.
+    name: Tests passed
+    needs: [changes, check]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Require the suite to have passed, or to have been skipped for cause
+        env:
+          CODE: ${{ needs.changes.outputs.code }}
+          R0: ${{ needs.check.result }}
+        run: |
+          echo "gate said code=${CODE:-<nothing: the gate itself failed>}"
+          echo "check: ${R0}"
+
+          # Two classes of job, because they skip for different reasons.
+          #
+          # STRICT jobs apply to every change, so the only acceptable skip is the
+          # one this workflow's gate asked for. If the gate failed, CODE is empty,
+          # the job skipped for some other reason, and a green here would cover
+          # untested code.
+          for result in "${R0}"; do
+            case "$result" in
+              success) ;;
+              skipped)
+                if [ "$CODE" != "false" ]; then
+                  echo "A required job was skipped and the gate did not ask for it."
+                  exit 1
+                fi
+                ;;
+              *) echo "A required job reported: $result"; exit 1 ;;
+            esac
+          done
+
+          echo "Every job passed, or skipped for a reason this gate accepts."
