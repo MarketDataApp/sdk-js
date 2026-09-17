@@ -1,4 +1,4 @@
-# Chain
+# Option Chain (JavaScript SDK)
 
 Retrieve the full option chain — every call and put contract — for any supported underlying symbol, with extensive filtering options.
 
@@ -30,7 +30,7 @@ chain<P>(
 
 Fetches the option chain for a single underlying symbol.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -107,9 +107,9 @@ Fetches the option chain for a single underlying symbol.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 - [`mode`](../settings.md#data-mode) (optional): The data mode to use.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<OptionsChain[] | OptionsChainHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<OptionsChain[] | OptionsChainHuman[] | Blob>`](../client.md#marketdatapromise)
 
 ### Full Chain
 
@@ -225,7 +225,7 @@ interface OptionsChain {
 }
 ```
 
-#### Properties
+### Properties
 
 - `optionSymbol` (string): OCC-format option symbol (e.g. `"AAPL271217C00250000"`).
 - `underlying` (string): The underlying stock symbol.

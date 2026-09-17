@@ -1,6 +1,6 @@
-# Lookup
+# Lookup (JavaScript SDK)
 
-Convert a human-readable option description (e.g. `"AAPL 7/28/2023 200 Call"`) into its standard OCC option symbol.
+Convert a human-readable option description (e.g. `"AAPL 12/17/2027 250 Call"`) into its standard OCC option symbol.
 
 ## Making Requests
 
@@ -24,18 +24,18 @@ lookup<P>(
 
 Resolves a human-readable option description to its OCC symbol.
 
-#### Parameters
+### Parameters
 
 - `lookupStr` (string)
 
-  A natural-language description of the option contract (e.g. `"AAPL 7/28/2023 200 Call"`, `"TSLA Jan 2025 300 Put"`).
+  A natural-language description of the option contract (e.g. `"AAPL 12/17/2027 250 Call"`, `"TSLA Jan 2025 300 Put"`).
 
 - [`outputFormat`](../settings.md#output-format) (optional): The format of the returned data. Alias: `format`.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<OptionsLookupResponse | OptionsLookupHumanResponse>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<OptionsLookupResponse | OptionsLookupHumanResponse>`](../client.md#marketdatapromise)
 
 ### Default
 
@@ -45,8 +45,8 @@ import { MarketDataClient } from "@marketdata/sdk";
 const client = new MarketDataClient();
 
 try {
-  const data = await client.options.lookup("AAPL 7/28/2023 200 Call");
-  console.log(data.optionSymbol);  // "AAPL230728C00200000"
+  const data = await client.options.lookup("AAPL 12/17/2027 250 Call");
+  console.log(data.optionSymbol);  // "AAPL271217C00250000"
 } catch (error) {
   console.error(error);
 }
@@ -60,7 +60,7 @@ import { MarketDataClient } from "@marketdata/sdk";
 const client = new MarketDataClient();
 
 try {
-  const data = await client.options.lookup("AAPL 7/28/2023 200 Call", {
+  const data = await client.options.lookup("AAPL 12/17/2027 250 Call", {
     human: true,
   });
   console.log(data.Symbol);
@@ -80,7 +80,7 @@ interface OptionsLookupResponse {
 }
 ```
 
-#### Properties
+### Properties
 
 - `s` (string): Status indicator.
 - `optionSymbol` (string): The OCC-format option symbol.
