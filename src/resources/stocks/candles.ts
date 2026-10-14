@@ -19,6 +19,7 @@ import {
 import type { MarketDataParams, TypedPromise } from "@/types";
 
 import {
+	encodePathSegment,
 	getDataRecords,
 	MarketDataPromise,
 	normalizeArgs,
@@ -102,7 +103,7 @@ export function candles(
 		return ResultAsync.fromPromise(
 			Promise.resolve(
 				this._makeRequest<StockCandleRawResponse | StockCandleHumanRawResponse>(
-					`${Endpoints.STOCKS_CANDLES}${validated.resolution as string}/${validated.symbol}/`,
+					`${Endpoints.STOCKS_CANDLES}${encodePathSegment(validated.resolution)}/${encodePathSegment(validated.symbol)}/`,
 
 					queryParams as MarketDataParams,
 					{

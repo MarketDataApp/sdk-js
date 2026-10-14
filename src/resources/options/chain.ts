@@ -11,7 +11,7 @@ import {
 	OptionsChainParamsSchema,
 } from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
-import { normalizeArgs } from "@/utils";
+import { encodePathSegment, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
 export function chain<
@@ -46,7 +46,7 @@ export function chain(
 	this.logger.debug("Fetching options chain...");
 
 	return this._fetch(
-		`${Endpoints.OPTIONS_CHAIN}${symbol}/`,
+		`${Endpoints.OPTIONS_CHAIN}${encodePathSegment(symbol)}/`,
 		queryParams as MarketDataParams,
 		{
 			inputSchema: OptionsChainParamsSchema,

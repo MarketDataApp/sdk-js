@@ -60,15 +60,17 @@ export async function saveBlobToFile(
 		await fs.mkdir(parentDir, { recursive: true });
 	}
 
-	try {
-		await fs.access(targetPath);
-		throw new Error(`Filename already exists: ${targetPath}`);
-	} catch (e) {
-		if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
-	}
-
 	const arrayBuffer = await blob.arrayBuffer();
-	await fs.writeFile(targetPath, Buffer.from(arrayBuffer));
+	try {
+		// "wx" fails atomically when the path already exists, so a concurrent
+		// writer can't sneak in between an existence check and the write.
+		await fs.writeFile(targetPath, Buffer.from(arrayBuffer), { flag: "wx" });
+	} catch (e) {
+		if ((e as NodeJS.ErrnoException).code === "EEXIST") {
+			throw new Error(`Filename already exists: ${targetPath}`);
+		}
+		throw e;
+	}
 
 	return targetPath;
 }

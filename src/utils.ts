@@ -100,19 +100,31 @@ export const splitDatesByTimeframe = (
 	return ranges;
 };
 
+/**
+ * Encodes a caller-supplied value for use as a single URL path segment so it
+ * cannot smuggle extra segments (`/`, `../`) or truncate the path (`?`, `#`)
+ * into the request URL. Valid symbols (alphanumerics, `.`, `-`, `_`) are
+ * unchanged by the encoding.
+ */
+export const encodePathSegment = (segment: unknown): string =>
+	encodeURIComponent(String(segment));
+
 export const transformHumanKeys = (
 	data: Record<string, unknown>,
 ): Record<string, unknown> => {
-	const transformed: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(data)) {
-		const newKey = key
-			.replace(/ /g, "_")
-			.replace(/\$/g, "Price")
-			.replace(/%/g, "Percent")
-			.replace(/__/g, "_");
-		transformed[newKey] = value;
-	}
-	return transformed;
+	// Object.fromEntries defines own properties (CreateDataProperty), so a
+	// hostile response key like "__proto__" becomes inert data instead of
+	// reassigning the result's prototype the way `obj[key] = value` would.
+	return Object.fromEntries(
+		Object.entries(data).map(([key, value]) => [
+			key
+				.replace(/ /g, "_")
+				.replace(/\$/g, "Price")
+				.replace(/%/g, "Percent")
+				.replace(/__/g, "_"),
+			value,
+		]),
+	);
 };
 
 export const cleanAndValidateParams = <

@@ -21,8 +21,11 @@ jobs:
           cache: pnpm
           registry-url: 'https://registry.npmjs.org/'
 
-      - name: Upgrade npm to 11+ (required for Trusted Publishing OIDC)
-        run: npm install -g npm@latest
+      - name: Upgrade npm to 11 (required for Trusted Publishing OIDC)
+        # Pinned to the npm 11 major rather than `latest` so a compromised or
+        # breaking future npm major can't inject itself into the publish step
+        # that holds the OIDC publishing credential.
+        run: npm install -g npm@11
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

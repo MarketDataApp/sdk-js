@@ -44,6 +44,19 @@ import pkg from "../package.json";
 export const FETCH_TIMEOUT_MS = 99_000;
 
 /**
+ * Cap on how much of a response body may be copied into an error message.
+ * Legitimate API error messages are short sentences; the cap only bounds
+ * hostile or malformed bodies so they can't balloon errors and log output.
+ */
+const MAX_ERROR_BODY_CHARS = 512;
+
+function truncateErrorBody(body: unknown): string {
+	const text = typeof body === "string" ? body : String(body);
+	if (text.length <= MAX_ERROR_BODY_CHARS) return text;
+	return `${text.slice(0, MAX_ERROR_BODY_CHARS)}… [truncated ${text.length - MAX_ERROR_BODY_CHARS} chars]`;
+}
+
+/**
  * Sentinel payload returned by `_performFetch` when the server responds
  * with 404. Base resource `_fetch` detects this by identity and flags the
  * returned `MarketDataPromise` as `no_data: true`.
@@ -99,8 +112,12 @@ export class MarketDataClient implements IMarketDataClient {
 		this.logger = config.logger || new DefaultLogger(defaultLevel);
 
 		this.logger.info("Initializing MarketDataClient");
+		// Reveal the last 4 characters only when the token is long enough that
+		// they are a negligible fraction of it; otherwise mask it entirely.
 		const tokenLog = this.token
-			? `${"*".repeat(Math.max(0, this.token.length - 4))}${this.token.slice(-4)}`
+			? this.token.length >= 8
+				? `${"*".repeat(this.token.length - 4)}${this.token.slice(-4)}`
+				: "*".repeat(this.token.length)
 			: "None";
 		this.logger.debug(`Token: ${tokenLog}`);
 		this.logger.info(`Base URL: ${this.baseUrl}`);
@@ -303,7 +320,11 @@ export class MarketDataClient implements IMarketDataClient {
 			timestamp: new Date(),
 		};
 
-		const error = this._buildHttpError(response.status, errmsg, context);
+		const error = this._buildHttpError(
+			response.status,
+			truncateErrorBody(errmsg),
+			context,
+		);
 
 		if (isRetriableStatusCode(response.status) && service) {
 			await this._checkServiceStatus(service, error);
@@ -447,9 +468,9 @@ export class MarketDataClient implements IMarketDataClient {
 		} catch (error) {
 			if (error instanceof AbortError) throw error;
 
-			// Let ServerError propagate bare so p-retry can retry (5xx is
-			// the only retriable class per spec). Everything else —
-			// validation, parse, unexpected — is terminal.
+			// Let ServerError propagate bare so p-retry can retry (>500 is
+			// the only retriable range per spec; 500 itself is terminal).
+			// Everything else — validation, parse, unexpected — is terminal.
 			if (error instanceof ServerError) throw error;
 
 			// JSON.parse on a 2xx response body — this is response data,
@@ -521,7 +542,7 @@ export class MarketDataClient implements IMarketDataClient {
 		const contentType = response.headers.get("content-type");
 		if (contentType?.includes("application/json")) {
 			const json = await response.json();
-			const errmsg = json.errmsg || JSON.stringify(json);
+			const errmsg = truncateErrorBody(json.errmsg || JSON.stringify(json));
 			throw new BadRequestError(`API returned error: ${errmsg}`);
 		}
 		return response.blob();

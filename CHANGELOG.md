@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+All items below are Tier 1 fixes under the [Security Fix Policy](SECURITY.md#security-fix-policy):
+API- and behavior-compatible for legitimate consumers.
+
+- **Path-segment injection**: caller-supplied `symbol` and `resolution` values are
+  now percent-encoded before being interpolated into request paths. Previously a
+  crafted value (e.g. `"AAPL/../../other"`) could smuggle extra path segments or
+  traverse to a different endpoint. Valid symbols (alphanumerics, `.`, `-`, `_`)
+  are unaffected.
+- **Prototype-reassignment defense in human-readable parsing**: `transformHumanKeys`
+  now builds its result with own-property semantics, so a hostile API response key
+  that transforms to `__proto__` can no longer reassign the result object's
+  prototype and smuggle values past schema validation.
+- **Credential redaction**: the startup debug log now fully masks tokens shorter
+  than 8 characters instead of revealing the last 4 (which could be the entire
+  token).
+- **Bounded error messages**: response bodies copied into thrown error messages
+  are capped at 512 characters, so a hostile or malformed API response cannot
+  balloon errors and log output.
+- **Atomic file writes**: `.save()` now uses an exclusive-create write (`wx`),
+  closing a race where a concurrent writer could cause an existing file to be
+  overwritten between the existence check and the write.
+- **CI hardening**: the CI workflow's `GITHUB_TOKEN` is now restricted to
+  `contents: read`, and the publish workflow pins npm to the 11.x major instead
+  of installing `npm@latest` while holding the OIDC publishing credential.
+
 ## [1.0.0] - 2026-05-29
 
 **The official Market Data JavaScript / TypeScript SDK is here.** v1.0 is the first stable release — a typed, batteries-included client for the [Market Data API](https://www.marketdata.app/) covering stocks, options, funds, market status, and account utilities. Designed for production use in trading bots, dashboards, research notebooks, and anything else that needs reliable financial data with end-to-end type safety.
