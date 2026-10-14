@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **`.env` isolation** (Tier 2 fix, maintainer-approved): importing the SDK no
+  longer loads the consumer's entire `.env` file into `process.env`. The SDK now
+  parses `.env` privately and reads only its own `MARKETDATA_*` variables;
+  unrelated entries (database URLs, cloud credentials, ...) are ignored and
+  `process.env` is never mutated. Real environment variables still take
+  precedence over `.env` values. Consumers who relied on the SDK's import-time
+  side effect to populate `process.env` for their own code must call
+  `dotenv.config()` themselves.
+
 ## [1.0.0] - 2026-05-29
 
 **The official Market Data JavaScript / TypeScript SDK is here.** v1.0 is the first stable release — a typed, batteries-included client for the [Market Data API](https://www.marketdata.app/) covering stocks, options, funds, market status, and account utilities. Designed for production use in trading bots, dashboards, research notebooks, and anything else that needs reliable financial data with end-to-end type safety.
