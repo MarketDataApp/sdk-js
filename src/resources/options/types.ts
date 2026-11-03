@@ -6,6 +6,14 @@ export const OptionsChainInputSchema = z
 		symbol: z.string().optional(),
 		date: z.union([z.string(), z.date()]).optional(),
 		expiration: z.union([z.string(), z.date()]).optional(),
+		/**
+		 * Days to expiry. A single value (e.g. `30`) limits the chain to the
+		 * expiration closest to that value. A comma-separated list
+		 * (`"15,30,45"`) selects the closest expiration for each value. A
+		 * closed range (`"0-45"`) or a comparison operator (`">=30"`,
+		 * `"<45"`) returns every expiration whose dte falls within the
+		 * bounds, inclusive.
+		 */
 		dte: z.union([z.number(), z.string()]).optional(),
 		from: z.union([z.string(), z.date()]).optional(),
 		to: z.union([z.string(), z.date()]).optional(),
