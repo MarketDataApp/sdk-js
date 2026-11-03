@@ -44,9 +44,9 @@ Fetches the option chain for a single underlying symbol.
 
   Filter by specific expiration date.
 
-- `dte` (number, optional)
+- `dte` (number | string, optional)
 
-  Filter by number of days to expiration.
+  Days to expiry. A single value (e.g. `30`) limits the chain to the expiration closest to that value. A comma-separated list (`"15,30,45"`) selects the closest expiration for each value, deduplicated. A closed range (`"0-45"`) or a comparison operator (`">=30"`, `"<45"`) returns every expiration whose dte falls within the bounds, inclusive. Values are whole numbers of days, at most 36500. Should not be used together with `from` and `to`. Take care combining with `weekly`, `monthly`, or `quarterly`, since that limits the expirations `dte` can return. If `date` is set, `dte` is relative to it.
 
 - `from` / `to` (string | Date, optional)
 
@@ -145,6 +145,30 @@ try {
       `${c.optionSymbol} strike=${c.strike} mid=${c.mid} delta=${c.delta} oi=${c.openInterest}`
     );
   }
+} catch (error) {
+  console.error(error);
+}
+```
+
+### Days-to-Expiry Filter
+
+```typescript
+import { MarketDataClient } from "@marketdata/sdk";
+
+const client = new MarketDataClient();
+
+try {
+  // A single value: the expiration closest to 30 days out
+  const closest = await client.options.chain("AAPL", { dte: 30 });
+
+  // A comma-separated list: the closest expiration for each value
+  const several = await client.options.chain("AAPL", { dte: "15,30,45" });
+
+  // A closed range: every expiration between 0 and 45 days, inclusive
+  const inRange = await client.options.chain("AAPL", { dte: "0-45" });
+
+  // A comparison operator: every expiration at least 30 days out
+  const atLeast30 = await client.options.chain("AAPL", { dte: ">=30" });
 } catch (error) {
   console.error(error);
 }
