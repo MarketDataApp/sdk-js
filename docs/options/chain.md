@@ -46,7 +46,7 @@ Fetches the option chain for a single underlying symbol.
 
 - `dte` (number | string, optional)
 
-  Days to expiry. A single value (e.g. `30`) limits the chain to the expiration closest to that value. A comma-separated list (`"15,30,45"`) selects the closest expiration for each value, deduplicated. A closed range (`"0-45"`) or a comparison operator (`">=30"`, `"<45"`) returns every expiration whose dte falls within the bounds, inclusive — the same syntax `strike` and `delta` use. Values are whole numbers of days, at most 36500. Should not be used together with `from` and `to`. Take care combining with `weekly`, `monthly`, or `quarterly`, since that limits the expirations `dte` can return. If `date` is set, `dte` is relative to it.
+  Days to expiry. A single value (e.g. `30`) limits the chain to the expiration closest to that value. A comma-separated list (`"15,30,45"`) selects the closest expiration for each value, deduplicated. A closed range (`"0-45"`) or a comparison operator (`">=30"`, `"<45"`) returns every expiration whose dte falls within the bounds, inclusive. Values are whole numbers of days, at most 36500. Should not be used together with `from` and `to`. Take care combining with `weekly`, `monthly`, or `quarterly`, since that limits the expirations `dte` can return. If `date` is set, `dte` is relative to it.
 
 - `from` / `to` (string | Date, optional)
 
