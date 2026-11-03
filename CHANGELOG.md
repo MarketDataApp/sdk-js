@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `OptionsChainInput.dte` also accepts a `string`, in the forms the API documents (API release 2.0.0). A `number` works as before.
+
 ## [1.0.0] - 2026-05-29
 
 **The official Market Data JavaScript / TypeScript SDK is here.** v1.0 is the first stable release — a typed, batteries-included client for the [Market Data API](https://www.marketdata.app/) covering stocks, options, funds, market status, and account utilities. Designed for production use in trading bots, dashboards, research notebooks, and anything else that needs reliable financial data with end-to-end type safety.
