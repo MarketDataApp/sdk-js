@@ -229,7 +229,7 @@ interface OptionsChain {
 
 - `optionSymbol` (string): OCC-format option symbol (e.g. `"AAPL271217C00250000"`).
 - `underlying` (string): The underlying stock symbol.
-- `expiration` (number): Unix timestamp of the expiration date.
+- `expiration` (number): Unix timestamp of the settlement value time, the moment the payout price is fixed. See [Option Expiration](https://www.marketdata.app/docs/api/dates-and-times#option-expiration).
 - `side` (string): `"call"` or `"put"`.
 - `strike` (number): The strike price.
 - `firstTraded` (number): Unix timestamp when the contract first traded.
