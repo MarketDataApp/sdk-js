@@ -14,6 +14,11 @@ import type { MarketDataParams, TypedPromise } from "@/types";
 import { normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
+/**
+ * `dte` accepts a number or a string: a single value, a comma-separated
+ * list (`"15,30,45"`), a closed range (`"0-45"`), or a comparison operator
+ * (`">=30"`, `"<45"`). See docs/options/chain.md for the full contract.
+ */
 export function chain<
 	P extends Omit<OptionsChainParams, "symbol"> & MarketDataParams,
 >(
