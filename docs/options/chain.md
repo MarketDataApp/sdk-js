@@ -44,9 +44,9 @@ Fetches the option chain for a single underlying symbol.
 
   Filter by specific expiration date.
 
-- `dte` (number, optional)
+- `dte` (number | string, optional)
 
-  Filter by number of days to expiration.
+  Days to expiry. A single value limits the chain to the expiration closest to the `dte` provided. A comma-separated list (`"15,30,45"`) selects the closest expiration for each value, deduplicated. A closed range (`"0-45"`) or a comparison operator (`">=30"`, `"<45"`) returns every expiration whose `dte` falls within the bounds, inclusive; the syntax matches `strike` and `delta`. Values are whole numbers of days, at most 36500. Should not be used together with `from` and `to`. Take care before combining with `weekly`, `monthly`, `quarterly`, since that will limit the expirations `dte` can return. If you are using the `date` parameter, `dte` is relative to the date provided.
 
 - `from` / `to` (string | Date, optional)
 
