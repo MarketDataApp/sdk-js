@@ -16,12 +16,18 @@ updates:
     labels:
       - "dependencies"
 
+  # Also covers the `examples` workspace member, whose lockfile is the root one.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
+    # chalk 6 requires Node.js 22; this repository supports Node.js 20.x.
+    ignore:
+      - dependency-name: "chalk"
+        update-types:
+          - "version-update:semver-major"
     # Wait before adopting new releases so compromised versions (npm
     # supply-chain attacks) can be caught and yanked first. Known CVEs still
     # arrive immediately via Dependabot security updates.
@@ -33,22 +39,6 @@ updates:
     # grouped, so every runtime minor/patch opened its own PR.
     groups:
       npm-minor-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-
-  - package-ecosystem: "npm"
-    directory: "/examples"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-    cooldown:
-      default-days: 7
-    groups:
-      examples-dependencies:
         patterns:
           - "*"
         update-types:
