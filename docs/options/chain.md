@@ -100,6 +100,10 @@ Fetches the option chain for a single underlying symbol.
 
   Filter by AM-settled or PM-settled contracts.
 
+- `model` (`"bsm"` | `"bjs"` | `"crr"` | `"baw"`, optional)
+
+  The pricing model for `iv` and the greeks on a historical request (the `date` parameter). `"bsm"` (Black-Scholes-Merton) prices every contract. `"bjs"` (Bjerksund-Stensland 2002), `"crr"` (Cox-Ross-Rubinstein binomial tree) and `"baw"` (Barone-Adesi-Whaley) price the American contracts, and the European contracts keep `"bsm"`. If omitted, American contracts use `"bjs"` and European contracts use `"bsm"`, with broker conventions: a contract without a bid is priced from half its ask, a contract priced at or below the model's lowest price gets the greeks of an option without time value, a contract on its expiration day gets its greeks at expiration, and delta stays between -1 and 1. A named model returns its own output instead: those contracts get null values, and delta is the model's own. Requires `date`; omitting it gets a 400 from the API. Only available for paid plans — a trial gets a 402.
+
 - [`outputFormat`](../settings.md#output-format) (optional): The format of the returned data. Alias: `format`.
 - [`dateFormat`](../settings.md#date-format) (optional): Date format. Alias: `dateformat`.
 - [`columns`](../settings.md#columns) (optional): Columns to include.
@@ -162,6 +166,26 @@ try {
     date: "2024-01-15",
     expiration: "2024-02-16",
     side: "call",
+  });
+  console.log(contracts);
+} catch (error) {
+  console.error(error);
+}
+```
+
+### Priced With a Named Model
+
+```typescript
+import { MarketDataClient } from "@marketdata/sdk";
+
+const client = new MarketDataClient();
+
+try {
+  // Price every contract with Black-Scholes-Merton instead of the
+  // default per-contract broker convention.
+  const contracts = await client.options.chain("AAPL", {
+    date: "2024-01-15",
+    model: "bsm",
   });
   console.log(contracts);
 } catch (error) {

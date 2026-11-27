@@ -18,6 +18,11 @@ import type { OptionsResource } from "./index";
  * `dte` accepts a number or a string: a single value, a comma-separated
  * list (`"15,30,45"`), a closed range (`"0-45"`), or a comparison operator
  * (`">=30"`, `"<45"`). See docs/options/chain.md for the full contract.
+ *
+ * `model` picks the pricing model for `iv` and the greeks on a historical
+ * request (the `date` parameter): one of `"bsm"`, `"bjs"`, `"crr"` or
+ * `"baw"`. Omitted, American contracts price with `bjs` and European
+ * contracts with `bsm`. See docs/options/chain.md for the full contract.
  */
 export function chain<
 	P extends Omit<OptionsChainParams, "symbol"> & MarketDataParams,

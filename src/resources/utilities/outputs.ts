@@ -12,3 +12,8 @@ export type ApiStatusResponse = z.infer<typeof ApiStatusSchema>;
 
 export const HeadersSchema = z.record(z.string(), z.unknown());
 export type HeadersResponse = z.infer<typeof HeadersSchema>;
+
+export const DeleteTokenSchema = z.object({
+	s: z.literal("ok"),
+});
+export type DeleteTokenResponse = z.infer<typeof DeleteTokenSchema>;

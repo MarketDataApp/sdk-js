@@ -16,6 +16,7 @@ export const Endpoints = {
 	STOCKS_PRICES: "stocks/prices/",
 	STOCKS_BULK_QUOTES: "stocks/bulkquotes/",
 	USER: "user/",
+	USER_TOKEN: "user/token/",
 } as const;
 
 export const GLOBAL_EXCLUDED_PARAMS = ["outputFormat", "filename"] as const;
@@ -43,6 +44,7 @@ export const Service = {
 	STOCKS_QUOTES: `/v1/${Endpoints.STOCKS_BULK_QUOTES}`,
 	STATUS: `/v1/${Endpoints.MARKETS_STATUS}`,
 	USER: `/v1/${Endpoints.USER}`,
+	USER_TOKEN: `/v1/${Endpoints.USER_TOKEN}`,
 } as const;
 
 export type Service = (typeof Service)[keyof typeof Service];

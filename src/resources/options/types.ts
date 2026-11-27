@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { UserUniversalAPIParamsInputSchema } from "@/types";
 
+/**
+ * The pricing model for `iv` and the greeks on a historical request, shared
+ * by `options.chain` and `options.quotes`. See docs/options/chain.md and
+ * docs/options/quotes.md for the full contract.
+ */
+export const OptionsPricingModelSchema = z.enum(["bsm", "bjs", "crr", "baw"]);
+export type OptionsPricingModel = z.infer<typeof OptionsPricingModelSchema>;
+
 export const OptionsChainInputSchema = z
 	.object({
 		symbol: z.string().optional(),
@@ -30,6 +38,7 @@ export const OptionsChainInputSchema = z
 		side: z.enum(["call", "put", "both"]).optional(),
 		am: z.boolean().optional(),
 		pm: z.boolean().optional(),
+		model: OptionsPricingModelSchema.optional(),
 	})
 	.passthrough();
 
@@ -88,6 +97,7 @@ export type OptionsLookupParams = z.input<typeof OptionsLookupParamsSchema>;
 export const OptionsQuotesInputSchema = z
 	.object({
 		symbols: z.union([z.string(), z.array(z.string())]),
+		model: OptionsPricingModelSchema.optional(),
 	})
 	.passthrough();
 

@@ -10,7 +10,10 @@ import {
 	OptionsQuotesSchema,
 } from "@/resources/options/outputs";
 
-import type { OptionsQuotesParams } from "@/resources/options/types";
+import {
+	OptionsPricingModelSchema,
+	type OptionsQuotesParams,
+} from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 import {
 	encodePathSegment,
@@ -21,6 +24,12 @@ import {
 } from "@/utils";
 import type { OptionsResource } from "./index";
 
+/**
+ * `model` picks the pricing model for `iv` and the greeks on a historical
+ * request (`date`, `from` or `to`): one of `"bsm"`, `"bjs"`, `"crr"` or
+ * `"baw"`. Omitted, American contracts price with `bjs` and European
+ * contracts with `bsm`. See docs/options/quotes.md for the full contract.
+ */
 export function quotes<
 	P extends Omit<OptionsQuotesParams, "symbols"> & MarketDataParams,
 >(
@@ -47,6 +56,24 @@ export function quotes(
 > {
 	const params = normalizeArgs(arg1, arg2, "symbols") as OptionsQuotesParams &
 		MarketDataParams;
+
+	// `quotes` has no input-schema validation pipeline (unlike `chain`'s
+	// `_fetch`), so other params keep reaching the wire unchecked. `model`
+	// gets its own narrow check instead of adopting that pipeline wholesale,
+	// which would newly validate `symbols` too and change its error type.
+	if (params.model !== undefined) {
+		const modelResult = OptionsPricingModelSchema.safeParse(params.model);
+		if (!modelResult.success) {
+			return MarketDataPromise.fromResult(
+				errAsync(new ValidationError(JSON.stringify(modelResult.error.issues))),
+				saveBlobToFile,
+			) as unknown as TypedPromise<
+				OptionsQuotesResponse,
+				OptionsQuotesHumanResponse,
+				OptionsQuotesParams & MarketDataParams
+			>;
+		}
+	}
 
 	const useHuman =
 		params.human ||
