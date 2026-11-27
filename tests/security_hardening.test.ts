@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
+import { OutputFormat } from "@/enums";
 import { BadRequestError } from "@/error";
 import { saveBlobToFile } from "@/fileUtils";
 import type { Logger, LogLevel } from "@/logger";
@@ -148,9 +149,87 @@ describe("security hardening", () => {
 			expect((error as BadRequestError).message.length).toBeLessThan(700);
 			expect((error as BadRequestError).message).toContain("truncated");
 		});
+
+		it("truncates an oversized errmsg on a CSV request", async () => {
+			const client = new MarketDataClient({ token: "test" });
+			await client.ready;
+
+			fetchMock.mockImplementation(async () =>
+				createMockResponse({
+					headers: { "content-type": "application/json" },
+					json: { errmsg: "y".repeat(100_000) },
+				}),
+			);
+
+			const error = await client.stocks
+				.prices("AAPL", { outputFormat: OutputFormat.CSV })
+				.then(() => null)
+				.catch((e: unknown) => e);
+
+			expect(error).toBeInstanceOf(BadRequestError);
+			expect((error as BadRequestError).message.length).toBeLessThan(700);
+			expect((error as BadRequestError).message).toContain("truncated");
+		});
+
+		it("truncates an oversized JSON body without errmsg on a CSV request", async () => {
+			const client = new MarketDataClient({ token: "test" });
+			await client.ready;
+
+			fetchMock.mockImplementation(async () =>
+				createMockResponse({
+					headers: { "content-type": "application/json" },
+					json: { s: "error", detail: "z".repeat(100_000) },
+				}),
+			);
+
+			const error = await client.stocks
+				.prices("AAPL", { outputFormat: OutputFormat.CSV })
+				.then(() => null)
+				.catch((e: unknown) => e);
+
+			expect(error).toBeInstanceOf(BadRequestError);
+			expect((error as BadRequestError).message).toContain('{"s":"error"');
+			expect((error as BadRequestError).message.length).toBeLessThan(700);
+		});
+
+		it("keeps a non-string errmsg readable", async () => {
+			const client = new MarketDataClient({ token: "test" });
+			await client.ready;
+
+			fetchMock.mockImplementation(async () =>
+				createMockResponse({ ok: false, status: 400, json: { errmsg: 42 } }),
+			);
+
+			const error = await client.stocks
+				.earnings("AAPL")
+				.then(() => null)
+				.catch((e: unknown) => e);
+
+			expect(error).toBeInstanceOf(BadRequestError);
+			expect((error as BadRequestError).message).toContain(
+				"Request failed (400): 42",
+			);
+		});
 	});
 
 	describe("saveBlobToFile exclusive write", () => {
+		it("rethrows a write error that is not an existing file", async () => {
+			const dir = await mkdtemp(join(tmpdir(), "sdk-sec-"));
+			const plainFile = join(dir, "plain-file");
+			await writeFile(plainFile, "x");
+
+			const blob = new Blob(["a,b\n1,2\n"], { type: "text/csv" });
+			const error = await saveBlobToFile(
+				blob,
+				join(plainFile, "out.csv"),
+			).catch((e: unknown) => e);
+
+			expect((error as NodeJS.ErrnoException).code).toMatch(
+				/^(ENOTDIR|ENOENT)$/,
+			);
+			expect((error as Error).message).not.toMatch(/already exists/);
+		});
+
 		it("refuses to overwrite an existing file", async () => {
 			const dir = await mkdtemp(join(tmpdir(), "sdk-sec-"));
 			const target = join(dir, "existing.csv");
