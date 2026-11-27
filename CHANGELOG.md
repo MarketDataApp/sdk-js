@@ -31,7 +31,7 @@ API- and behavior-compatible for legitimate consumers.
 - **Bounded error messages**: response bodies copied into thrown error messages
   are capped at 512 characters, so a hostile or malformed API response cannot
   balloon errors and log output.
-- **Atomic file writes**: `.save()` now uses an exclusive-create write (`wx`),
+- **Exclusive-create file writes**: `.save()` now uses an exclusive-create write (`wx`),
   closing a race where a concurrent writer could cause an existing file to be
   overwritten between the existence check and the write.
 - **CI hardening**: the CI workflow's `GITHUB_TOKEN` is now restricted to

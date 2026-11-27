@@ -86,8 +86,9 @@ export class NotFoundError extends MarketDataClientError {}
 export class RateLimitError extends MarketDataClientError {}
 
 /**
- * HTTP 5xx — server-side failure. Status codes above 500 are retried with
- * exponential backoff; 500 itself is terminal by design.
+ * HTTP 5xx — server-side failure. A status above 500 is retried with
+ * exponential backoff when the request names a service that is not offline;
+ * 500, or any 5xx without a service, is terminal.
  */
 export class ServerError extends MarketDataClientError {}
 

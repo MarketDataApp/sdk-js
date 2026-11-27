@@ -468,9 +468,8 @@ export class MarketDataClient implements IMarketDataClient {
 		} catch (error) {
 			if (error instanceof AbortError) throw error;
 
-			// Let ServerError propagate bare so p-retry can retry (>500 is
-			// the only retriable range per spec; 500 itself is terminal).
-			// Everything else — validation, parse, unexpected — is terminal.
+			// A bare ServerError is the only error p-retry retries; one that
+			// must not be retried arrives here already wrapped in AbortError.
 			if (error instanceof ServerError) throw error;
 
 			// JSON.parse on a 2xx response body — this is response data,
