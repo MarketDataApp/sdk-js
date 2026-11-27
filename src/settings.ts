@@ -55,8 +55,9 @@ export const loadSettings = (
 	// leak into the process environment as an import side effect. Real
 	// environment variables take precedence over .env values, matching
 	// dotenv's own no-override behavior.
-	const dotenvVars: Record<string, string> =
-		dotenv.config({ processEnv: {}, quiet: true }).parsed ?? {};
+	const dotenvVars: Record<string, string> = {
+		...dotenv.config({ processEnv: {}, quiet: true }).parsed,
+	};
 	const env = (key: string): string | undefined =>
 		process.env[key] ?? dotenvVars[key];
 
