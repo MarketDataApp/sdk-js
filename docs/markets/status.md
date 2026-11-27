@@ -1,4 +1,4 @@
-# Status
+# Market Status (JavaScript SDK)
 
 Retrieve market status information (open/closed) for dates and countries.
 
@@ -23,7 +23,7 @@ status<P>(
 
 Fetches market status information. All parameters are optional.
 
-#### Parameters
+### Parameters
 
 - `country` (string, optional)
 
@@ -52,9 +52,9 @@ Fetches market status information. All parameters are optional.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 - [`mode`](../settings.md#data-mode) (optional): The data mode to use.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<MarketStatus[] | MarketStatusHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<MarketStatus[] | MarketStatusHuman[] | Blob>`](../client.md#marketdatapromise)
 
 ### Today
 
@@ -136,7 +136,7 @@ interface MarketStatus {
 }
 ```
 
-#### Properties
+### Properties
 
 - `s` (string, optional): Status indicator.
 - `date` (number): Unix timestamp of the trading day.

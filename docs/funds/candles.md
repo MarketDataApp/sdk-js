@@ -1,4 +1,4 @@
-# Candles
+# Fund Candles (JavaScript SDK)
 
 Retrieve historical OHLC (open/high/low/close) candles for any supported mutual fund symbol.
 
@@ -33,7 +33,7 @@ candles<P>(
 
 Fetches historical daily candles for a single fund symbol.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -62,9 +62,9 @@ Fetches historical daily candles for a single fund symbol.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 - [`mode`](../settings.md#data-mode) (optional): The data mode to use.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<FundsCandle[] | FundsCandleHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<FundsCandle[] | FundsCandleHuman[] | Blob>`](../client.md#marketdatapromise)
 
 ### Default
 
@@ -139,7 +139,7 @@ interface FundsCandle {
 
 `FundsCandle` uses the API's short, machine-readable field names.
 
-#### Properties
+### Properties
 
 - `s` (string, optional): Status indicator.
 - `t` (number): Unix timestamp of the bar.

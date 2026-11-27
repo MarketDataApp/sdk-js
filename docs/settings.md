@@ -1,4 +1,4 @@
-# Settings
+# Settings (JavaScript SDK)
 
 The Market Data JavaScript SDK provides flexible configuration for customizing API requests. You can configure universal parameters like output format, date format, data mode, and more through multiple methods with different priority levels.
 

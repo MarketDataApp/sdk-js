@@ -249,6 +249,12 @@ Closing this issue due to inactivity. If you're able to provide the requested in
 6. [ ] **Commit**: `fix: Description (closes #NNN)`
 7. [ ] **Open PR** against `main`
 
+> **Stacking a PR on another PR?** Retarget it to `main` as soon as a reviewer
+> approves it. Do not wait for its base to merge. A PR merged into a base branch that
+> has already merged puts its work on a branch nothing points at, and the work never
+> reaches `main`. **Automatically delete head branches** is on, so GitHub retargets a
+> stacked PR when its base merges — retargeting early keeps the work off that race.
+
 ### Commit Message Format
 
 ```

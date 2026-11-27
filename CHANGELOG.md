@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `OptionsChainParams.dte` also accepts a `string`, in the forms the API documents (API release 2.0.0). A `number` works as before.
+
 ### Security
 
 - **`.env` isolation** (Tier 2 fix, maintainer-approved): importing the SDK no
