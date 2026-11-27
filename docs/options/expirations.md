@@ -1,4 +1,4 @@
-# Expirations
+# Expirations (JavaScript SDK)
 
 Retrieve the list of current or historical option expiration dates for a given underlying symbol.
 
@@ -29,7 +29,7 @@ expirations<P>(
 
 Fetches the list of expirations for a single underlying symbol.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -48,9 +48,9 @@ Fetches the list of expirations for a single underlying symbol.
 - [`columns`](../settings.md#columns) (optional): Columns to include.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<OptionsExpirationsResponse | OptionsExpirationsHumanResponse>`](../client.md#marketdatapromise)
 
 ### Default
 
@@ -112,7 +112,7 @@ interface OptionsExpirationsResponse {
 }
 ```
 
-#### Properties
+### Properties
 
 - `s` (string): Status indicator.
 - `expirations` (string[]): List of expiration dates in `YYYY-MM-DD` format.

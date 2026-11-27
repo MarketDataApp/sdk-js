@@ -1,4 +1,4 @@
-# Chain
+# Option Chain (JavaScript SDK)
 
 Retrieve the full option chain — every call and put contract — for any supported underlying symbol, with extensive filtering options.
 
@@ -30,7 +30,7 @@ chain<P>(
 
 Fetches the option chain for a single underlying symbol.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -44,9 +44,9 @@ Fetches the option chain for a single underlying symbol.
 
   Filter by specific expiration date.
 
-- `dte` (number, optional)
+- `dte` (number | string, optional)
 
-  Filter by number of days to expiration.
+  Days to expiry. A single value limits the chain to the expiration closest to the `dte` provided. A comma-separated list (`"15,30,45"`) selects the closest expiration for each value, deduplicated. A closed range (`"0-45"`, inclusive at both ends) or a comparison operator (`">=30"`, `"<45"`) returns every expiration whose `dte` satisfies it, strict for `<` and `>`, inclusive for `<=` and `>=`; the syntax matches `strike`. Values are whole numbers of days, at most 36500. Should not be used together with `from` and `to`. Take care before combining with `weekly`, `monthly`, `quarterly`, since that will limit the expirations `dte` can return. If you are using the `date` parameter, `dte` is relative to the date provided.
 
 - `from` / `to` (string | Date, optional)
 
@@ -107,9 +107,9 @@ Fetches the option chain for a single underlying symbol.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 - [`mode`](../settings.md#data-mode) (optional): The data mode to use.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<OptionsChain[] | OptionsChainHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<OptionsChain[] | OptionsChainHuman[] | Blob>`](../client.md#marketdatapromise)
 
 ### Full Chain
 
@@ -225,11 +225,11 @@ interface OptionsChain {
 }
 ```
 
-#### Properties
+### Properties
 
 - `optionSymbol` (string): OCC-format option symbol (e.g. `"AAPL271217C00250000"`).
 - `underlying` (string): The underlying stock symbol.
-- `expiration` (number): Unix timestamp of the expiration date.
+- `expiration` (number): Unix timestamp of the settlement value time, the moment the payout price is fixed. See [Option Expiration](https://www.marketdata.app/docs/api/dates-and-times#option-expiration).
 - `side` (string): `"call"` or `"put"`.
 - `strike` (number): The strike price.
 - `firstTraded` (number): Unix timestamp when the contract first traded.

@@ -6,7 +6,7 @@ export const OptionsChainInputSchema = z
 		symbol: z.string().optional(),
 		date: z.union([z.string(), z.date()]).optional(),
 		expiration: z.union([z.string(), z.date()]).optional(),
-		dte: z.number().optional(),
+		dte: z.union([z.number(), z.string()]).optional(),
 		from: z.union([z.string(), z.date()]).optional(),
 		to: z.union([z.string(), z.date()]).optional(),
 		month: z.number().int().min(1).max(12).optional(),

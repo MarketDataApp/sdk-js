@@ -1,4 +1,4 @@
-# Earnings
+# Earnings (JavaScript SDK)
 
 Retrieve historical and upcoming earnings information for any supported stock symbol.
 
@@ -28,9 +28,9 @@ earnings<P>(
 ): MarketDataPromise<StockEarnings[] | StockEarningsHuman[]>
 ```
 
-Fetches earnings data for a single symbol.
+Fetches earnings data for a single symbol. With no dates the API returns only upcoming reports, from today through the next three years.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -45,9 +45,9 @@ Fetches earnings data for a single symbol.
 
 Additional endpoint-specific parameters (e.g. `from`, `to`, `date`) are passed through to the REST API as-is. See the [REST API Earnings documentation](https://www.marketdata.app/docs/api/stocks/earnings) for the complete list.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<StockEarnings[] | StockEarningsHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<StockEarnings[] | StockEarningsHuman[] | Blob>`](../client.md#marketdatapromise)
 
 > [!NOTE]
 > Earnings data is a premium endpoint on the Market Data API. Your plan must include earnings access for this method to return data.
@@ -110,14 +110,14 @@ interface StockEarnings {
 }
 ```
 
-#### Properties
+### Properties
 
 - `symbol` (string): The stock symbol.
 - `fiscalYear` (number): The fiscal year of the earnings report.
 - `fiscalQuarter` (number): The fiscal quarter (1–4).
-- `date` (number): Unix timestamp of the earnings event.
+- `date` (number): Unix timestamp of the last day of the fiscal period.
 - `reportDate` (number): Unix timestamp when the earnings were reported.
-- `reportTime` (string | null): Time of day the earnings were reported (e.g. `"bmo"`, `"amc"`).
+- `reportTime` (string | null): Time of day the earnings were reported: `"before open"`, `"after close"` or `"during market hours"`; `null` when the API has no time.
 - `currency` (string | null): Currency of the EPS figures.
 - `reportedEPS` (number | null): The actual reported earnings per share.
 - `estimatedEPS` (number | null): The analyst consensus estimate.

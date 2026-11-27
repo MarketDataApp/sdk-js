@@ -1,6 +1,6 @@
-# Authentication
+# Authentication (JavaScript SDK)
 
-The Market Data API uses a **Bearer Token** for authentication. The token is required for each request you make to the API. Your token should have been e-mailed to you when you first signed up for an account. If you do not have a token or have lost your sign-up email, request a new token from the [Market Data Dashboard](https://www.marketdata.app/dashboard/).
+The Market Data API uses a **Bearer Token** for authentication. The token is required for each request you make to the API. To get a token, sign in to the [Market Data Dashboard](https://www.marketdata.app/dashboard/) and click **Generate Token**. The token is shown on the dashboard only once. See [Obtaining a Token](https://www.marketdata.app/docs/api/authentication#obtaining-a-token) for the steps.
 
 There are three ways to set your token when using the JavaScript SDK:
 
@@ -51,7 +51,7 @@ Open a new Command Prompt and run `echo %MARKETDATA_TOKEN%`. If the output print
 
 The SDK automatically loads a `.env` file from your working directory at import time (via [`dotenv`](https://github.com/motdotla/dotenv)). Create a file named `.env` in your project root:
 
-```env title=".env"
+```ini title=".env"
 MARKETDATA_TOKEN=your_api_token
 ```
 

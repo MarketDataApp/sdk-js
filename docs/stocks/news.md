@@ -1,4 +1,4 @@
-# News
+# News (JavaScript SDK)
 
 Retrieve news articles for any supported stock symbol.
 
@@ -30,7 +30,7 @@ news<P>(
 
 Fetches news articles for a single symbol.
 
-#### Parameters
+### Parameters
 
 - `symbol` (string)
 
@@ -59,9 +59,9 @@ Fetches news articles for a single symbol.
 - [`useHumanReadable`](../settings.md#human-readable) (optional): Use human-readable field names. Alias: `human`.
 - [`mode`](../settings.md#data-mode) (optional): The data mode to use.
 
-#### Returns
+### Returns
 
-- [`MarketDataPromise<StockNews[] | StockNewsHuman[] | Blob>`](../client.md#MarketDataPromise)
+- [`MarketDataPromise<StockNews[] | StockNewsHuman[] | Blob>`](../client.md#marketdatapromise)
 
 ### Default
 
@@ -112,7 +112,7 @@ interface StockNews {
 }
 ```
 
-#### Properties
+### Properties
 
 - `symbol` (string): The stock symbol.
 - `headline` (string): The news headline.
