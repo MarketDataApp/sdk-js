@@ -16,7 +16,7 @@ import {
 	type MarketDataParams,
 	type TypedPromise,
 } from "@/types";
-import { MarketDataPromise, normalizeArgs } from "@/utils";
+import { encodePathSegment, MarketDataPromise, normalizeArgs } from "@/utils";
 import type { StocksResource } from "./index";
 
 export function earnings<
@@ -68,7 +68,7 @@ export function earnings(
 	this.logger.debug("Fetching stock earnings...");
 
 	return this._fetch(
-		`${Endpoints.STOCKS_EARNINGS}${symbol}/`,
+		`${Endpoints.STOCKS_EARNINGS}${encodePathSegment(symbol)}/`,
 		queryParams as MarketDataParams,
 		{
 			inputSchema: AlreadyValidatedSchema,
