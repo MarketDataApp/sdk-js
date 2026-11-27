@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `OptionsChainParams.dte` also accepts a `string`, in the forms the API documents (API release 2.0.0). A `number` works as before.
+- `OptionsChainParams.model`: the API's new optional `model` parameter, accepting `"bsm"`, `"bjs"`, `"crr"`, or `"baw"` for the pricing model on `options.chain()` (API release 3.0.0).
+- `OptionsQuotesParams.model`: the API's new optional `model` parameter, accepting `"bsm"`, `"bjs"`, `"crr"`, or `"baw"` for the pricing model on `options.quotes()` (API release 3.0.0).
+- `OptionsPricingModel` — exported type alias for the four named pricing models on options endpoints.
+- `OptionsPricingModelSchema` — exported Zod schema backing `OptionsPricingModel`.
+- `client.utilities.deleteToken()` — revokes the client's current token via `DELETE /v1/user/token/`, returning `{ s: "ok" }` (API release 3.0.0).
+- `DeleteTokenResponse` — the response type of `deleteToken()`.
+- `DeleteTokenSchema` — the Zod schema backing `DeleteTokenResponse`.
+- `MarketDataClient._makeRequest()` options now accept `method?: HttpMethod` and `throwOn404?: boolean`, enabling resource implementations beyond the standard `GET` pattern and custom 404 handling (API release 3.0.0).
 
 ### Security
 

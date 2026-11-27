@@ -100,6 +100,18 @@ try {
 }
 ```
 
+## Revoking a Token
+
+To invalidate a token without visiting the dashboard, call [`client.utilities.deleteToken()`](./utilities/delete-token.md). It revokes the token the client is currently authenticating with; generate a replacement before the old one is revoked if you need uninterrupted access.
+
+```typescript
+import { MarketDataClient } from "@marketdata/sdk";
+
+const client = new MarketDataClient({ token: "your_token_here" });
+
+await client.utilities.deleteToken();
+```
+
 ## Next Steps
 
 After successful authentication, you will be able to begin making requests to the Market Data API. We recommend reading the brief overview of how the [client](./client.md) works, so you can get familiar with interacting with the SDK.

@@ -6,6 +6,9 @@ import type { Logger } from "@/logger";
 import type { MarketDataSettings } from "@/settings";
 import type { MarketDataPromise } from "@/utils";
 
+/** HTTP verb a request may be sent with. Every endpoint but the new token revocation uses `GET`. */
+export type HttpMethod = "GET" | "DELETE";
+
 export interface IMarketDataClient {
 	_makeRequest<T>(
 		path: string,
@@ -15,8 +18,10 @@ export interface IMarketDataClient {
 			schema?: z.ZodType<T>;
 			service?: string;
 			includeApiVersion?: boolean;
+			method?: HttpMethod;
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
+			throwOn404?: boolean;
 		},
 	): MarketDataResult<T>;
 	readonly apiVersion: string;

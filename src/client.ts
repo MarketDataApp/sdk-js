@@ -32,6 +32,7 @@ import { StocksResource } from "@/resources/stocks/index";
 import { UtilitiesResource } from "@/resources/utilities/index";
 import { loadSettings, type MarketDataSettings } from "@/settings";
 import type {
+	HttpMethod,
 	IMarketDataClient,
 	MarketDataConfig,
 	MarketDataParams,
@@ -170,8 +171,9 @@ export class MarketDataClient implements IMarketDataClient {
 	}
 
 	/**
-	 * Sends a GET request to an API path, with retries, rate-limit tracking and
-	 * error mapping.
+	 * Sends a request to an API path, with retries, rate-limit tracking and
+	 * error mapping. Defaults to `GET`; pass `method: "DELETE"` for an
+	 * endpoint that requires it.
 	 *
 	 * @param path - Endpoint path relative to the API version, segments already encoded.
 	 * @param params - Query parameters; `undefined` values are dropped.
@@ -188,6 +190,7 @@ export class MarketDataClient implements IMarketDataClient {
 			schema?: z.ZodType<T>;
 			service?: string;
 			includeApiVersion?: boolean;
+			method?: HttpMethod;
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
 			signal?: AbortSignal;
@@ -211,6 +214,7 @@ export class MarketDataClient implements IMarketDataClient {
 			options.schema,
 			options.service,
 			{
+				method: options.method,
 				skipRateLimitCheck: options.skipRateLimitCheck,
 				skipRetry: options.skipRetry,
 				signal: options.signal,
@@ -288,6 +292,7 @@ export class MarketDataClient implements IMarketDataClient {
 		schema?: z.ZodType<T>,
 		service?: string,
 		options: {
+			method?: HttpMethod;
 			skipRateLimitCheck?: boolean;
 			skipRetry?: boolean;
 			signal?: AbortSignal;
@@ -405,6 +410,7 @@ export class MarketDataClient implements IMarketDataClient {
 		schema?: z.ZodType<T>,
 		service?: string,
 		options: {
+			method?: HttpMethod;
 			skipRateLimitCheck?: boolean;
 			signal?: AbortSignal;
 			responseLogLevel?: LogLevel;
@@ -430,9 +436,10 @@ export class MarketDataClient implements IMarketDataClient {
 				? AbortSignal.any([options.signal, timeoutSignal])
 				: timeoutSignal;
 
+			const method = options.method ?? "GET";
 			const response = await fetch(url.toString(), {
 				headers,
-				method: "GET",
+				method,
 				signal,
 			}).catch((err) => {
 				if (timeoutSignal.aborted) {
@@ -446,6 +453,7 @@ export class MarketDataClient implements IMarketDataClient {
 			const duration = performance.now() - start;
 			this._postRequestLogs(
 				response,
+				method,
 				duration,
 				options.responseLogLevel ?? LogLevel.INFO,
 			);
@@ -514,12 +522,12 @@ export class MarketDataClient implements IMarketDataClient {
 
 	private _postRequestLogs(
 		response: Response,
+		method: HttpMethod,
 		duration: number,
 		logLevel: LogLevel,
 	): void {
 		const cfRequestId = response.headers.get("cf-ray") || "None";
 		const durationLog = formatDurationLog(duration);
-		const method = "GET"; // Currently only GET is supported
 		const status = response.status;
 		const url = response.url;
 		const message = `${method} ${status} ${durationLog} ${cfRequestId} ${url}`;
