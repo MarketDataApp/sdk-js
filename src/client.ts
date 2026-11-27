@@ -1,4 +1,4 @@
-import { ResultAsync } from "neverthrow";
+import { errAsync, ResultAsync } from "neverthrow";
 import pLimit, { type LimitFunction } from "p-limit";
 import pRetry, { AbortError } from "p-retry";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import {
 	PaymentRequiredError,
 	RateLimitError,
 	ServerError,
+	ValidationError,
 } from "@/error";
 import {
 	CHECK_RATE_LIMITS,
@@ -55,6 +56,9 @@ function truncateErrorBody(body: unknown): string {
 	if (text.length <= MAX_ERROR_BODY_CHARS) return text;
 	return `${text.slice(0, MAX_ERROR_BODY_CHARS)}… [truncated ${text.length - MAX_ERROR_BODY_CHARS} chars]`;
 }
+
+/** A path segment that URL parsing treats as `.` or `..`, literal or percent-encoded. */
+const DOT_SEGMENT = /^(?:\.|%2e){1,2}$/i;
 
 /**
  * Sentinel payload returned by `_performFetch` when the server responds
@@ -165,6 +169,17 @@ export class MarketDataClient implements IMarketDataClient {
 		}
 	}
 
+	/**
+	 * Sends a GET request to an API path, with retries, rate-limit tracking and
+	 * error mapping.
+	 *
+	 * @param path - Endpoint path relative to the API version, segments already encoded.
+	 * @param params - Query parameters; `undefined` values are dropped.
+	 * @param options - Per-request headers, response schema, service name for
+	 *   retries, and transport switches.
+	 * @returns The parsed response, or a `MarketDataClientError`. A path with a
+	 *   `.` or `..` segment returns a `ValidationError` without sending anything.
+	 */
 	public _makeRequest<T>(
 		path: string,
 		params: MarketDataParams = {},
@@ -180,6 +195,11 @@ export class MarketDataClient implements IMarketDataClient {
 			throwOn404?: boolean;
 		} = {},
 	): MarketDataResult<T> {
+		if (path.split("/").some((segment) => DOT_SEGMENT.test(segment))) {
+			return errAsync(
+				new ValidationError(`Invalid path segment in request path: ${path}`),
+			);
+		}
 		const includeApiVersion = options.includeApiVersion ?? true;
 		const url = this._buildUrl(path, params, includeApiVersion);
 		const headers = this._getHeaders(params, options);

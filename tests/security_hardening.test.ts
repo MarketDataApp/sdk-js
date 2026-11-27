@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { MarketDataClient } from "@/client";
 import { OutputFormat } from "@/enums";
-import { BadRequestError } from "@/error";
+import { BadRequestError, ValidationError } from "@/error";
 import { saveBlobToFile } from "@/fileUtils";
 import type { Logger, LogLevel } from "@/logger";
 import { encodePathSegment, transformHumanKeys } from "@/utils";
@@ -80,6 +80,52 @@ describe("security hardening", () => {
 					new URL(url).pathname.startsWith("/v1/options/expirations/"),
 				).toBe(true);
 			}
+		});
+
+		it.each([
+			["stocks.earnings", (c: MarketDataClient) => c.stocks.earnings("..")],
+			["stocks.news", (c: MarketDataClient) => c.stocks.news(".")],
+			[
+				"stocks.candles resolution",
+				(c: MarketDataClient) =>
+					c.stocks.candles({ symbol: "AAPL", resolution: ".." }),
+			],
+			[
+				"funds.candles symbol",
+				(c: MarketDataClient) =>
+					c.funds.candles({ symbol: "..", resolution: "D" }),
+			],
+			[
+				"options.expirations",
+				(c: MarketDataClient) => c.options.expirations(".."),
+			],
+			["options.lookup", (c: MarketDataClient) => c.options.lookup("..")],
+		])(
+			"rejects a dot-segment value in %s without sending a request",
+			async (_name, call) => {
+				const client = new MarketDataClient({ token: "test" });
+				await client.ready;
+				fetchMock.mockClear();
+
+				const error = await call(client)
+					.then(() => null)
+					.catch((e: unknown) => e);
+
+				expect(error).toBeInstanceOf(ValidationError);
+				expect(fetchMock).not.toHaveBeenCalled();
+			},
+		);
+
+		it("rejects a percent-encoded dot-segment in a raw request path", async () => {
+			const client = new MarketDataClient({ token: "test" });
+			await client.ready;
+			fetchMock.mockClear();
+
+			const result = await client._makeRequest("stocks/quotes/%2E%2e/");
+
+			expect(result.isErr()).toBe(true);
+			expect(result.isErr() && result.error).toBeInstanceOf(ValidationError);
+			expect(fetchMock).not.toHaveBeenCalled();
 		});
 	});
 

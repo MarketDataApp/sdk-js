@@ -19,8 +19,9 @@ API- and behavior-compatible for legitimate consumers.
 - **Path-segment injection**: caller-supplied `symbol` and `resolution` values are
   now percent-encoded before being interpolated into request paths. Previously a
   crafted value (e.g. `"AAPL/../../other"`) could smuggle extra path segments or
-  traverse to a different endpoint. Valid symbols (alphanumerics, `.`, `-`, `_`)
-  are unaffected.
+  traverse to a different endpoint. A value that is exactly `.` or `..` is
+  rejected with a `ValidationError` before any request is sent. Valid symbols
+  (alphanumerics, `.`, `-`, `_`) are unaffected.
 - **Prototype-reassignment defense in human-readable parsing**: `transformHumanKeys`
   now builds its result with own-property semantics, so a hostile API response key
   that transforms to `__proto__` can no longer reassign the result object's

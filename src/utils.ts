@@ -104,7 +104,11 @@ export const splitDatesByTimeframe = (
  * Encodes a caller-supplied value for use as a single URL path segment so it
  * cannot smuggle extra segments (`/`, `../`) or truncate the path (`?`, `#`)
  * into the request URL. Valid symbols (alphanumerics, `.`, `-`, `_`) are
- * unchanged by the encoding.
+ * unchanged by the encoding. A value that is exactly `.` or `..` stays a
+ * dot-segment; `MarketDataClient._makeRequest` rejects those.
+ *
+ * @param segment - The value to place in one path segment.
+ * @returns The percent-encoded segment.
  */
 export const encodePathSegment = (segment: unknown): string =>
 	encodeURIComponent(String(segment));
