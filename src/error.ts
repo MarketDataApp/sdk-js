@@ -85,7 +85,11 @@ export class NotFoundError extends MarketDataClientError {}
 /** HTTP 429 — per-minute/day rate limit exceeded. */
 export class RateLimitError extends MarketDataClientError {}
 
-/** HTTP 5xx — server-side failure. Retriable with exponential backoff. */
+/**
+ * HTTP 5xx — server-side failure. A status above 500 is retried with
+ * exponential backoff when the request names a service that is not offline;
+ * 500, or any 5xx without a service, is terminal.
+ */
 export class ServerError extends MarketDataClientError {}
 
 /** Transport-level failure: DNS, connection refused, TLS, or the 99s timeout. */

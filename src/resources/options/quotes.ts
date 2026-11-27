@@ -13,6 +13,7 @@ import {
 import type { OptionsQuotesParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
 import {
+	encodePathSegment,
 	getDataRecords,
 	MarketDataPromise,
 	normalizeArgs,
@@ -65,7 +66,7 @@ export function quotes(
 	let sentinelCount = 0;
 	const requests = symbols.map((symbol) => {
 		return this._makeRequest<Record<string, unknown>>(
-			`${Endpoints.OPTIONS_QUOTES}${symbol}/`,
+			`${Endpoints.OPTIONS_QUOTES}${encodePathSegment(symbol)}/`,
 			queryParams as MarketDataParams,
 			{
 				service: Service.OPTIONS_QUOTES,

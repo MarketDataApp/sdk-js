@@ -9,7 +9,7 @@ import {
 } from "@/resources/options/outputs";
 import type { OptionsStrikesParams } from "@/resources/options/types";
 import type { MarketDataParams, TypedPromise } from "@/types";
-import { MarketDataPromise, normalizeArgs } from "@/utils";
+import { encodePathSegment, MarketDataPromise, normalizeArgs } from "@/utils";
 import type { OptionsResource } from "./index";
 
 // Cast through unknown: zod's catchall + statically-known keys synthesizes an
@@ -61,7 +61,7 @@ export function strikes(
 
 	return MarketDataPromise.fromResult(
 		this._makeRequest<OptionsStrikesResponse | OptionsStrikesHumanResponse>(
-			`${Endpoints.OPTIONS_STRIKES}${symbol}/`,
+			`${Endpoints.OPTIONS_STRIKES}${encodePathSegment(symbol)}/`,
 			queryParams as MarketDataParams,
 			{
 				schema: this._getSchema(

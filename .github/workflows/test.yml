@@ -5,6 +5,11 @@ on:
   pull_request:
     branches: [main]
 
+# Least privilege: the CI job only reads the repo; it never needs a writable
+# GITHUB_TOKEN (default token permissions can include write access).
+permissions:
+  contents: read
+
 jobs:
   changes:
     # A documentation-only pull request does not need the suite below. But a
