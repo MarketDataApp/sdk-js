@@ -13,8 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-All items below are Tier 1 fixes under the [Security Fix Policy](SECURITY.md#security-fix-policy):
-API- and behavior-compatible for legitimate consumers.
+- **`.env` isolation** (Tier 2 fix, maintainer-approved): importing the SDK no
+  longer loads the consumer's entire `.env` file into `process.env`. The SDK now
+  parses `.env` privately and reads only its own `MARKETDATA_*` variables;
+  unrelated entries (database URLs, cloud credentials, ...) are ignored and
+  `process.env` is never mutated. Real environment variables still take
+  precedence over `.env` values. Consumers who relied on the SDK's import-time
+  side effect to populate `process.env` for their own code must call
+  `dotenv.config()` themselves.
+
+Tier 1 fixes under the [Security Fix Policy](SECURITY.md#security-fix-policy),
+API- and behavior-compatible for legitimate consumers:
 
 - **Path-segment injection**: caller-supplied `symbol` and `resolution` values are
   now percent-encoded before being interpolated into request paths. Previously a
